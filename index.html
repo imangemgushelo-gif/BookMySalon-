@@ -4,150 +4,163 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BookMySalon - East London</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;font-family:Arial,sans-serif}
-body{margin:0;background:#fff5f8;padding:0 0 80px}
-header{background:#e91e63;color:white;padding:16px;text-align:center;font-weight:bold;font-size:20px;position:sticky;top:0;z-index:10}
-.card{background:white;margin:12px;padding:14px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.btn{padding:10px 14px;border-radius:10px;border:none;font-weight:bold;cursor:pointer;margin:4px 4px 0 0}
-.green{background:#22c55e;color:white}.red{background:#ef4444;color:white}.yellow{background:#f59e0b;color:white}.pink{background:#e91e63;color:white}.grey{background:#eee}
-.badge{padding:3px 8px;border-radius:20px;font-size:12px;color:white}
-.yellow-bg{background:#f59e0b}.green-bg{background:#22c55e}.red-bg{background:#ef4444}
-input,select{width:100%;padding:11px;margin:6px 0;border:1px solid #ddd;border-radius:10px}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:10px;border-top:1px solid #eee}
-.bottom button{border:none;background:none;font-size:13px;font-weight:bold;color:#e91e63}
-#map{height:220px;background:#e5e7eb;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:bold;text-align:center;padding:10px}
-.hidden{display:none}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#fff5f7;color:#1a1a1a;padding-bottom:80px}
+header{background:#111;color:white;padding:16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+header b{font-size:20px} header b span{color:#ff4d6d}
+.hero{padding:24px 16px;text-align:center}
+.hero h1{font-size:32px;line-height:1.1} .hero h1 span{color:#ff4d6d}
+.hero p{color:#666;margin:10px 0 16px}
+.search{display:flex;gap:8px;max-width:500px;margin:0 auto}
+.search input{flex:1;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px}
+.search button{background:#ff4d6d;color:white;border:0;padding:13px 18px;border-radius:12px;font-weight:700}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none}
+.filters button{white-space:nowrap;padding:8px 16px;border-radius:20px;border:1px solid #ddd;background:white;font-weight:600}
+.filters button.active{background:#111;color:white}
+.grid{padding:0 16px;display:grid;gap:16px;max-width:900px;margin:0 auto}
+.card{background:white;border:1px solid #eee;border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+.card-top{height:140px;background:linear-gradient(135deg,#ff4d6d,#ff8fa3);display:flex;align-items:center;justify-content:center;font-size:60px}
+.card-body{padding:16px}
+.badge{font-size:11px;background:#fff0f3;color:#ff4d6d;padding:4px 8px;border-radius:20px;font-weight:700}
+.card-body h3{margin:8px 0 4px;font-size:19px}
+.muted{color:#777;font-size:13px}
+.services{margin:12px 0;display:flex;flex-wrap:wrap;gap:8px}
+.services span{background:#f7f7f7;padding:6px 10px;border-radius:20px;font-size:13px}
+.book-btn{width:100%;background:#111;color:white;padding:13px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:50}
+.modal.open{display:flex}
+.sheet{background:white;width:100%;max-height:90vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px;padding-bottom:40px}
+.sheet input,.sheet select{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;margin:6px 0 12px;font-size:15px}
+.sheet label{font-weight:700;font-size:13px}
+.confirm{background:#e6ffed;border:1px solid #a7f3c0;padding:14px;border-radius:12px;display:none;margin-top:12px}
 </style>
 </head>
 <body>
 
-<header>💇 BookMySalon - East London</header>
+<header><b>BookMy<span>Salon</span></b><span>📍 East London</span></header>
 
-<!-- SWITCH ROLE -->
-<div class="card">
-<b>Who are you?</b><br>
-<button class="btn pink" onclick="show('customer')">I'm a Customer</button>
-<button class="btn grey" onclick="show('owner')">I'm a Salon Owner</button>
+<div class="hero">
+<h1>Book your next<br><span>glow-up</span> in seconds.</h1>
+<p>Real salons in East London. Real bookings. No waiting.</p>
+<div class="search">
+<input id="searchInput" placeholder="Search braids, nails, wig...">
+<button onclick="render()">Search</button>
+</div>
 </div>
 
-<!-- CUSTOMER VIEW -->
-<div id="customer">
-  <div class="card">
-    <h3>🔍 Find Salon Near Me</h3>
-    <input placeholder="Search: Braids, Barber, Nails...">
-    <select>
-      <option>📍 Location: Use My Location</option>
-      <option>Mdantsane</option>
-      <option>Southernwood</option>
-      <option>Quigney</option>
-      <option>Beacon Bay</option>
-      <option>Gonubie</option>
-      <option>Vincent</option>
-      <option>Amalinda</option>
-      <option>Duncan Village</option>
-      <option>Cambridge</option>
-      <option>Buffalo Flats</option>
-    </select>
-    <select><option>Distance: Within 5km</option><option>Within 2km</option><option>Within 10km</option></select>
-    <button class="btn pink" onclick="alert('Found 3 salons near you in East London!')">Search</button>
-  </div>
-
-  <div class="card">
-    <b>Glow Hair Salon</b> ⭐ 4.9 (120) <span class="badge green-bg">1.2 km away</span><br>
-    📍 Southernwood, East London - Next to Oxford Street<br>
-    Braids from R350 | Wig Install R500<br>
-    <button class="btn pink" onclick="showBooking()">Book Now</button>
-    <button class="btn grey" onclick="showLive()">📍 Get Directions</button>
-  </div>
-
-  <div class="card hidden" id="bookingForm">
-    <h3>Book: Knotless Braids - R450 - 3 hrs</h3>
-    <select><option>Stylist: Ayesha</option><option>Stylist: Naledi</option><option>Any Available</option></select>
-    <input type="date" value="2026-10-18">
-    <select><option>10:00 - Available</option><option>11:30 - Available</option><option>13:00 - Booked</option></select>
-    <select><option>I will go to salon</option><option>Come to me (House Call) - Mdantsane / Beacon Bay / Gonubie</option></select>
-    <input placeholder="Your Name: e.g. Thandi">
-    <input placeholder="Your Phone">
-    <p><b>Total: R450</b> | Deposit to pay: R100</p>
-    <button class="btn green" onclick="confirmBooking()">Pay R100 Deposit & Book</button>
-  </div>
-
-  <div class="card hidden" id="myBooking">
-    <h3>My Booking</h3>
-    <p>🟡 <b>PENDING</b> - Waiting for salon to confirm...</p>
-    <p>Glow Salon - Knotless Braids with Ayesha<br>Sat 18 Oct, 10:00 - Southernwood<br>📍 1.2 km away</p>
-    <button class="btn pink" onclick="showLive()">▶️ Start Live Directions</button>
-    <button class="btn red" onclick="alert('Booking cancelled. Deposit refunded.')">Cancel Booking</button>
-  </div>
+<div class="filters" id="filters">
+<button class="active" onclick="setArea('All',this)">All Areas</button>
+<button onclick="setArea('Southernwood',this)">Southernwood</button>
+<button onclick="setArea('Mdantsane',this)">Mdantsane</button>
+<button onclick="setArea('Gonubie',this)">Gonubie</button>
 </div>
 
-<!-- OWNER VIEW -->
-<div id="owner" class="hidden">
-  <div class="card">
-    <h3>📅 TODAY - Sat 18 Oct - East London</h3>
-    <h1 style="margin:0">Total Bookings: 8</h1>
-    <p>✅ Confirmed: 5 | 🟡 Pending: 2 | ❌ Cancelled: 1</p>
-    <p><b>This Week: 32</b> | <b>This Month: 115</b> | <b>Earnings: R18,450</b></p>
-  </div>
+<div class="grid" id="grid"><p style="text-align:center;padding:20px">Loading real salons from database...</p></div>
 
-  <div class="card">
-    <b>Thandi M.</b> <span class="badge yellow-bg">PENDING</span><br>
-    Knotless Braids - R450<br>
-    Sat 18 Oct, 10:00 - 13:00 | Stylist: Ayesha<br>
-    📍 Customer 1.2 km away - Mdantsane | Note: Bring long braids<br>
-    <button class="btn green" onclick="ownerAction(this,'Accepted')">✅ Accept</button>
-    <button class="btn red" onclick="ownerAction(this,'Declined')">❌ Decline</button>
-    <button class="btn yellow" onclick="ownerAction(this,'Reschedule to 11:30')">⏳ Reschedule</button>
-    <br><button class="btn grey" onclick="alert('Calling Thandi...')">📞 Call</button>
-    <button class="btn grey" onclick="alert('Thandi is on her way - 800m away')">📍 Track Customer</button>
-  </div>
-
-  <div class="card">
-    <b>Zanele K.</b> <span class="badge green-bg">CONFIRMED</span><br>
-    Wig Install - R500 | Today 09:00 - Southernwood<br>
-    <button class="btn green" onclick="alert('Marked as Done. R500 added to earnings.')">✔️ Mark As Done</button>
-    <button class="btn red" onclick="alert('Marked as No-Show. Deposit kept.')">🚫 No-Show</button>
-  </div>
+<!-- BOOKING MODAL -->
+<div class="modal" id="modal" onclick="if(event.target==this) closeModal()">
+<div class="sheet">
+<h2 id="modalTitle">Book Appointment</h2>
+<p class="muted" id="modalSalon"></p><br>
+<label>Your Name</label>
+<input id="custName" placeholder="e.g. Amanda">
+<label>Your WhatsApp Number</label>
+<input id="custPhone" placeholder="e.g. 073 123 4567">
+<label>Service</label>
+<select id="serviceSelect"></select>
+<label>Date</label>
+<input id="bookDate" type="date">
+<label>Time</label>
+<select id="bookTime"><option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option><option>13:00</option><option>14:00</option><option>15:00</option></select>
+<button class="book-btn" style="background:#ff4d6d" onclick="submitBooking()">Confirm Booking →</button>
+<div class="confirm" id="confirmBox">✅ Booking saved! The salon will contact you on WhatsApp to confirm.</div>
 </div>
-
-<!-- LIVE DIRECTION VIEW -->
-<div id="liveView" class="card hidden">
-  <h3>🗺️ Live Directions to Glow Salon - Southernwood</h3>
-  <div id="map">📍 Blue Dot = You &nbsp;|&nbsp; 🔴 = Salon<br>Blue Line = Route - East London</div>
-  <p><b>800m left</b> | 5 mins away | Arrive by 09:58</p>
-  <p id="liveStatus">🚶 You are on your way...</p>
-  <button class="btn pink" onclick="startLive()">▶️ Start Live Tracking</button>
-  <button class="btn grey" onclick="alert('Calling Salon...')">📞 Call Salon</button>
-  <button class="btn yellow" onclick="alert('Salon notified: You will be 10 mins late')">⚠️ Notify I'm Late</button>
-  <button class="btn green" onclick="arrived()">✅ I Have Arrived</button>
 </div>
 
 <script>
-function show(role){
-  document.getElementById('customer').classList.toggle('hidden', role!=='customer');
-  document.getElementById('owner').classList.toggle('hidden', role!=='owner');
+const SUPABASE_URL = "https://zkkyslypjukewacipyey.supabase.co";
+const SUPABASE_KEY = "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let salons = [];
+let currentArea = 'All';
+let currentSalon = null;
+
+async function loadSalons(){
+  const { data, error } = await supabaseClient.from('salons').select('*').order('created_at');
+  if(error){ document.getElementById('grid').innerHTML = '<p>Error loading: '+error.message+'</p>'; return; }
+  salons = data;
+  render();
 }
-function showBooking(){ document.getElementById('bookingForm').classList.remove('hidden'); }
-function confirmBooking(){
-  document.getElementById('bookingForm').classList.add('hidden');
-  document.getElementById('myBooking').classList.remove('hidden');
-  alert('Booking Sent! Waiting for salon to Accept.');
+
+function setArea(area, btn){
+  currentArea = area;
+  document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
 }
-function showLive(){ document.getElementById('liveView').classList.remove('hidden'); window.scrollTo(0, document.body.scrollHeight); }
-function ownerAction(btn, status){ alert('Booking ' + status + '! Customer notified instantly.'); btn.parentElement.querySelector('.badge').textContent = status.toUpperCase(); }
-function startLive(){
-  document.getElementById('liveStatus').textContent = '🔵 Live: 800m away - Salon can see you coming...';
-  if(navigator.geolocation){
-    navigator.geolocation.watchPosition(pos=>{
-      document.getElementById('liveStatus').textContent = '🔵 Live Location: ' + pos.coords.latitude.toFixed(4) + ', ' + pos.coords.longitude.toFixed(4);
-    });
+
+function render(){
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = salons.filter(s => {
+    if(currentArea!=='All' && s.area!==currentArea) return false;
+    if(q && !JSON.stringify(s.services).toLowerCase().includes(q) && !s.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(filtered.length===0){
+    document.getElementById('grid').innerHTML = '<p style="text-align:center;padding:20px">No salons found. Try All Areas.</p>';
+    return;
   }
+  document.getElementById('grid').innerHTML = filtered.map(s=>`
+    <div class="card">
+      <div class="card-top">💇‍♀️</div>
+      <div class="card-body">
+        <span class="badge">📍 ${s.area} • ⭐ ${s.rating}</span>
+        <h3>${s.name}</h3>
+        <p class="muted">${s.address} • ${s.phone}</p>
+        <div class="services">${(s.services||[]).map(x=>`<span>${x.name} - R${x.price}</span>`).join('')}</div>
+        <button class="book-btn" onclick='openModal(${JSON.stringify(s).replace(/'/g,"&#39;")})'>Book Now</button>
+      </div>
+    </div>
+  `).join('');
 }
-function arrived(){
-  alert('You have arrived! Live tracking stopped for privacy.');
-  document.getElementById('liveStatus').textContent = '✅ Arrived at salon';
+
+function openModal(salon){
+  currentSalon = salon;
+  document.getElementById('modalTitle').innerText = 'Book at ' + salon.name;
+  document.getElementById('modalSalon').innerText = salon.address;
+  document.getElementById('serviceSelect').innerHTML = (salon.services||[]).map(x=>`<option value="${x.name}|${x.price}">${x.name} - R${x.price}</option>`).join('');
+  document.getElementById('confirmBox').style.display='none';
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('bookDate').value = new Date().toISOString().split('T')[0];
 }
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+async function submitBooking(){
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const date = document.getElementById('bookDate').value;
+  const time = document.getElementById('bookTime').value;
+  if(!name || !phone || !date){ alert('Please fill name, phone and date'); return; }
+  const [service, price] = document.getElementById('serviceSelect').value.split('|');
+  const { error } = await supabaseClient.from('bookings').insert([{
+    salon_id: currentSalon.id,
+    customer_name: name,
+    customer_phone: phone,
+    service: service,
+    price: parseInt(price),
+    booking_date: date,
+    booking_time: time,
+    status: 'pending'
+  }]);
+  if(error){ alert('Error: '+error.message); return; }
+  document.getElementById('confirmBox').style.display='block';
+  setTimeout(closeModal, 2000);
+}
+
+loadSalons();
 </script>
 </body>
-</html>
+                                                                                          </html>
