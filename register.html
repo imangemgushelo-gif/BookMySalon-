@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register Your Salon - BookMySalon</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#fff5f7;padding:20px;padding-bottom:60px}
+.box{max-width:520px;margin:0 auto;background:white;padding:24px;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,.07)}
+h1{font-size:26px} h1 span{color:#ff4d6d}
+p{color:#666;margin:8px 0 20px;font-size:14px}
+label{font-weight:700;font-size:13px;display:block;margin-top:14px}
+input,select,textarea{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;margin-top:6px;font-size:15px}
+.service-row{display:flex;gap:8px;margin-top:8px}
+.service-row input:first-child{flex:2} .service-row input:last-child{flex:1}
+.btn{width:100%;background:#111;color:white;padding:15px;border:0;border-radius:12px;font-weight:700;font-size:16px;margin-top:20px;cursor:pointer}
+.btn2{background:#ff4d6d}
+.success{background:#e6ffed;border:1px solid #a7f3c0;padding:14px;border-radius:12px;display:none;margin-top:16px}
+small{color:#888}
+a{color:#ff4d6d}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>Register Your <span>Salon</span></h1>
+<p>Join BookMySalon East London. Customers will find you and book you directly. Free to join.</p>
+
+<label>Salon / Barbershop Name *</label>
+<input id="name" placeholder="e.g. Vukuzenzele barbershop (kwaLaz)">
+
+<label>Area *</label>
+<select id="area">
+<option>Mdantsane</option><option>Southernwood</option><option>Gonubie</option><option>Quigney</option><option>Vincent</option><option>Beacon Bay</option><option>Other</option>
+</select>
+
+<label>Full Address *</label>
+<input id="address" placeholder="e.g. Mdantsane Unit 3, Mdantsane, 5219">
+
+<label>WhatsApp / Phone Number *</label>
+<input id="phone" placeholder="e.g. 069 962 3309">
+
+<label>Google Maps Link (optional)</label>
+<input id="maps" placeholder="Paste Google Maps link or -32.935657, 27.753081">
+<small>Paste your location from Google Maps so customers can get directions.</small>
+
+<label>Your Services & Prices</label>
+<div id="services">
+<div class="service-row"><input placeholder="Service e.g. Haircut"><input placeholder="Price R" type="number"></div>
+<div class="service-row"><input placeholder="Service e.g. Beard Trim"><input placeholder="Price R" type="number"></div>
+</div>
+<button onclick="addService()" style="margin-top:8px;background:none;border:0;color:#ff4d6d;font-weight:700;cursor:pointer">+ Add another service</button>
+
+<button class="btn btn2" onclick="register()">Register My Salon →</button>
+
+<div class="success" id="successBox">✅ Success! Your salon is now live on BookMySalon. Customers can now find and book you.</div>
+<p style="text-align:center;margin-top:16px"><a href="index.html">← Back to Home</a></p>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
+
+function addService(){
+  const div = document.createElement('div');
+  div.className='service-row';
+  div.innerHTML='<input placeholder="Service"><input placeholder="Price R" type="number">';
+  document.getElementById('services').appendChild(div);
+}
+
+async function register(){
+  const name = document.getElementById('name').value.trim();
+  const area = document.getElementById('area').value;
+  const address = document.getElementById('address').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const maps = document.getElementById('maps').value.trim();
+
+  if(!name || !address || !phone){ alert('Please fill Name, Address and Phone'); return; }
+
+  let lat=null, lng=null;
+  const coordMatch = maps.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+  if(coordMatch){ lat=parseFloat(coordMatch[1]); lng=parseFloat(coordMatch[2]); }
+
+  const services=[];
+  document.querySelectorAll('.service-row').forEach(row=>{
+    const sName=row.children[0].value.trim();
+    const sPrice=row.children[1].value;
+    if(sName) services.push({name:sName, price: parseInt(sPrice)||0});
+  });
+
+  const { error } = await supabaseClient.from('salons').insert([{
+    name, area, address, phone,
+    rating: null,
+    services: services,
+    latitude: lat,
+    longitude: lng
+  }]);
+
+  if(error){ alert('Error: '+error.message); return; }
+  document.getElementById('successBox').style.display='block';
+  window.scrollTo(0, document.body.scrollHeight);
+}
+</script>
+</body>
+</html>
