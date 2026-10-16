@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookMySalon - East London</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#fff5f8;padding:0 0 80px}
+header{background:#e91e63;color:white;padding:16px;text-align:center;font-weight:bold;font-size:20px;position:sticky;top:0;z-index:10}
+.card{background:white;margin:12px;padding:14px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.btn{padding:10px 14px;border-radius:10px;border:none;font-weight:bold;cursor:pointer;margin:4px 4px 0 0}
+.green{background:#22c55e;color:white}.red{background:#ef4444;color:white}.yellow{background:#f59e0b;color:white}.pink{background:#e91e63;color:white}.grey{background:#eee}
+.badge{padding:3px 8px;border-radius:20px;font-size:12px;color:white}
+.yellow-bg{background:#f59e0b}.green-bg{background:#22c55e}.red-bg{background:#ef4444}
+input,select{width:100%;padding:11px;margin:6px 0;border:1px solid #ddd;border-radius:10px}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:10px;border-top:1px solid #eee}
+.bottom button{border:none;background:none;font-size:13px;font-weight:bold;color:#e91e63}
+#map{height:220px;background:#e5e7eb;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:bold;text-align:center;padding:10px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<header>💇 BookMySalon - East London</header>
+
+<!-- SWITCH ROLE -->
+<div class="card">
+<b>Who are you?</b><br>
+<button class="btn pink" onclick="show('customer')">I'm a Customer</button>
+<button class="btn grey" onclick="show('owner')">I'm a Salon Owner</button>
+</div>
+
+<!-- CUSTOMER VIEW -->
+<div id="customer">
+  <div class="card">
+    <h3>🔍 Find Salon Near Me</h3>
+    <input placeholder="Search: Braids, Barber, Nails...">
+    <select>
+      <option>📍 Location: Use My Location</option>
+      <option>Mdantsane</option>
+      <option>Southernwood</option>
+      <option>Quigney</option>
+      <option>Beacon Bay</option>
+      <option>Gonubie</option>
+      <option>Vincent</option>
+      <option>Amalinda</option>
+      <option>Duncan Village</option>
+      <option>Cambridge</option>
+      <option>Buffalo Flats</option>
+    </select>
+    <select><option>Distance: Within 5km</option><option>Within 2km</option><option>Within 10km</option></select>
+    <button class="btn pink" onclick="alert('Found 3 salons near you in East London!')">Search</button>
+  </div>
+
+  <div class="card">
+    <b>Glow Hair Salon</b> ⭐ 4.9 (120) <span class="badge green-bg">1.2 km away</span><br>
+    📍 Southernwood, East London - Next to Oxford Street<br>
+    Braids from R350 | Wig Install R500<br>
+    <button class="btn pink" onclick="showBooking()">Book Now</button>
+    <button class="btn grey" onclick="showLive()">📍 Get Directions</button>
+  </div>
+
+  <div class="card hidden" id="bookingForm">
+    <h3>Book: Knotless Braids - R450 - 3 hrs</h3>
+    <select><option>Stylist: Ayesha</option><option>Stylist: Naledi</option><option>Any Available</option></select>
+    <input type="date" value="2026-10-18">
+    <select><option>10:00 - Available</option><option>11:30 - Available</option><option>13:00 - Booked</option></select>
+    <select><option>I will go to salon</option><option>Come to me (House Call) - Mdantsane / Beacon Bay / Gonubie</option></select>
+    <input placeholder="Your Name: e.g. Thandi">
+    <input placeholder="Your Phone">
+    <p><b>Total: R450</b> | Deposit to pay: R100</p>
+    <button class="btn green" onclick="confirmBooking()">Pay R100 Deposit & Book</button>
+  </div>
+
+  <div class="card hidden" id="myBooking">
+    <h3>My Booking</h3>
+    <p>🟡 <b>PENDING</b> - Waiting for salon to confirm...</p>
+    <p>Glow Salon - Knotless Braids with Ayesha<br>Sat 18 Oct, 10:00 - Southernwood<br>📍 1.2 km away</p>
+    <button class="btn pink" onclick="showLive()">▶️ Start Live Directions</button>
+    <button class="btn red" onclick="alert('Booking cancelled. Deposit refunded.')">Cancel Booking</button>
+  </div>
+</div>
+
+<!-- OWNER VIEW -->
+<div id="owner" class="hidden">
+  <div class="card">
+    <h3>📅 TODAY - Sat 18 Oct - East London</h3>
+    <h1 style="margin:0">Total Bookings: 8</h1>
+    <p>✅ Confirmed: 5 | 🟡 Pending: 2 | ❌ Cancelled: 1</p>
+    <p><b>This Week: 32</b> | <b>This Month: 115</b> | <b>Earnings: R18,450</b></p>
+  </div>
+
+  <div class="card">
+    <b>Thandi M.</b> <span class="badge yellow-bg">PENDING</span><br>
+    Knotless Braids - R450<br>
+    Sat 18 Oct, 10:00 - 13:00 | Stylist: Ayesha<br>
+    📍 Customer 1.2 km away - Mdantsane | Note: Bring long braids<br>
+    <button class="btn green" onclick="ownerAction(this,'Accepted')">✅ Accept</button>
+    <button class="btn red" onclick="ownerAction(this,'Declined')">❌ Decline</button>
+    <button class="btn yellow" onclick="ownerAction(this,'Reschedule to 11:30')">⏳ Reschedule</button>
+    <br><button class="btn grey" onclick="alert('Calling Thandi...')">📞 Call</button>
+    <button class="btn grey" onclick="alert('Thandi is on her way - 800m away')">📍 Track Customer</button>
+  </div>
+
+  <div class="card">
+    <b>Zanele K.</b> <span class="badge green-bg">CONFIRMED</span><br>
+    Wig Install - R500 | Today 09:00 - Southernwood<br>
+    <button class="btn green" onclick="alert('Marked as Done. R500 added to earnings.')">✔️ Mark As Done</button>
+    <button class="btn red" onclick="alert('Marked as No-Show. Deposit kept.')">🚫 No-Show</button>
+  </div>
+</div>
+
+<!-- LIVE DIRECTION VIEW -->
+<div id="liveView" class="card hidden">
+  <h3>🗺️ Live Directions to Glow Salon - Southernwood</h3>
+  <div id="map">📍 Blue Dot = You &nbsp;|&nbsp; 🔴 = Salon<br>Blue Line = Route - East London</div>
+  <p><b>800m left</b> | 5 mins away | Arrive by 09:58</p>
+  <p id="liveStatus">🚶 You are on your way...</p>
+  <button class="btn pink" onclick="startLive()">▶️ Start Live Tracking</button>
+  <button class="btn grey" onclick="alert('Calling Salon...')">📞 Call Salon</button>
+  <button class="btn yellow" onclick="alert('Salon notified: You will be 10 mins late')">⚠️ Notify I'm Late</button>
+  <button class="btn green" onclick="arrived()">✅ I Have Arrived</button>
+</div>
+
+<script>
+function show(role){
+  document.getElementById('customer').classList.toggle('hidden', role!=='customer');
+  document.getElementById('owner').classList.toggle('hidden', role!=='owner');
+}
+function showBooking(){ document.getElementById('bookingForm').classList.remove('hidden'); }
+function confirmBooking(){
+  document.getElementById('bookingForm').classList.add('hidden');
+  document.getElementById('myBooking').classList.remove('hidden');
+  alert('Booking Sent! Waiting for salon to Accept.');
+}
+function showLive(){ document.getElementById('liveView').classList.remove('hidden'); window.scrollTo(0, document.body.scrollHeight); }
+function ownerAction(btn, status){ alert('Booking ' + status + '! Customer notified instantly.'); btn.parentElement.querySelector('.badge').textContent = status.toUpperCase(); }
+function startLive(){
+  document.getElementById('liveStatus').textContent = '🔵 Live: 800m away - Salon can see you coming...';
+  if(navigator.geolocation){
+    navigator.geolocation.watchPosition(pos=>{
+      document.getElementById('liveStatus').textContent = '🔵 Live Location: ' + pos.coords.latitude.toFixed(4) + ', ' + pos.coords.longitude.toFixed(4);
+    });
+  }
+}
+function arrived(){
+  alert('You have arrived! Live tracking stopped for privacy.');
+  document.getElementById('liveStatus').textContent = '✅ Arrived at salon';
+}
+</script>
+</body>
+</html>
