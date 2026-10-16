@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owner Dashboard - BookMySalon</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#fff5f7;padding:20px;padding-bottom:60px}
+.box{max-width:600px;margin:0 auto}
+h1{font-size:26px} h1 span{color:#ff4d6d}
+p{color:#666;margin:8px 0 16px;font-size:14px}
+.card{background:white;padding:18px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:12px}
+input{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;margin:6px 0 10px}
+.btn{width:100%;background:#111;color:white;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
+.btn-pink{background:#ff4d6d}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
+.pending{background:#fef9c3;color:#854d0e}
+.confirmed{background:#dcfce7;color:#166534}
+.cancelled{background:#fee2e2;color:#991b1b}
+.small{font-size:13px;color:#777}
+.actions{display:flex;gap:8px;margin-top:10px}
+.actions button{flex:1;padding:10px;border-radius:10px;border:0;font-weight:700;cursor:pointer;font-size:13px}
+.accept{background:#16a34a;color:white}
+.reject{background:#ef4444;color:white}
+.wa{background:#25D366;color:white;text-decoration:none;display:block;text-align:center;padding:10px;border-radius:10px;font-weight:700;font-size:13px;margin-top:8px}
+a{color:#ff4d6d}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>Owner <span>Dashboard</span></h1>
+<p>Enter your WhatsApp number you used to register. You will see all your bookings.</p>
+
+<div class="card" id="loginCard">
+<label style="font-weight:700;font-size:13px">Your WhatsApp / Phone Number</label>
+<input id="ownerPhone" placeholder="Enter your WhatsApp number">
+<button class="btn btn-pink" onclick="login()">View My Bookings →</button>
+<p class="small" style="margin-top:10px">Example: If you registered with 0699623309, type it exactly the same way.</p>
+</div>
+
+<div id="salonInfo"></div>
+<div id="bookings"></div>
+
+<p style="text-align:center;margin-top:16px"><a href="index.html">← Back to Home</a> • <a href="register.html">Register Salon</a></p>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
+let mySalonId = null;
+
+async function login(){
+  const phone = document.getElementById('ownerPhone').value.trim();
+  if(!phone){ alert('Please enter your phone number'); return; }
+
+  // Find salon(s) with this phone - try exact and without spaces
+  const cleanPhone = phone.replace(/\s/g,'');
+  const { data: salons, error } = await supabaseClient.from('salons').select('*').or(`phone.eq.${phone},phone.eq.${cleanPhone}`);
+  
+  if(error){ alert('Error: '+error.message); return; }
+  if(!salons || salons.length===0){ 
+    document.getElementById('salonInfo').innerHTML = `<div class="card">❌ No salon found with number <b>${phone}</b>.<br><span class="small">Make sure you type it exactly as you registered. Or <a href="register.html">Register here</a>.</span></div>`;
+    document.getElementById('bookings').innerHTML = '';
+    return;
+  }
+
+  const salon = salons[0];
+  mySalonId = salon.id;
+  document.getElementById('salonInfo').innerHTML = `
+    <div class="card">
+      <div class="row"><b style="font-size:18px">${salon.name}</b><span class="badge confirmed">LIVE</span></div>
+      <p class="small">${salon.address} • ${salon.phone}</p>
+      <p class="small">Services: ${salon.services && salon.services.length>0 ? salon.services.map(s=>s.name+' - R'+s.price).join(', ') : 'Not added yet'}</p>
+    </div>
+    <h3 style="margin:12px 0 8px">📅 Bookings</h3>
+  `;
+  loadBookings();
+}
+
+async function loadBookings(){
+  const { data, error } = await supabaseClient.from('bookings').select('*').eq('salon_id', mySalonId).order('booking_date', {ascending: true});
+  if(error){ alert(error.message); return; }
+  if(!data || data.length===0){
+    document.getElementById('bookings').innerHTML = `<div class="card">No bookings yet.<br><span class="small">When customers book you, they will show here instantly.</span></div>`;
+    return;
+  }
+  document.getElementById('bookings').innerHTML = data.map(b=>{
+    const badgeClass = b.status==='confirmed' ? 'confirmed' : b.status==='cancelled' ? 'cancelled' : 'pending';
+    const waLink = `https://wa.me/27${b.customer_phone.replace(/\D/g,'').replace(/^0/,'')}?text=${encodeURIComponent('Hi '+b.customer_name+', this is BookMySalon. Your booking for '+b.service+' on '+b.booking_date+' at '+b.booking_time+' is '+b.status+'.')}`;
+    return `
+    <div class="card">
+      <div class="row"><b>${b.customer_name}</b><span class="badge ${badgeClass}">${b.status.toUpperCase()}</span></div>
+      <p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}</p>
+      <p class="small">📞 ${b.customer_phone}</p>
+      <div class="actions">
+        <button class="accept" onclick="updateStatus('${b.id}','confirmed')">✅ Confirm</button>
+        <button class="reject" onclick="updateStatus('${b.id}','cancelled')">❌ Cancel</button>
+      </div>
+      <a class="wa" target="_blank" href="${waLink}">💬 Message on WhatsApp</a>
+    </div>`;
+  }).join('');
+}
+
+async function updateStatus(id, status){
+  const { error } = await supabaseClient.from('bookings').update({status}).eq('id', id);
+  if(error){ alert(error.message); return; }
+  loadBookings();
+}
+</script>
+</body>
+  </html>
