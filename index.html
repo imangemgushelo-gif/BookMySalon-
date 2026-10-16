@@ -10,6 +10,7 @@
 body{background:#fff5f7;color:#1a1a1a;padding-bottom:80px}
 header{background:#111;color:white;padding:16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
 header b{font-size:20px} header b span{color:#ff4d6d}
+header a{background:#ff4d6d;color:white;padding:8px 12px;border-radius:20px;text-decoration:none;font-size:13px;font-weight:700}
 .hero{padding:24px 16px;text-align:center}
 .hero h1{font-size:32px;line-height:1.1} .hero h1 span{color:#ff4d6d}
 .hero p{color:#666;margin:10px 0 16px}
@@ -17,18 +18,20 @@ header b{font-size:20px} header b span{color:#ff4d6d}
 .search input{flex:1;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px}
 .search button{background:#ff4d6d;color:white;border:0;padding:13px 18px;border-radius:12px;font-weight:700}
 .filters{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none}
-.filters button{white-space:nowrap;padding:8px 16px;border-radius:20px;border:1px solid #ddd;background:white;font-weight:600}
+.filters button{white-space:nowrap;padding:8px 16px;border-radius:20px;border:1px solid #ddd;background:white;font-weight:600;cursor:pointer}
 .filters button.active{background:#111;color:white}
 .grid{padding:0 16px;display:grid;gap:16px;max-width:900px;margin:0 auto}
 .card{background:white;border:1px solid #eee;border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.05)}
 .card-top{height:140px;background:linear-gradient(135deg,#ff4d6d,#ff8fa3);display:flex;align-items:center;justify-content:center;font-size:60px}
 .card-body{padding:16px}
 .badge{font-size:11px;background:#fff0f3;color:#ff4d6d;padding:4px 8px;border-radius:20px;font-weight:700}
+.badge-new{background:#e6ffed;color:#15803d}
 .card-body h3{margin:8px 0 4px;font-size:19px}
 .muted{color:#777;font-size:13px}
 .services{margin:12px 0;display:flex;flex-wrap:wrap;gap:8px}
 .services span{background:#f7f7f7;padding:6px 10px;border-radius:20px;font-size:13px}
-.book-btn{width:100%;background:#111;color:white;padding:13px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
+.book-btn{width:100%;background:#111;color:white;padding:13px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px}
+.dir-btn{display:block;text-align:center;background:white;color:#111;border:1.5px solid #ddd;padding:11px;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;margin-top:8px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:50}
 .modal.open{display:flex}
 .sheet{background:white;width:100%;max-height:90vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px;padding-bottom:40px}
@@ -39,27 +42,29 @@ header b{font-size:20px} header b span{color:#ff4d6d}
 </head>
 <body>
 
-<header><b>BookMy<span>Salon</span></b><span>📍 East London</span></header>
+<header><b>BookMy<span>Salon</span></b><a href="register.html">+ Register Salon</a></header>
 
 <div class="hero">
 <h1>Book your next<br><span>glow-up</span> in seconds.</h1>
-<p>Real salons in East London. Real bookings. No waiting.</p>
+<p>Real salons in East London. Owned by real people. Book directly.</p>
 <div class="search">
-<input id="searchInput" placeholder="Search braids, nails, wig...">
+<input id="searchInput" placeholder="Search braids, nails, haircut, barber...">
 <button onclick="render()">Search</button>
 </div>
 </div>
 
 <div class="filters" id="filters">
 <button class="active" onclick="setArea('All',this)">All Areas</button>
-<button onclick="setArea('Southernwood',this)">Southernwood</button>
 <button onclick="setArea('Mdantsane',this)">Mdantsane</button>
+<button onclick="setArea('Southernwood',this)">Southernwood</button>
 <button onclick="setArea('Gonubie',this)">Gonubie</button>
+<button onclick="setArea('Quigney',this)">Quigney</button>
+<button onclick="setArea('Vincent',this)">Vincent</button>
+<button onclick="setArea('Beacon Bay',this)">Beacon Bay</button>
 </div>
 
-<div class="grid" id="grid"><p style="text-align:center;padding:20px">Loading real salons from database...</p></div>
+<div class="grid" id="grid"><p style="text-align:center;padding:20px">Loading real salons...</p></div>
 
-<!-- BOOKING MODAL -->
 <div class="modal" id="modal" onclick="if(event.target==this) closeModal()">
 <div class="sheet">
 <h2 id="modalTitle">Book Appointment</h2>
@@ -73,94 +78,4 @@ header b{font-size:20px} header b span{color:#ff4d6d}
 <label>Date</label>
 <input id="bookDate" type="date">
 <label>Time</label>
-<select id="bookTime"><option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option><option>13:00</option><option>14:00</option><option>15:00</option></select>
-<button class="book-btn" style="background:#ff4d6d" onclick="submitBooking()">Confirm Booking →</button>
-<div class="confirm" id="confirmBox">✅ Booking saved! The salon will contact you on WhatsApp to confirm.</div>
-</div>
-</div>
-
-<script>
-const SUPABASE_URL = "https://zkkyslypjukewacipyey.supabase.co";
-const SUPABASE_KEY = "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let salons = [];
-let currentArea = 'All';
-let currentSalon = null;
-
-async function loadSalons(){
-  const { data, error } = await supabaseClient.from('salons').select('*').order('created_at');
-  if(error){ document.getElementById('grid').innerHTML = '<p>Error loading: '+error.message+'</p>'; return; }
-  salons = data;
-  render();
-}
-
-function setArea(area, btn){
-  currentArea = area;
-  document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  render();
-}
-
-function render(){
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let filtered = salons.filter(s => {
-    if(currentArea!=='All' && s.area!==currentArea) return false;
-    if(q && !JSON.stringify(s.services).toLowerCase().includes(q) && !s.name.toLowerCase().includes(q)) return false;
-    return true;
-  });
-  if(filtered.length===0){
-    document.getElementById('grid').innerHTML = '<p style="text-align:center;padding:20px">No salons found. Try All Areas.</p>';
-    return;
-  }
-  document.getElementById('grid').innerHTML = filtered.map(s=>`
-    <div class="card">
-      <div class="card-top">💇‍♀️</div>
-      <div class="card-body">
-        <span class="badge">📍 ${s.area} • ⭐ ${s.rating}</span>
-        <h3>${s.name}</h3>
-        <p class="muted">${s.address} • ${s.phone}</p>
-        <div class="services">${(s.services||[]).map(x=>`<span>${x.name} - R${x.price}</span>`).join('')}</div>
-        <button class="book-btn" onclick='openModal(${JSON.stringify(s).replace(/'/g,"&#39;")})'>Book Now</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function openModal(salon){
-  currentSalon = salon;
-  document.getElementById('modalTitle').innerText = 'Book at ' + salon.name;
-  document.getElementById('modalSalon').innerText = salon.address;
-  document.getElementById('serviceSelect').innerHTML = (salon.services||[]).map(x=>`<option value="${x.name}|${x.price}">${x.name} - R${x.price}</option>`).join('');
-  document.getElementById('confirmBox').style.display='none';
-  document.getElementById('modal').classList.add('open');
-  document.getElementById('bookDate').value = new Date().toISOString().split('T')[0];
-}
-function closeModal(){ document.getElementById('modal').classList.remove('open'); }
-
-async function submitBooking(){
-  const name = document.getElementById('custName').value.trim();
-  const phone = document.getElementById('custPhone').value.trim();
-  const date = document.getElementById('bookDate').value;
-  const time = document.getElementById('bookTime').value;
-  if(!name || !phone || !date){ alert('Please fill name, phone and date'); return; }
-  const [service, price] = document.getElementById('serviceSelect').value.split('|');
-  const { error } = await supabaseClient.from('bookings').insert([{
-    salon_id: currentSalon.id,
-    customer_name: name,
-    customer_phone: phone,
-    service: service,
-    price: parseInt(price),
-    booking_date: date,
-    booking_time: time,
-    status: 'pending'
-  }]);
-  if(error){ alert('Error: '+error.message); return; }
-  document.getElementById('confirmBox').style.display='block';
-  setTimeout(closeModal, 2000);
-}
-
-loadSalons();
-</script>
-</body>
-                                                                                          </html>
+<select id="bookTime"><option>09:00
