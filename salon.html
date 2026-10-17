@@ -34,6 +34,7 @@ h1{font-size:28px;margin:8px 0 4px;line-height:1.1}
 .btnFull{width:100%;background:#2a0a45;color:#fff;padding:15px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}
 .btnCall{display:block;text-align:center;background:#f1f1f1;color:#111;text-decoration:none;padding:13px;border-radius:12px;font-weight:700;margin-top:8px}
 .btnShare{display:block;text-align:center;background:#fff;color:#2a0a45;border:1.5px solid #2a0a45;text-decoration:none;padding:12px;border-radius:12px;font-weight:700;margin-top:8px;cursor:pointer;width:100%}
+.btnMap{display:block;text-align:center;background:#c2a06e;color:#2a0a45;text-decoration:none;padding:14px;border-radius:12px;font-weight:800;margin-top:10px;font-size:15px}
 .stickyBar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;padding:12px 16px;z-index:60}
 .stickyBar .wrap{display:flex;gap:10px;padding:0}
 .stickyBar .btnFull{flex:1;margin:0}
@@ -48,6 +49,8 @@ input{width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font
 .success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:12px;color:#166534;font-size:14px}
 .small{font-size:13px;color:#777}
 .ownerBox{background:#f5f0ff;border:1px solid #e9dfff}
+.queueBox{background:#f5f0ff;border:1px solid #e9dfff;font-weight:800;font-size:15px;padding:14px;border-radius:14px;margin:12px 0}
+.mapFrame{width:100%;height:220px;border:0;border-radius:14px;margin-top:10px;background:#f5f5f5}
 </style>
 </head>
 <body>
@@ -57,6 +60,7 @@ input{width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font
 <div class="modal" id="bookingModal" onclick="if(event.target===this) closeBooking()">
 <div class="sheet">
 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><h2 id="bName">Book</h2><button onclick="closeBooking()" style="background:#f1f1f1;border:0;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px">✕</button></div>
+<p id="bookingQueue" style="font-weight:800;font-size:14px;margin-top:6px"></p>
 <label>Choose Service *</label><div id="serviceList"></div>
 <label>Your Name *</label><input id="customerName" placeholder="e.g. Sihle">
 <label>Your Phone *</label><input id="customerPhone" placeholder="e.g. 073 123 4567">
@@ -71,6 +75,10 @@ const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supab
 let salon=null, selectedService=null;
 function esc(t){return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function normalizePhone(p){return String(p||'').replace(/[^0-9]/g,'')}
+// --- QUEUE ---
+function queueText(s){ if(!s || !s.queue_enabled) return ''; const w=Number(s.people_waiting||0); const avg=Number(s.avg_service_minutes||30); const total=w*avg; if(w===0) return '🟢 No wait — Walk in now!'; if(total<60) return `⏳ ${w} waiting • ~${total} min wait`; return `⏳ ${w} waiting • ~${Math.floor(total/60)}h ${total%60}m wait`; }
+// --- MAP ---
+function openMap(){ if(!salon || !salon.address){ alert('No address for this salon'); return; } window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(salon.address + ', East London, South Africa'), '_blank'); }
 async function load(){
   const id=new URLSearchParams(location.search).get('id');
   if(!id){ document.getElementById('content').innerHTML='<p style="padding:40px;text-align:center">No salon selected. <a href="index.html">Go Home</a></p>'; return; }
@@ -79,12 +87,16 @@ async function load(){
   salon=data; document.title=data.name+' - BookMySalon';
   const photos=(data.photos && Array.isArray(data.photos) && data.photos.length>0)?data.photos:[data.photo_url].filter(Boolean);
   if(photos.length===0) photos.push('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80');
+  const qText=queueText(data);
+  const mapUrl='https://maps.google.com/maps?q=' + encodeURIComponent((data.address||'') + ', East London, South Africa') + '&output=embed';
   document.getElementById('stickyBar').style.display='block';
   document.getElementById('stickyCall').href='tel:'+data.owner_phone;
   document.getElementById('content').innerHTML=`
   <div class="gallery"><div class="gScroll" id="gScroll" onscroll="updateDots(${photos.length})">${photos.map(p=>`<img src="${p}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'">`).join('')}</div><div class="count"><span id="count">1</span> / ${photos.length}</div><div class="dots" id="dots">${photos.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('')}</div>
   <span class="badgeCat">${esc(data.category||'Salon')}</span>
   <h1>${esc(data.name)}</h1><p class="addr">📍 ${esc(data.address||'')}</p>
+  ${qText ? `<div class="queueBox">${qText}</div>` : ''}
+  <div class="card"><h3>📍 Location & Map</h3><p class="small">${esc(data.address||'No address listed')}</p><iframe class="mapFrame" loading="lazy" src="${mapUrl}"></iframe><a class="btnMap" href="javascript:void(0)" onclick="openMap()">🧭 Get Directions in Google Maps →</a></div>
   <div class="card"><h3>About ${esc(data.name)}</h3>${data.description ? `<p class="desc">${esc(data.description)}</p>` : `<p class="desc" style="color:#999">No description yet.</p>`}</div>
   <div class="card"><h3>Services & Prices</h3>${(data.services||[]).length===0 ? '<p class="small">No services listed.</p>' : (data.services||[]).map((s,i)=>`<div class="service"><div><b>${esc(s.name)}</b><div class="price">R${s.price}</div></div><button class="btnBook" onclick="openBooking(${i})">Book →</button></div>`).join('')}</div>
   <div class="card"><h3>Share this salon</h3><p class="small" style="margin-bottom:10px">Send this link to customers on WhatsApp, Facebook or TikTok.</p><button class="btnShare" onclick="shareSalon()">🔗 Copy Link / Share</button><a class="btnCall" href="tel:${data.owner_phone}">📞 Call ${esc(data.name)}</a></div>
@@ -93,7 +105,7 @@ async function load(){
 }
 function updateDots(total){ const el=document.getElementById('gScroll'); if(!el) return; const idx=Math.round(el.scrollLeft/el.clientWidth); const c=document.getElementById('count'); if(c) c.textContent=idx+1; document.querySelectorAll('#dots span').forEach((d,i)=>d.classList.toggle('active',i===idx)); }
 async function shareSalon(){ const url=location.href; const text=`Book at ${salon.name} on BookMySalon: ${url}`; if(navigator.share){ try{ await navigator.share({title:salon.name,text,url}); return; }catch(e){} } try{ await navigator.clipboard.writeText(url); alert('✅ Link copied! Paste it on WhatsApp / Facebook.'); } catch(e){ prompt('Copy this link:', url); } }
-function openBooking(i){ if(!salon.services || salon.services.length===0){ alert('No services listed for this salon yet.'); return; } selectedService=salon.services[i]||salon.services[0]; document.getElementById('bName').textContent='Book - '+salon.name; document.getElementById('bookingSuccess').style.display='none'; const today=new Date().toISOString().split('T')[0]; document.getElementById('bookingDate').value=today; document.getElementById('bookingDate').min=today; document.getElementById('bookingTime').value='10:00'; document.getElementById('serviceList').innerHTML=salon.services.map((s,idx)=>`<button type="button" class="serviceBtn ${idx===i?'active':''}" onclick="selectService(${idx})">${esc(s.name)} - R${s.price}</button>`).join(''); document.getElementById('bookingModal').classList.add('open'); }
+function openBooking(i){ if(!salon.services || salon.services.length===0){ alert('No services listed for this salon yet.'); return; } selectedService=salon.services[i]||salon.services[0]; document.getElementById('bName').textContent='Book - '+salon.name; document.getElementById('bookingQueue').textContent=queueText(salon); document.getElementById('bookingSuccess').style.display='none'; const today=new Date().toISOString().split('T')[0]; document.getElementById('bookingDate').value=today; document.getElementById('bookingDate').min=today; document.getElementById('bookingTime').value='10:00'; document.getElementById('serviceList').innerHTML=salon.services.map((s,idx)=>`<button type="button" class="serviceBtn ${idx===i?'active':''}" onclick="selectService(${idx})">${esc(s.name)} - R${s.price}</button>`).join(''); document.getElementById('bookingModal').classList.add('open'); }
 function selectService(i){ selectedService=salon.services[i]; document.querySelectorAll('.serviceBtn').forEach((b,idx)=>b.classList.toggle('active',idx===i)); }
 function closeBooking(){ document.getElementById('bookingModal').classList.remove('open'); }
 async function confirmBooking(){ const name=document.getElementById('customerName').value.trim(); const phone=normalizePhone(document.getElementById('customerPhone').value.trim()); const date=document.getElementById('bookingDate').value; const time=document.getElementById('bookingTime').value; if(!name||!phone){ alert('Enter your name and phone'); return; } if(!date||!time){ alert('Choose date and time'); return; } const btn=document.getElementById('confirmBtn'); btn.textContent='Booking...'; btn.disabled=true; const { error } = await supabaseClient.from('bookings').insert([{salon_id:salon.id,customer_name:name,customer_phone:phone,service:selectedService.name,price:selectedService.price,booking_date:date,booking_time:time,status:'pending'}]); btn.textContent='Confirm Booking →'; btn.disabled=false; if(error){ alert(error.message); return; } document.getElementById('bookingSuccess').style.display='block'; setTimeout(()=>{ closeBooking(); window.location.href='index.html'; },1200); }
