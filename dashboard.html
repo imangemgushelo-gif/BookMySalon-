@@ -12,9 +12,10 @@ body{background:#fff5f7;padding:20px;padding-bottom:60px}
 h1{font-size:26px} h1 span{color:#ff4d6d}
 p{color:#666;margin:8px 0 16px;font-size:14px}
 .card{background:white;padding:18px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:12px}
-input{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;margin:6px 0 10px}
+input,textarea{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;margin:6px 0 10px}
 .btn{width:100%;background:#111;color:white;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
 .btn-pink{background:#ff4d6d}
+.btn-green{background:#16a34a}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
 .pending{background:#fef9c3;color:#854d0e}
@@ -26,22 +27,26 @@ input{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-si
 .accept{background:#16a34a;color:white}
 .reject{background:#ef4444;color:white}
 a{color:#ff4d6d}
-.tabs{display:flex;gap:8px;margin:16px 0 10px}
-.tabs button{flex:1;padding:11px;border-radius:12px;border:1px solid #ddd;background:white;font-weight:700;cursor:pointer}
+.tabs{display:flex;gap:6px;margin:16px 0 10px}
+.tabs button{flex:1;padding:11px 6px;border-radius:12px;border:1px solid #ddd;background:white;font-weight:700;cursor:pointer;font-size:13px}
 .tabs button.active{background:#111;color:white;border-color:#111}
 .rating-big{font-size:32px;font-weight:800;text-align:center}
 .stars-gold{color:#ffc107;font-size:20px}
 .review{border-top:1px solid #eee;padding:10px 0}
-.review:last-child{border-bottom:0}
+.service-row{display:flex;gap:8px;margin-bottom:8px}
+.service-row input{margin:0}
+.service-row button{background:#fee2e2;border:0;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+label{font-weight:700;font-size:13px;display:block;margin-top:8px}
+.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:10px;font-size:14px}
 </style>
 </head>
 <body>
 <div class="box">
 <h1>Owner <span>Dashboard</span></h1>
-<p>Manage your bookings and see your reviews inside BookMySalon.</p>
+<p>Manage bookings, reviews and your salon info.</p>
 
 <div class="card" id="loginCard">
-<label style="font-weight:700;font-size:13px">Your Phone Number (used to register)</label>
+<label>Your Phone Number (used to register)</label>
 <input id="ownerPhone" placeholder="Enter your phone number">
 <button class="btn btn-pink" onclick="login()">View My Dashboard →</button>
 </div>
@@ -50,11 +55,13 @@ a{color:#ff4d6d}
 
 <div id="tabs" style="display:none" class="tabs">
   <button id="tabBookings" class="active" onclick="showTab('bookings')">📅 Bookings</button>
-  <button id="tabRatings" onclick="showTab('ratings')">⭐ My Reviews</button>
+  <button id="tabRatings" onclick="showTab('ratings')">⭐ Reviews</button>
+  <button id="tabEdit" onclick="showTab('edit')">✏️ Edit Salon</button>
 </div>
 
 <div id="bookings"></div>
 <div id="ratings" style="display:none"></div>
+<div id="edit" style="display:none"></div>
 
 <p style="text-align:center;margin-top:16px"><a href="index.html">← Back to Home</a> • <a href="register.html">Register Salon</a></p>
 </div>
@@ -62,16 +69,21 @@ a{color:#ff4d6d}
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let mySalonId = null;
+let mySalon = null;
 let currentTab = 'bookings';
+let editServices = [];
 
 function showTab(tab){
   currentTab = tab;
   document.getElementById('tabBookings').classList.toggle('active', tab==='bookings');
   document.getElementById('tabRatings').classList.toggle('active', tab==='ratings');
+  document.getElementById('tabEdit').classList.toggle('active', tab==='edit');
   document.getElementById('bookings').style.display = tab==='bookings' ? 'block' : 'none';
   document.getElementById('ratings').style.display = tab==='ratings' ? 'block' : 'none';
+  document.getElementById('edit').style.display = tab==='edit' ? 'block' : 'none';
   if(tab==='ratings') loadRatings();
   if(tab==='bookings') loadBookings();
+  if(tab==='edit') renderEditForm();
 }
 
 async function login(){
@@ -85,14 +97,15 @@ async function login(){
     document.getElementById('bookings').innerHTML = '';
     return;
   }
-  const salon = salons[0];
-  mySalonId = salon.id;
+  mySalon = salons[0];
+  mySalonId = mySalon.id;
+  editServices = [...(mySalon.services || [])];
   document.getElementById('tabs').style.display = 'flex';
   document.getElementById('salonInfo').innerHTML = `
     <div class="card">
-      <div class="row"><b style="font-size:18px">${salon.name}</b><span class="badge confirmed">LIVE</span></div>
-      <p class="small">${salon.address} • ${salon.phone}</p>
-      <p class="small">Services: ${salon.services && salon.services.length>0 ? salon.services.map(s=>s.name+' - R'+s.price).join(', ') : 'Not added yet'}</p>
+      <div class="row"><b style="font-size:18px">${mySalon.name}</b><span class="badge confirmed">LIVE</span></div>
+      <p class="small">${mySalon.address} • ${mySalon.phone}</p>
+      <p class="small">Services: ${mySalon.services && mySalon.services.length>0 ? mySalon.services.map(s=>s.name+' - R'+s.price).join(', ') : 'Not added yet'}</p>
       <div id="salonRatingSummary" class="small" style="margin-top:6px">Loading rating...</div>
     </div>
   `;
@@ -102,10 +115,7 @@ async function login(){
 
 async function loadRatingSummary(){
   const { data } = await supabaseClient.from('ratings').select('rating').eq('salon_id', mySalonId);
-  if(!data || data.length===0){
-    document.getElementById('salonRatingSummary').innerHTML = '⭐ New • No ratings yet';
-    return;
-  }
+  if(!data || data.length===0){ document.getElementById('salonRatingSummary').innerHTML = '⭐ New • No ratings yet'; return; }
   const avg = data.reduce((a,b)=>a+b.rating,0)/data.length;
   document.getElementById('salonRatingSummary').innerHTML = `⭐ <b style="color:#111;font-size:15px">${avg.toFixed(1)} average</b> • ${data.length} ${data.length===1?'review':'reviews'}`;
 }
@@ -113,10 +123,7 @@ async function loadRatingSummary(){
 async function loadBookings(){
   const { data, error } = await supabaseClient.from('bookings').select('*').eq('salon_id', mySalonId).order('booking_date', {ascending: true});
   if(error){ alert(error.message); return; }
-  if(!data || data.length===0){
-    document.getElementById('bookings').innerHTML = `<div class="card">No bookings yet.<br><span class="small">When customers book you, they will show here instantly. Keep checking here.</span></div>`;
-    return;
-  }
+  if(!data || data.length===0){ document.getElementById('bookings').innerHTML = `<div class="card">No bookings yet.<br><span class="small">When customers book you, they will show here instantly.</span></div>`; return; }
   document.getElementById('bookings').innerHTML = `<h3 style="margin:0 0 8px">📅 Bookings</h3>` + data.map(b=>{
     const badgeClass = b.status==='confirmed' ? 'confirmed' : b.status==='cancelled' ? 'cancelled' : 'pending';
     return `
@@ -135,10 +142,7 @@ async function loadBookings(){
 async function loadRatings(){
   const { data, error } = await supabaseClient.from('ratings').select('*').eq('salon_id', mySalonId).order('created_at', {ascending:false});
   if(error){ alert(error.message); return; }
-  if(!data || data.length===0){
-    document.getElementById('ratings').innerHTML = `<div class="card"><h3>⭐ My Reviews</h3><p class="small">No reviews yet. When customers rate you in My Bookings, they will show here.</p></div>`;
-    return;
-  }
+  if(!data || data.length===0){ document.getElementById('ratings').innerHTML = `<div class="card"><h3>⭐ My Reviews</h3><p class="small">No reviews yet. When customers rate you in My Bookings, they will show here.</p></div>`; return; }
   const avg = data.reduce((a,b)=>a+b.rating,0)/data.length;
   const stars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg));
   const breakdown = [5,4,3,2,1].map(n=>{
@@ -146,7 +150,6 @@ async function loadRatings(){
     const pct = Math.round(count/data.length*100);
     return `<div style="display:flex;gap:8px;align-items:center;font-size:13px"><span style="width:20px">${n}★</span><div style="flex:1;background:#eee;height:8px;border-radius:10px;overflow:hidden"><div style="width:${pct}%;background:#ffc107;height:8px"></div></div><span>${count}</span></div>`;
   }).join('');
-
   document.getElementById('ratings').innerHTML = `
     <div class="card">
       <h3>⭐ My Reviews</h3>
@@ -161,6 +164,71 @@ async function loadRatings(){
       return `<div class="card review"><div class="row"><span style="color:#ffc107">${rStars}</span><span class="small">${date}</span></div><p style="margin-top:6px">${r.comment ? r.comment : '<span class="small">No comment - just stars</span>'}</p><p class="small">From: ${r.customer_phone || 'Customer'}</p></div>`;
     }).join('')}
   `;
+}
+
+// ✏️ EDIT SALON
+function renderEditForm(){
+  if(!mySalon) return;
+  document.getElementById('edit').innerHTML = `
+    <div class="card">
+      <h3>✏️ Edit My Salon</h3>
+      <p class="small">Changes show instantly on the Home page.</p>
+      <label>Salon Name</label>
+      <input id="editName" value="${mySalon.name || ''}">
+      <label>Address / Area</label>
+      <input id="editAddress" value="${mySalon.address || ''}" placeholder="e.g. 12 Oxford Street, Southernwood">
+      <label>Phone Number</label>
+      <input id="editPhone" value="${mySalon.phone || ''}">
+      <label>Your Services & Prices</label>
+      <div id="editServicesList"></div>
+      <button class="btn" style="background:#f1f1f1;color:#111;margin-bottom:10px" onclick="addServiceRow()">+ Add Service</button>
+      <button class="btn btn-green" onclick="saveSalon()">💾 Save Changes</button>
+      <div class="success" id="saveSuccess">✅ Saved! Your salon is updated on the Home page.</div>
+    </div>
+  `;
+  renderServiceRows();
+}
+
+function renderServiceRows(){
+  const container = document.getElementById('editServicesList');
+  if(!container) return;
+  if(editServices.length===0) editServices.push({name:'', price:''});
+  container.innerHTML = editServices.map((s,i)=>`
+    <div class="service-row">
+      <input placeholder="Service e.g. Braids" value="${s.name || ''}" oninput="editServices[${i}].name=this.value">
+      <input placeholder="Price R" type="number" style="width:110px" value="${s.price || ''}" oninput="editServices[${i}].price=this.value">
+      <button onclick="removeService(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addServiceRow(){ editServices.push({name:'', price:''}); renderServiceRows(); }
+function removeService(i){ editServices.splice(i,1); if(editServices.length===0) editServices.push({name:'',price:''}); renderServiceRows(); }
+
+async function saveSalon(){
+  const name = document.getElementById('editName').value.trim();
+  const address = document.getElementById('editAddress').value.trim();
+  const phone = document.getElementById('editPhone').value.trim();
+  if(!name || !address || !phone){ alert('Please fill name, address and phone'); return; }
+  const cleanServices = editServices.filter(s=>s.name.trim()!=='').map(s=>({name:s.name.trim(), price: parseInt(s.price)||0}));
+  if(cleanServices.length===0){ alert('Add at least one service'); return; }
+
+  const { error } = await supabaseClient.from('salons').update({ name, address, phone, services: cleanServices }).eq('id', mySalonId);
+  if(error){ alert(error.message); return; }
+  mySalon = {...mySalon, name, address, phone, services: cleanServices};
+  editServices = [...cleanServices];
+  document.getElementById('salonInfo').innerHTML = `
+    <div class="card">
+      <div class="row"><b style="font-size:18px">${mySalon.name}</b><span class="badge confirmed">LIVE</span></div>
+      <p class="small">${mySalon.address} • ${mySalon.phone}</p>
+      <p class="small">Services: ${mySalon.services.map(s=>s.name+' - R'+s.price).join(', ')}</p>
+      <div id="salonRatingSummary" class="small" style="margin-top:6px"></div>
+    </div>
+  `;
+  loadRatingSummary();
+  const ok = document.getElementById('saveSuccess');
+  ok.style.display='block';
+  setTimeout(()=> ok.style.display='none', 4000);
 }
 
 async function updateStatus(id, status){
