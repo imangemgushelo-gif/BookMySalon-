@@ -73,6 +73,10 @@ input:focus,select:focus{border-color:#2a0a45}
 <a href="register.html">➕ Register Salon</a>
 <a href="dashboard.html">👤 Owner Dashboard</a>
 </div>
+<!-- ADD ONLY - Logout for customer / owner, stays hidden until logged in -->
+<div class="top-links" id="logoutRow" style="display:none">
+<a href="#" onclick="logoutUser();return false;" style="background:#f1f1f1">🚪 Logout</a>
+</div>
 <div class="tabs">
 <button id="tabHome" class="active" onclick="showTab('home')">🏠 Find Salon</button>
 <button id="tabMy" onclick="showTab('my')">📅 My Bookings</button>
@@ -246,6 +250,13 @@ document.getElementById('bookingSuccess').style.display='none';
 document.getElementById('modalServices').innerHTML = `<label style="font-weight:700;font-size:13px">Choose Service</label>` + (selectedSalon.services||[]).map((svc,i)=>`
 <button class="service-btn" id="svc-${i}" onclick="selectService(${i})"><span>${svc.name}</span><b>R${svc.price}</b></button>
 `).join('');
+// ADD ONLY - prefill customer details if remembered
+try{
+const n = localStorage.getItem('bms_customer_name');
+const p = localStorage.getItem('bms_customer_phone');
+if(n) document.getElementById('customerName').value = n;
+if(p) document.getElementById('customerPhone').value = p;
+}catch(e){}
 document.getElementById('bookingModal').classList.add('open');
 }
 function selectService(i){
@@ -262,6 +273,13 @@ const customer_phone = document.getElementById('customerPhone').value.trim();
 const booking_date = document.getElementById('bookingDate').value;
 const booking_time = document.getElementById('bookingTime').value;
 if(!customer_name || !customer_phone || !booking_date || !booking_time){ alert('Please fill all fields'); return; }
+// ADD ONLY - stay logged in as customer
+try{
+localStorage.setItem('bms_role','customer');
+localStorage.setItem('bms_customer_name', customer_name);
+localStorage.setItem('bms_customer_phone', customer_phone);
+updateLogoutVisibility();
+}catch(e){}
 const { error } = await supabaseClient.from('bookings').insert([{ salon_id:selectedSalon.id, service:selectedService.name, price:selectedService.price, customer_name, customer_phone, booking_date, booking_time, status:'pending' }]);
 if(error){ alert(error.message); return; }
 document.getElementById('bookingSuccess').style.display='block';
@@ -270,6 +288,12 @@ setTimeout(()=>{ closeModal(); showTab('my'); document.getElementById('myPhone')
 async function loadMyBookings(){
 const phone = document.getElementById('myPhone').value.trim();
 if(!phone){ alert('Enter your phone number'); return; }
+// ADD ONLY - remember customer when they view bookings
+try{
+localStorage.setItem('bms_role','customer');
+localStorage.setItem('bms_customer_phone', phone);
+updateLogoutVisibility();
+}catch(e){}
 const { data: bookings } = await supabaseClient.from('bookings').select('*, salons(name)').eq('customer_phone', phone).order('booking_date',{ascending:false});
 if(!bookings || bookings.length===0){
 document.getElementById('myBookingsList').innerHTML = `<div class="card">No bookings found for ${phone}.</div>`;
@@ -309,8 +333,41 @@ if(error){ alert(error.message); return; }
 document.getElementById('ratingSuccess').style.display='block';
 setTimeout(()=>{ closeRatingModal(); loadMyBookings(); loadSalons(); }, 1000);
 }
+// ADD ONLY - stay logged in helpers for customer
+function updateLogoutVisibility(){
+try{
+const hasLogin = localStorage.getItem('bms_customer_phone') || localStorage.getItem('bms_owner_phone');
+document.getElementById('logoutRow').style.display = hasLogin ? 'flex' : 'none';
+}catch(e){}
+}
+function logoutUser(){
+try{
+localStorage.removeItem('bms_role');
+localStorage.removeItem('bms_customer_phone');
+localStorage.removeItem('bms_customer_name');
+localStorage.removeItem('bms_owner_phone');
+localStorage.removeItem('bms_salon_id');
+}catch(e){}
+window.location.reload();
+}
+function restoreCustomerSession(){
+try{
+const phone = localStorage.getItem('bms_customer_phone');
+const name = localStorage.getItem('bms_customer_name');
+if(phone){
+document.getElementById('myPhone').value = phone;
+document.getElementById('customerPhone').value = phone;
+if(name) document.getElementById('customerName').value = name;
+// Auto-show their own bookings - they stay logged in until Logout
+showTab('my');
+loadMyBookings();
+}
+updateLogoutVisibility();
+}catch(e){}
+}
 document.getElementById('bookingDate').min = new Date().toISOString().split('T')[0];
 loadSalons();
+restoreCustomerSession();
 </script>
 </body>
-  </html>
+  </html>;
