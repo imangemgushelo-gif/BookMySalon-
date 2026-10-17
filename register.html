@@ -27,6 +27,7 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 .preview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .preview img{width:100%;height:110px;object-fit:cover;border-radius:12px}
 .success{background:#dcfce7;border:1px solid #86efac;padding:14px;border-radius:12px;color:#166534;display:none;margin-top:12px}
+.opt{font-weight:400;color:#888;font-size:11px}
 </style>
 </head>
 <body>
@@ -34,10 +35,10 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 <a href="index.html" style="display:inline-block;margin:14px 0;text-decoration:none;color:#2a0a45;font-weight:700">← Back to Home</a>
 <div class="logo">Book<span>My</span>Salon</div>
 <h1>Register Your Salon</h1>
-<p class="small">Fill this in once. Your salon gets its own page instantly.</p>
+<p class="small">Fill this in once. Your salon gets its own page instantly. Only Name + Phone are required — everything else is optional.</p>
 <div class="card">
 <label>Salon / Barbershop Name *</label><input id="name" placeholder="e.g. Tyler's barbershop">
-<label>Category *</label>
+<label>Category <span class="opt">(optional)</span></label>
 <select id="category">
 <option value="Barbershop">💈 Barbershop</option>
 <option value="Salon" selected>💇‍♀️ Salon</option>
@@ -46,14 +47,14 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 <option value="Beauty">✨ Beauty</option>
 <option value="Makeup">💄 Makeup</option>
 </select>
-<label>Owner Name *</label><input id="owner_name" placeholder="e.g. Tyler">
+<label>Owner Name <span class="opt">(optional - this is the Owner column)</span></label><input id="owner_name" placeholder="e.g. Tyler">
 <label>Owner Phone *</label><input id="owner_phone" placeholder="e.g. 073 123 4567">
-<label>Address / Location *</label><input id="address" placeholder="e.g. 5223 Nu2, Mdantsane, East London">
+<label>Address / Location <span class="opt">(optional)</span></label><input id="address" placeholder="e.g. 5223 Nu2, Mdantsane, East London">
 <p class="small">Tip: Include area like Mdantsane, NU2, East London so Location filter finds you.</p>
-<label>About Your Salon (Description)</label><textarea id="description" rows="3" placeholder="e.g. We specialize in fades, clean cuts and beard trims. Walk-ins welcome."></textarea>
-<label>Services & Prices *</label><div id="servicesEditor"></div>
+<label>About Your Salon (Description) <span class="opt">(optional)</span></label><textarea id="description" rows="3" placeholder="e.g. We specialize in fades, clean cuts and beard trims. Walk-ins welcome."></textarea>
+<label>Services & Prices <span class="opt">(optional - leave blank if you want)</span></label><div id="servicesEditor"></div>
 <button class="btn-light" onclick="addServiceRow()">+ Add Service</button>
-<label>Photos (up to 10) *</label><input type="file" id="photosInput" accept="image/*" multiple>
+<label>Photos (up to 10) <span class="opt">(optional)</span></label><input type="file" id="photosInput" accept="image/*" multiple>
 <div class="preview" id="preview"></div>
 <p class="small">First photo = cover photo. You can add / delete photos later in Dashboard.</p>
 <button class="btnFull" id="registerBtn" onclick="registerSalon()">Register My Salon →</button>
@@ -64,7 +65,7 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let services=[{name:'Fade',price:60},{name:'Cut + Beard',price:120}];
 let selectedFiles=[];
-function renderServices(){ document.getElementById('servicesEditor').innerHTML=services.map((s,i)=>`<div class="serviceRow"><input placeholder="Service e.g. Fade" value="${s.name.replace(/"/g,'')}" oninput="services[${i}].name=this.value"><input type="number" placeholder="Price" value="${s.price}" style="width:100px" oninput="services[${i}].price=this.value"><button class="del" onclick="removeService(${i})">✕</button></div>`).join(''); }
+function renderServices(){ document.getElementById('servicesEditor').innerHTML=services.map((s,i)=>`<div class="serviceRow"><input placeholder="Service e.g. Fade (optional)" value="${s.name.replace(/"/g,'')}" oninput="services[${i}].name=this.value"><input type="number" placeholder="Price" value="${s.price}" style="width:100px" oninput="services[${i}].price=this.value"><button class="del" onclick="removeService(${i})">✕</button></div>`).join(''); }
 function addServiceRow(){ services.push({name:'',price:''}); renderServices(); }
 function removeService(i){ services.splice(i,1); if(services.length===0) services.push({name:'',price:''}); renderServices(); }
 document.getElementById('photosInput').addEventListener('change',e=>{ selectedFiles=[...e.target.files].slice(0,10); const p=document.getElementById('preview'); p.innerHTML=''; selectedFiles.forEach(f=>{ const url=URL.createObjectURL(f); p.innerHTML+=`<img src="${url}">`; }); });
@@ -76,10 +77,12 @@ async function registerSalon(){
   const owner_phone=document.getElementById('owner_phone').value.trim();
   const address=document.getElementById('address').value.trim();
   const description=document.getElementById('description').value.trim();
-  if(!name||!owner_name||!owner_phone||!address){ alert('Please fill Name, Owner Name, Phone and Address'); return; }
+  // ONLY Name + Phone are required. Everything else is optional.
+  if(!name){ alert('Please enter Salon Name'); return; }
+  if(!owner_phone){ alert('Please enter Phone (so you can login to Dashboard later)'); return; }
+  // Services optional - can be empty
   const cleanServices=services.filter(s=>s.name.trim()!=='').map(s=>({name:s.name.trim(),price:Number(s.price)||0}));
-  if(cleanServices.length===0){ alert('Add at least 1 service'); return; }
-  if(selectedFiles.length===0){ alert('Please add at least 1 photo'); return; }
+  // Photos optional - can be empty
   const btn=document.getElementById('registerBtn'); btn.textContent='Registering...'; btn.disabled=true;
   let photos=[];
   for(let f of selectedFiles){
@@ -90,7 +93,15 @@ async function registerSalon(){
       else { photos.push(await fileToBase64(f)); }
     }catch(e){ photos.push(await fileToBase64(f)); }
   }
-  const { data, error } = await supabaseClient.from('salons').insert([{name,category,owner_name,owner_phone,address,description,services:cleanServices,photos:photos,photo_url:photos[0]}]).select().single();
+  // Try with owner_name first, fallback without it if column not yet created in Supabase
+  let data, error;
+  const res1 = await supabaseClient.from('salons').insert([{name,category,owner_name:owner_name||'',owner_phone,address:address||'',description:description||'',services:cleanServices,photos:photos,photo_url:photos[0]||null}]).select().single();
+  data=res1.data; error=res1.error;
+  if(error && String(error.message).includes('owner_name')){
+    const res2 = await supabaseClient.from('salons').insert([{name,category,owner_phone,address:address||'',description:description||'',services:cleanServices,photos:photos,photo_url:photos[0]||null}]).select().single();
+    data=res2.data; error=res2.error;
+    if(!error) alert('⚠️ Registered, but owner_name column is missing in Supabase. Run: ALTER TABLE salons ADD COLUMN IF NOT EXISTS owner_name text DEFAULT \'\';');
+  }
   btn.textContent='Register My Salon →'; btn.disabled=false;
   if(error){ alert('Error: '+error.message); return; }
   const box=document.getElementById('successBox'); box.style.display='block';
@@ -100,4 +111,4 @@ async function registerSalon(){
 renderServices();
 </script>
 </body>
-                                    </html>
+  </html>
