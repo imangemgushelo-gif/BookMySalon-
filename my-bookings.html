@@ -12,20 +12,23 @@ body{background:#fff5f7;padding:20px}
 h1{font-size:26px} h1 span{color:#ff4d6d}
 p{color:#666;margin:8px 0 16px;font-size:14px}
 .card{background:white;padding:18px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:12px}
-input{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;margin:6px 0 10px}
+input,textarea{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;margin:6px 0 10px}
 .btn{width:100%;background:#ff4d6d;color:white;padding:14px;border:0;border-radius:12px;font-weight:700;cursor:pointer}
 .badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
 .pending{background:#fef9c3;color:#854d0e}
 .confirmed{background:#dcfce7;color:#166534}
 .cancelled{background:#fee2e2;color:#991b1b}
 .small{font-size:13px;color:#777}
+.stars{font-size:28px;cursor:pointer;letter-spacing:4px}
+.stars span{color:#ddd}
+.stars span.active{color:#ffc107}
 a{color:#ff4d6d}
 </style>
 </head>
 <body>
 <div class="box">
 <h1>My <span>Bookings</span></h1>
-<p>Enter your phone number to see if your booking is confirmed. Stay in the app.</p>
+<p>Enter your phone number to see status and rate your salon.</p>
 <div class="card">
 <input id="custPhone" placeholder="Enter your phone number">
 <button class="btn" onclick="check()">Check My Bookings →</button>
@@ -35,6 +38,14 @@ a{color:#ff4d6d}
 </div>
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
+let selectedRating = 0;
+function setStars(n, bookingId){
+  selectedRating = n;
+  for(let i=1;i<=5;i++){
+    document.getElementById('star-'+bookingId+'-'+i).classList.toggle('active', i<=n);
+  }
+  document.getElementById('rate-btn-'+bookingId).style.display='block';
+}
 async function check(){
   const phone = document.getElementById('custPhone').value.trim();
   if(!phone){ alert('Enter your phone number'); return; }
@@ -45,8 +56,34 @@ async function check(){
   document.getElementById('results').innerHTML = data.map(b=>{
     const cls = b.status==='confirmed'?'confirmed':b.status==='cancelled'?'cancelled':'pending';
     const msg = b.status==='confirmed' ? '✅ Confirmed! Show up on time.' : b.status==='pending' ? '⏳ Waiting for salon to confirm. Check back here.' : '❌ Cancelled by salon. Please book again.';
-    return `<div class="card"><b>${b.salons?.name||'Salon'}</b> <span class="badge ${cls}">${b.status.toUpperCase()}</span><p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}</p><p class="small">${b.salons?.address||''}</p><p style="font-weight:700;margin-top:8px">${msg}</p></div>`;
+    let rateBox = '';
+    if(b.status==='confirmed'){
+      rateBox = `<div style="margin-top:12px;border-top:1px solid #eee;padding-top:12px">
+        <b style="font-size:14px">⭐ Rate this salon</b>
+        <div class="stars" id="stars-${b.id}">
+          <span id="star-${b.id}-1" onclick="setStars(1,'${b.id}')">★</span>
+          <span id="star-${b.id}-2" onclick="setStars(2,'${b.id}')">★</span>
+          <span id="star-${b.id}-3" onclick="setStars(3,'${b.id}')">★</span>
+          <span id="star-${b.id}-4" onclick="setStars(4,'${b.id}')">★</span>
+          <span id="star-${b.id}-5" onclick="setStars(5,'${b.id}')">★</span>
+        </div>
+        <textarea id="comment-${b.id}" placeholder="How was it? (optional)"></textarea>
+        <button class="btn" id="rate-btn-${b.id}" style="display:none" onclick="submitRating('${b.salon_id}','${b.id}')">Submit Rating</button>
+        <p class="small">Tap a star to rate. Your rating shows on the salon's page.</p>
+      </div>`;
+    }
+    return `<div class="card"><b>${b.salons?.name||'Salon'}</b> <span class="badge ${cls}">${b.status.toUpperCase()}</span><p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}</p><p class="small">${b.salons?.address||''}</p><p style="font-weight:700;margin-top:8px">${msg}</p>${rateBox}</div>`;
   }).join('');
+}
+async function submitRating(salonId, bookingId){
+  if(selectedRating===0){ alert('Please tap a star first'); return; }
+  const phone = document.getElementById('custPhone').value.trim();
+  const comment = document.getElementById('comment-'+bookingId).value;
+  const { error } = await supabaseClient.from('ratings').insert([{salon_id: salonId, booking_id: bookingId, customer_phone: phone, rating: selectedRating, comment}]);
+  if(error){ alert(error.message); return; }
+  alert('Thanks! Your rating is saved ⭐');
+  selectedRating = 0;
+  check();
 }
 </script>
 </body>
