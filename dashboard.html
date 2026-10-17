@@ -42,7 +42,7 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 <body>
 <div class="box">
 <div class="logo">Book<span>My</span>Salon</div>
-<p style="margin:10px 0"><a href="index.html">← Back to home</a></p>
+<p style="margin:10px 0"><a href="index.html">← Back to home</a> <span id="logoutRow" style="display:none;float:right"><a href="#" onclick="logoutUser();return false;" style="font-size:13px;color:#666">🚪 Logout</a></span></p>
 <h1>Owner Dashboard 👤</h1>
 <p class="small">Manage your bookings, services & profile.</p>
 
@@ -53,6 +53,23 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 </div>
 
 <div id="dashboardContent"></div>
+</div>
+
+<!-- ADD ONLY - Edit Salon Modal -->
+<div id="editSalonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:20px;max-width:500px;margin:40px auto">
+    <h2 style="margin-top:0">Edit Salon</h2>
+    <label style="font-weight:700;font-size:13px">Salon Name</label>
+    <input id="edit_salon_name">
+    <label style="font-weight:700;font-size:13px">Address</label>
+    <input id="edit_salon_address">
+    <label style="font-weight:700;font-size:13px">Phone</label>
+    <input id="edit_salon_phone">
+    <label style="font-weight:700;font-size:13px">Description</label>
+    <input id="edit_salon_desc">
+    <button class="btn" onclick="saveEditSalon()">Save Changes</button>
+    <button class="btn" style="background:#eee;color:#111;margin-top:8px" onclick="document.getElementById('editSalonModal').style.display='none'">Cancel</button>
+  </div>
 </div>
 
 <script>
@@ -67,12 +84,26 @@ async function loadDashboard(){
     return;
   }
   salon=salons[0];
+  // ADD ONLY - remember owner login + expose salon for Edit/View
+  try{
+    localStorage.setItem('bms_role','owner');
+    localStorage.setItem('bms_owner_phone', phone);
+    localStorage.setItem('bms_salon_id', salon.id);
+    window.currentSalon = salon;
+    window.salon = salon;
+    updateLogoutVisibility();
+  }catch(e){}
   const {data} = await supabaseClient.from('bookings').select('*').eq('salon_id',salon.id).order('booking_date',{ascending:false});
   bookings=data||[];
   const {data:ratings} = await supabaseClient.from('ratings').select('*').eq('salon_id',salon.id).order('created_at',{ascending:false});
   const avg = ratings && ratings.length ? (ratings.reduce((a,b)=>a+b.rating,0)/ratings.length).toFixed(1) : 'New';
   document.getElementById('dashboardContent').innerHTML=`
   <div class="card"><h2>${salon.name}</h2><p class="small">${salon.address||''}</p><p style="margin-top:8px">⭐ ${avg} (${ratings?ratings.length:0} reviews) • ${bookings.length} bookings</p></div>
+  <!-- ADD ONLY - Edit + View Salon buttons -->
+  <div style="display:flex;gap:10px;margin:14px 0">
+    <button class="btn" style="background:#fff;color:#111;border:2px solid #111" onclick="openEditSalon()">✏️ Edit Salon</button>
+    <button class="btn" onclick="viewMySalon()">👁️ View Salon</button>
+  </div>
   <div class="tabs"><button class="active" id="tB" onclick="showD('b')">📅 Bookings</button><button id="tR" onclick="showD('r')">⭐ Reviews</button><button id="tS" onclick="showD('s')">✂️ Services</button></div>
   <div id="dB"></div><div id="dR" style="display:none"></div><div id="dS" style="display:none"></div>`;
   renderBookings(); renderReviews(ratings||[]); renderServices();
@@ -115,6 +146,70 @@ async function removeService(i){
   await supabaseClient.from('salons').update({services}).eq('id',salon.id);
   loadDashboard();
 }
+// ADD ONLY - Edit Salon, View Salon, Stay Logged In, Logout
+function openEditSalon(){
+  if(!salon){ alert('Load your salon first'); return; }
+  document.getElementById('edit_salon_name').value = salon.name || '';
+  document.getElementById('edit_salon_address').value = salon.address || '';
+  document.getElementById('edit_salon_phone').value = salon.phone || '';
+  document.getElementById('edit_salon_desc').value = salon.description || '';
+  document.getElementById('editSalonModal').style.display = 'block';
+}
+async function saveEditSalon(){
+  if(!salon) return;
+  const updates = {
+    name: document.getElementById('edit_salon_name').value.trim(),
+    address: document.getElementById('edit_salon_address').value.trim(),
+    phone: document.getElementById('edit_salon_phone').value.trim(),
+    description: document.getElementById('edit_salon_desc').value.trim()
+  };
+  if(!updates.name){ alert('Salon name is required'); return; }
+  const { error } = await supabaseClient.from('salons').update(updates).eq('id', salon.id);
+  if(error){ alert(error.message); return; }
+  alert('Salon updated!');
+  document.getElementById('editSalonModal').style.display = 'none';
+  // If phone changed, keep owner logged in with new phone
+  try{ localStorage.setItem('bms_owner_phone', updates.phone); }catch(e){}
+  document.getElementById('ownerPhone').value = updates.phone;
+  loadDashboard();
+}
+function viewMySalon(){
+  if(salon && salon.id){
+    window.location.href = 'salon.html?id=' + salon.id;
+  } else {
+    const savedId = localStorage.getItem('bms_salon_id');
+    if(savedId) window.location.href = 'salon.html?id=' + savedId;
+    else alert('Load your salon first');
+  }
+}
+function updateLogoutVisibility(){
+  try{
+    const hasLogin = localStorage.getItem('bms_owner_phone');
+    document.getElementById('logoutRow').style.display = hasLogin ? 'inline' : 'none';
+  }catch(e){}
+}
+function logoutUser(){
+  try{
+    localStorage.removeItem('bms_role');
+    localStorage.removeItem('bms_owner_phone');
+    localStorage.removeItem('bms_salon_id');
+    localStorage.removeItem('bms_customer_phone');
+    localStorage.removeItem('bms_customer_name');
+  }catch(e){}
+  window.location.href = 'index.html';
+}
+function restoreOwnerSession(){
+  try{
+    const savedPhone = localStorage.getItem('bms_owner_phone');
+    const role = localStorage.getItem('bms_role');
+    updateLogoutVisibility();
+    if(role === 'owner' && savedPhone){
+      document.getElementById('ownerPhone').value = savedPhone;
+      loadDashboard();
+    }
+  }catch(e){}
+}
+restoreOwnerSession();
 </script>
 </body>
-</html>
+  </html>
