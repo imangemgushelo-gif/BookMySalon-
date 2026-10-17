@@ -77,4 +77,116 @@ header a{background:#ff4d6d;color:white;padding:8px 12px;border-radius:20px;text
 <label>Date</label>
 <input id="bookDate" type="date">
 <label>Time</label>
-<select id="bookTime"><option>09:00
+<select id="bookTime"><option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option><option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option><option>17:00</option></select>
+<button class="book-btn" onclick="submitBooking()">Confirm Booking</button>
+<div class="confirm" id="confirmBox">✅ Booking request sent! Check <b>My Bookings</b> to see if the salon confirms it.</div>
+<button class="book-btn" style="background:#eee;color:#111;margin-top:10px" onclick="closeModal()">Close</button>
+</div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
+let allSalons = [];
+let currentArea = 'All';
+let currentSalon = null;
+let currentSalonId = null;
+
+// ⭐ NEW: Get real average rating for a salon
+async function getAverageRating(salonId){
+  const { data } = await supabaseClient.from('ratings').select('rating').eq('salon_id', salonId);
+  if(!data || data.length===0) return '⭐ New • No ratings yet';
+  const avg = data.reduce((a,b)=>a+b.rating,0) / data.length;
+  return `⭐ ${avg.toFixed(1)} (${data.length} ${data.length===1?'rating':'ratings'})`;
+}
+
+async function loadSalons(){
+  const { data, error } = await supabaseClient.from('salons').select('*').order('created_at', {ascending:false});
+  if(error){ document.getElementById('grid').innerHTML = '<p>Error loading salons</p>'; return; }
+  allSalons = data || [];
+  render();
+}
+
+async function render(){
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = allSalons.filter(s => {
+    const matchesArea = currentArea==='All' || (s.address && s.address.toLowerCase().includes(currentArea.toLowerCase()));
+    const matchesSearch = !q || s.name.toLowerCase().includes(q) || (s.services && JSON.stringify(s.services).toLowerCase().includes(q)) || (s.address && s.address.toLowerCase().includes(q));
+    return matchesArea && matchesSearch;
+  });
+
+  if(filtered.length===0){
+    document.getElementById('grid').innerHTML = '<p style="text-align:center;padding:20px">No salons found in this area yet.<br><a href="register.html">Be the first to register</a></p>';
+    return;
+  }
+
+  // ⭐ NEW: Fetch ratings for all salons at once (faster)
+  const { data: allRatings } = await supabaseClient.from('ratings').select('salon_id, rating');
+  const ratingMap = {};
+  if(allRatings){
+    allRatings.forEach(r=>{
+      if(!ratingMap[r.salon_id]) ratingMap[r.salon_id] = [];
+      ratingMap[r.salon_id].push(r.rating);
+    });
+  }
+  function ratingText(salonId){
+    const list = ratingMap[salonId];
+    if(!list || list.length===0) return '⭐ New • No ratings yet';
+    const avg = list.reduce((a,b)=>a+b,0)/list.length;
+    return `⭐ ${avg.toFixed(1)} (${list.length} ${list.length===1?'rating':'ratings'})`;
+  }
+
+  document.getElementById('grid').innerHTML = filtered.map(s=>{
+    const services = s.services || [];
+    const servicesHtml = services.map(sv=>`<span>${sv.name} - R${sv.price}</span>`).join('');
+    const emoji = s.name.toLowerCase().includes('barber') ? '💈' : s.name.toLowerCase().includes('nail') ? '💅' : '💇‍♀️';
+    return `
+    <div class="card">
+      <div class="card-top">${emoji}</div>
+      <div class="card-body">
+        <span class="badge">${s.address || 'East London'}</span> <span class="badge badge-new">${ratingText(s.id)}</span>
+        <h3>${s.name}</h3>
+        <p class="muted">${s.address || ''} • ${s.phone || ''}</p>
+        <div class="services">${servicesHtml || '<span>Services on booking</span>'}</div>
+        <button class="book-btn" onclick='openModal(${JSON.stringify(s).replace(/'/g, "&#39;")})'>Book Now →</button>
+        <a class="dir-btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address + ' East London')}">📍 Get Directions</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setArea(area, el){
+  currentArea = area;
+  document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function openModal(salon){
+  currentSalon = salon;
+  currentSalonId = salon.id;
+  document.getElementById('modalTitle').innerText = 'Book at ' + salon.name;
+  document.getElementById('modalSalon').innerText = salon.address + ' • ' + salon.phone;
+  const services = salon.services || [];
+  document.getElementById('serviceSelect').innerHTML = services.length>0 ? services.map(s=>`<option value="${s.name}|${s.price}">${s.name} - R${s.price}</option>`).join('') : '<option value="General|0">General Service</option>';
+  document.getElementById('confirmBox').style.display='none';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+async function submitBooking(){
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const serviceVal = document.getElementById('serviceSelect').value;
+  const date = document.getElementById('bookDate').value;
+  const time = document.getElementById('bookTime').value;
+  if(!name || !phone || !date){ alert('Please fill in name, phone and date'); return; }
+  const [service, price] = serviceVal.split('|');
+  const { error } = await supabaseClient.from('bookings').insert([{ salon_id: currentSalonId, customer_name: name, customer_phone: phone, service: service, price: parseInt(price)||0, booking_date: date, booking_time: time, status: 'pending' }]);
+  if(error){ alert(error.message); return; }
+  document.getElementById('confirmBox').style.display='block';
+}
+
+loadSalons();
+</script>
+</body>
+  </html>
