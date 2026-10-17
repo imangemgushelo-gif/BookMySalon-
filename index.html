@@ -4,22 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BookMySalon - Find & Book Salons in East London</title>
-<meta name="description" content="Find and book salons, barbershops and beauty salons in East London.">
 <meta name="theme-color" content="#2a0a45">
-<link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
 body{background:#fff;color:#111;padding-bottom:90px}
 .topbar{background:#fff;padding:14px 16px 10px;position:sticky;top:0;z-index:50;border-bottom:1px solid #f0f0f0}
-.logo{font-size:30px;font-weight:900;color:#2a0a45;letter-spacing:-0.5px}
+.logo{font-size:30px;font-weight:900;color:#2a0a45}
 .logo span{color:#c2a06e}
 .topbar p{font-size:13px;color:#666;margin-top:2px}
 .wrap{max-width:700px;margin:0 auto;padding:0 16px}
 .tabs{display:flex;gap:8px;margin:14px 0}
 .tabs button{flex:1;padding:12px;border-radius:14px;border:1px solid #e5e5e5;background:#fff;font-weight:700;cursor:pointer;font-size:14px}
 .tabs button.active{background:#2a0a45;color:#fff;border-color:#2a0a45}
-.search{width:100%;padding:13px 14px 13px 42px;border:1.5px solid #e5e5e5;border-radius:14px;font-size:15px;outline:none;background:#fff}
+.search{width:100%;padding:13px 14px 13px 42px;border:1.5px solid #e5e5e5;border-radius:14px;font-size:15px;outline:none}
 .searchWrap{position:relative;margin-bottom:14px}
 .searchWrap:before{content:"🔍";position:absolute;left:14px;top:13px}
 .search:focus{border-color:#2a0a45}
@@ -48,7 +46,6 @@ body{background:#fff;color:#111;padding-bottom:90px}
 .btnCall{background:#f1f1f1;color:#111;text-decoration:none;padding:12px 14px;border-radius:12px;font-weight:700;font-size:14px}
 .empty{text-align:center;padding:40px 10px;color:#777}
 .empty b{color:#111;font-size:18px;display:block;margin-bottom:6px}
-/* Modal */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}
 .sheet{background:#fff;width:100%;max-width:600px;border-radius:22px 22px 0 0;padding:20px 18px 28px;max-height:92vh;overflow-y:auto}
@@ -66,233 +63,137 @@ input:focus{border-color:#2a0a45}
 .bookingItem{background:#fff;border:1px solid #eee;border-radius:16px;padding:14px;margin-bottom:10px}
 .badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:800}
 .small{font-size:13px;color:#777}
-.stars{font-size:26px;letter-spacing:4px;cursor:pointer}
-.star{cursor:pointer;color:#ddd}
+.star{cursor:pointer;color:#ddd;font-size:24px}
 .star.on{color:#f59e0b}
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <div class="wrap" style="padding:0">
-    <div class="logo">Book<span>My</span>Salon</div>
-    <p>Find & book salons in East London • Mdantsane • NU2</p>
-  </div>
-</div>
-
+<div class="topbar"><div class="wrap" style="padding:0"><div class="logo">Book<span>My</span>Salon</div><p>Find & book salons in East London • Mdantsane • NU2</p></div></div>
 <div class="wrap">
-  <div class="tabs">
-    <button id="tabFind" class="active" onclick="showTab('find')">🏠 Find Salon</button>
-    <button id="tabMy" onclick="showTab('my')">📅 My Bookings</button>
-  </div>
-
-  <!-- FIND TAB -->
-  <div id="findTab">
-    <div class="searchWrap">
-      <input class="search" id="searchInput" placeholder="Search salon or service e.g. Braids" oninput="renderSalons()">
-    </div>
-    <div class="actions">
-      <a href="register.html" class="btn-purple">+ Register Salon</a>
-      <a href="dashboard.html" class="btn-light">Owner Dashboard</a>
-    </div>
-    <div class="sectionTitle">Salons Near You</div>
-    <div id="salonList"><div class="empty">Loading salons...</div></div>
-  </div>
-
-  <!-- MY BOOKINGS TAB -->
-  <div id="myTab" style="display:none">
-    <label>Enter your phone number to see your bookings</label>
-    <input id="myPhone" placeholder="e.g. 073 771 5535">
-    <button class="btnFull" onclick="loadMyBookings()">View My Bookings</button>
-    <div id="myBookingsList" style="margin-top:16px"></div>
-  </div>
+<div class="tabs"><button id="tabFind" class="active" onclick="showTab('find')">🏠 Find Salon</button><button id="tabMy" onclick="showTab('my')">📅 My Bookings</button></div>
+<div id="findTab">
+<div class="searchWrap"><input class="search" id="searchInput" placeholder="Search salon or service e.g. Braids" oninput="renderSalons()"></div>
+<div class="actions"><a href="register.html" class="btn-purple">+ Register Salon</a><a href="dashboard.html" class="btn-light">Owner Dashboard</a></div>
+<div class="sectionTitle">Salons Near You</div>
+<div id="salonList"><div class="empty">Loading salons...</div></div>
 </div>
-
-<!-- BOOKING MODAL -->
+<div id="myTab" style="display:none">
+<label>Enter your phone number to see your bookings</label>
+<input id="myPhone" placeholder="e.g. 073 771 5535">
+<button class="btnFull" onclick="loadMyBookings()">View My Bookings</button>
+<div id="myBookingsList" style="margin-top:16px"></div>
+</div>
+</div>
 <div class="modal" id="bookingModal" onclick="if(event.target===this) closeBooking()">
-  <div class="sheet">
-    <div class="sheetHead">
-      <div>
-        <h2 id="bookingSalonName">Salon Name</h2>
-        <p class="small" id="bookingSalonAddress"></p>
-      </div>
-      <button class="close" onclick="closeBooking()">✕</button>
-    </div>
-
-    <label>Choose Service *</label>
-    <div id="serviceList"></div>
-
-    <label>Your Name *</label>
-    <input id="customerName" placeholder="e.g. Sihle">
-
-    <label>Your Phone *</label>
-    <input id="customerPhone" placeholder="e.g. 073 123 4567">
-
-    <label>Date *</label>
-    <input type="date" id="bookingDate">
-
-    <label>Time *</label>
-    <input type="time" id="bookingTime" value="10:00">
-
-    <button class="btnFull" id="confirmBtn" onclick="confirmBooking()">Confirm Booking →</button>
-    <div class="success" id="bookingSuccess">✅ Booking requested! The salon will confirm it. Check My Bookings for status.</div>
-  </div>
+<div class="sheet">
+<div class="sheetHead"><div><h2 id="bookingSalonName">Salon Name</h2><p class="small" id="bookingSalonAddress"></p></div><button class="close" onclick="closeBooking()">✕</button></div>
+<label>Choose Service *</label><div id="serviceList"></div>
+<label>Your Name *</label><input id="customerName" placeholder="e.g. Sihle">
+<label>Your Phone *</label><input id="customerPhone" placeholder="e.g. 073 123 4567">
+<label>Date *</label><input type="date" id="bookingDate">
+<label>Time *</label><input type="time" id="bookingTime" value="10:00">
+<button class="btnFull" id="confirmBtn" onclick="confirmBooking()">Confirm Booking →</button>
+<div class="success" id="bookingSuccess">✅ Booking requested! The salon will confirm it. Check My Bookings for status.</div>
 </div>
-
+</div>
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let salons = [];
 let currentSalon = null;
 let selectedService = null;
-
+function normalizePhone(p){ return String(p||'').replace(/[^0-9]/g,''); }
 function showTab(tab){
   document.getElementById('tabFind').classList.toggle('active', tab==='find');
   document.getElementById('tabMy').classList.toggle('active', tab==='my');
   document.getElementById('findTab').style.display = tab==='find' ? 'block' : 'none';
   document.getElementById('myTab').style.display = tab==='my' ? 'block' : 'none';
 }
-
 async function loadSalons(){
-  const { data, error } = await supabaseClient.from('salons').select('*').order('created_at', {ascending:false});
-  if(error){ document.getElementById('salonList').innerHTML = '<div class="empty"><b>Could not load salons</b>'+error.message+'</div>'; return; }
+  const { data, error } = await supabaseClient.from('salons').select('*').order('created_at',{ascending:false});
+  if(error){ document.getElementById('salonList').innerHTML='<div class="empty"><b>Could not load salons</b>'+error.message+'</div>'; return; }
   salons = data || [];
   renderSalons();
 }
-
 function getPhotos(s){
   if(s.photos && Array.isArray(s.photos) && s.photos.length>0) return s.photos;
   if(s.photo_url) return [s.photo_url];
   return ['https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'];
 }
-
 function renderSalons(){
-  const q = (document.getElementById('searchInput').value || '').toLowerCase();
-  const filtered = salons.filter(s => {
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const filtered = salons.filter(s=>{
     if(!q) return true;
-    const servicesText = (s.services||[]).map(x=>x.name).join(' ').toLowerCase();
-    return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || servicesText.includes(q);
+    const st=(s.services||[]).map(x=>x.name).join(' ').toLowerCase();
+    return s.name.toLowerCase().includes(q) || (s.address||'').toLowerCase().includes(q) || st.includes(q);
   });
-  if(filtered.length===0){
-    document.getElementById('salonList').innerHTML = '<div class="empty"><b>No salons found</b>Try a different search or be the first to register.</div>';
-    return;
-  }
-  document.getElementById('salonList').innerHTML = filtered.map(s => {
-    const photos = getPhotos(s);
-    const services = (s.services||[]).map(x=>`<span>${x.name} - R${x.price}</span>`).join('');
-    return `
-    <div class="card">
-      <div class="gallery">
-        <div class="galleryScroll" id="gal-${s.id}" onscroll="updateDots('${s.id}', ${photos.length})">
-          ${photos.map(p=>`<img src="${p}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'">`).join('')}
-        </div>
-        ${photos.length>1 ? `<div class="badgeCount"><span id="count-${s.id}">1</span> / ${photos.length}</div><div class="dots" id="dots-${s.id}">${photos.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('')}</div>` : ''}
-      </div>
-      <div class="cardBody">
-        <h3>${escapeHtml(s.name)}</h3>
-        <div class="addr">📍 ${escapeHtml(s.address||'')}</div>
-        <div class="services">${services || '<span>No services listed</span>'}</div>
-        <div class="row" style="margin-top:12px">
-          <a class="btnCall" href="tel:${s.owner_phone}">📞 Call</a>
-          <button class="btn btnBook" onclick="openBooking('${s.id}')">Book Now →</button>
-        </div>
-      </div>
-    </div>`;
+  if(filtered.length===0){ document.getElementById('salonList').innerHTML='<div class="empty"><b>No salons found</b>Try a different search or be the first to register.</div>'; return; }
+  document.getElementById('salonList').innerHTML = filtered.map(s=>{
+    const photos=getPhotos(s);
+    const services=(s.services||[]).map(x=>`<span>${escapeHtml(x.name)} - R${x.price}</span>`).join('');
+    return `<div class="card"><div class="gallery"><div class="galleryScroll" id="gal-${s.id}" onscroll="updateDots('${s.id}',${photos.length})">${photos.map(p=>`<img src="${p}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'">`).join('')}</div>${photos.length>1?`<div class="badgeCount"><span id="count-${s.id}">1</span> / ${photos.length}</div><div class="dots" id="dots-${s.id}">${photos.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('')}</div>`:''}</div><div class="cardBody"><h3>${escapeHtml(s.name)}</h3><div class="addr">📍 ${escapeHtml(s.address||'')}</div><div class="services">${services||'<span>No services listed</span>'}</div><div class="row" style="margin-top:12px"><a class="btnCall" href="tel:${s.owner_phone}">📞 Call</a><button class="btn btnBook" onclick="openBooking('${s.id}')">Book Now →</button></div></div></div>`;
   }).join('');
 }
-
-function updateDots(id, total){
-  const el = document.getElementById('gal-'+id);
-  if(!el) return;
-  const idx = Math.round(el.scrollLeft / el.clientWidth);
-  const countEl = document.getElementById('count-'+id);
-  if(countEl) countEl.textContent = idx+1;
-  const dots = document.querySelectorAll('#dots-'+id+' span');
-  dots.forEach((d,i)=> d.classList.toggle('active', i===idx));
+function updateDots(id,total){
+  const el=document.getElementById('gal-'+id); if(!el) return;
+  const idx=Math.round(el.scrollLeft/el.clientWidth);
+  const c=document.getElementById('count-'+id); if(c) c.textContent=idx+1;
+  document.querySelectorAll('#dots-'+id+' span').forEach((d,i)=>d.classList.toggle('active',i===idx));
 }
-
-function escapeHtml(t){ return String(t||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
+function escapeHtml(t){ return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function openBooking(salonId){
-  currentSalon = salons.find(s => s.id === salonId);
-  if(!currentSalon) return;
-  // AUTO-SELECT first service so "Please choose a service" never happens
-  selectedService = (currentSalon.services && currentSalon.services.length>0) ? currentSalon.services[0] : null;
-  document.getElementById('bookingSalonName').textContent = currentSalon.name;
-  document.getElementById('bookingSalonAddress').textContent = currentSalon.address || '';
+  currentSalon=salons.find(s=>s.id===salonId); if(!currentSalon) return;
+  selectedService=(currentSalon.services && currentSalon.services.length>0)?currentSalon.services[0]:null;
+  document.getElementById('bookingSalonName').textContent=currentSalon.name;
+  document.getElementById('bookingSalonAddress').textContent=currentSalon.address||'';
   document.getElementById('bookingSuccess').style.display='none';
   document.getElementById('customerName').value='';
   document.getElementById('customerPhone').value='';
-  // Default date = today, time = 10:00
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('bookingDate').value = today;
-  document.getElementById('bookingDate').min = today;
-  document.getElementById('bookingTime').value = '10:00';
-  const box = document.getElementById('serviceList');
-  if(!currentSalon.services || currentSalon.services.length===0){
-    box.innerHTML = '<p class="small">No services listed for this salon.</p>';
-  } else {
-    box.innerHTML = currentSalon.services.map((s,i)=>`<button type="button" class="serviceBtn ${i===0?'active':''}" onclick="selectService(${i})">${escapeHtml(s.name)} - R${s.price}</button>`).join('');
-  }
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('bookingDate').value=today;
+  document.getElementById('bookingDate').min=today;
+  document.getElementById('bookingTime').value='10:00';
+  const box=document.getElementById('serviceList');
+  if(!currentSalon.services || currentSalon.services.length===0){ box.innerHTML='<p class="small">No services listed.</p>'; }
+  else { box.innerHTML=currentSalon.services.map((s,i)=>`<button type="button" class="serviceBtn ${i===0?'active':''}" onclick="selectService(${i})">${escapeHtml(s.name)} - R${s.price}</button>`).join(''); }
   document.getElementById('bookingModal').classList.add('open');
 }
-
-function selectService(index){
-  selectedService = currentSalon.services[index];
-  document.querySelectorAll('.serviceBtn').forEach((b,i)=> b.classList.toggle('active', i===index));
-}
-
+function selectService(i){ selectedService=currentSalon.services[i]; document.querySelectorAll('.serviceBtn').forEach((b,idx)=>b.classList.toggle('active',idx===i)); }
 function closeBooking(){ document.getElementById('bookingModal').classList.remove('open'); }
-
 async function confirmBooking(){
   if(!selectedService){ alert('Please choose a service'); return; }
-  const customer_name = document.getElementById('customerName').value.trim();
-  const customer_phone = document.getElementById('customerPhone').value.trim();
-  const booking_date = document.getElementById('bookingDate').value;
-  const booking_time = document.getElementById('bookingTime').value;
+  const customer_name=document.getElementById('customerName').value.trim();
+  const customer_phone=normalizePhone(document.getElementById('customerPhone').value.trim());
+  const booking_date=document.getElementById('bookingDate').value;
+  const booking_time=document.getElementById('bookingTime').value;
   if(!customer_name || !customer_phone){ alert('Please enter your name and phone number'); return; }
   if(!booking_date || !booking_time){ alert('Please choose date and time'); return; }
-  const btn = document.getElementById('confirmBtn');
-  btn.textContent='Booking...'; btn.disabled=true;
-  const { error } = await supabaseClient.from('bookings').insert([{
-    salon_id: currentSalon.id,
-    customer_name,
-    customer_phone,
-    service: selectedService.name,
-    price: selectedService.price,
-    booking_date,
-    booking_time,
-    status: 'pending'
-  }]);
+  const btn=document.getElementById('confirmBtn'); btn.textContent='Booking...'; btn.disabled=true;
+  const { error } = await supabaseClient.from('bookings').insert([{salon_id:currentSalon.id,customer_name,customer_phone,service:selectedService.name,price:selectedService.price,booking_date,booking_time,status:'pending'}]);
   btn.textContent='Confirm Booking →'; btn.disabled=false;
   if(error){ alert('Error: '+error.message); return; }
   document.getElementById('bookingSuccess').style.display='block';
-  setTimeout(()=>{ closeBooking(); showTab('my'); document.getElementById('myPhone').value = customer_phone; loadMyBookings(); }, 1200);
+  setTimeout(()=>{ closeBooking(); showTab('my'); document.getElementById('myPhone').value=customer_phone; loadMyBookings(); },1200);
 }
-
 async function loadMyBookings(){
-  const phone = document.getElementById('myPhone').value.trim();
-  if(!phone){ alert('Enter your phone number'); return; }
-  const { data, error } = await supabaseClient.from('bookings').select('*, salons(name, address)').eq('customer_phone', phone).order('created_at',{ascending:false});
-  const list = document.getElementById('myBookingsList');
-  if(error || !data || data.length===0){ list.innerHTML='<div class="empty"><b>No bookings found</b>Try booking a salon first.</div>'; return; }
-  list.innerHTML = data.map(b=>{
-    const color = b.status==='confirmed' ? 'background:#dcfce7;color:#166534' : b.status==='cancelled' ? 'background:#fee2e2;color:#991b1b' : 'background:#fef9c3;color:#854d0e';
-    return `<div class="bookingItem">
-      <div class="row"><b>${escapeHtml(b.salons?.name||'Salon')}</b><span class="badge" style="${color}">${b.status.toUpperCase()}</span></div>
-      <p class="small" style="margin-top:6px">${escapeHtml(b.service)} - R${b.price}<br>📍 ${escapeHtml(b.salons?.address||'')}<br>📅 ${b.booking_date} at ${b.booking_time}</p>
-      <div style="margin-top:10px"><span class="small">Rate this salon:</span><div>${[1,2,3,4,5].map(n=>`<span class="star" onclick="rateSalon('${b.salon_id}', ${n}, this)">★</span>`).join('')}</div></div>
-    </div>`;
+  const phoneRaw=document.getElementById('myPhone').value.trim();
+  if(!phoneRaw){ alert('Enter your phone number'); return; }
+  const phoneNorm=normalizePhone(phoneRaw);
+  const { data, error } = await supabaseClient.from('bookings').select('*, salons(name, address)').order('created_at',{ascending:false});
+  const list=document.getElementById('myBookingsList');
+  if(error){ list.innerHTML='<div class="empty">Error loading bookings</div>'; return; }
+  const filtered=(data||[]).filter(b=>{ const s=normalizePhone(b.customer_phone); return s===phoneNorm || s.endsWith(phoneNorm.slice(-9)) || phoneNorm.endsWith(s.slice(-9)); });
+  if(filtered.length===0){ list.innerHTML='<div class="empty"><b>No bookings found</b>Try booking a salon first.</div>'; return; }
+  list.innerHTML=filtered.map(b=>{
+    const color=b.status==='confirmed'?'background:#dcfce7;color:#166534':b.status==='cancelled'?'background:#fee2e2;color:#991b1b':'background:#fef9c3;color:#854d0e';
+    return `<div class="bookingItem"><div class="row"><b>${escapeHtml(b.salons?.name||'Salon')}</b><span class="badge" style="${color}">${b.status.toUpperCase()}</span></div><p class="small" style="margin-top:6px">${escapeHtml(b.service)} - R${b.price}<br>📍 ${escapeHtml(b.salons?.address||'')}<br>📅 ${b.booking_date} at ${b.booking_time}</p><div style="margin-top:10px"><span class="small">Rate this salon:</span><div>${[1,2,3,4,5].map(n=>`<span class="star" onclick="rateSalon('${b.salon_id}',${n},this)">★</span>`).join('')}</div></div></div>`;
   }).join('');
 }
-
-async function rateSalon(salonId, rating, el){
-  const parent = el.parentElement;
-  parent.querySelectorAll('.star').forEach((s,i)=> s.classList.toggle('on', i < rating));
-  await supabaseClient.from('ratings').insert([{salon_id: salonId, rating}]);
+async function rateSalon(salonId,rating,el){
+  el.parentElement.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('on',i<rating));
+  await supabaseClient.from('ratings').insert([{salon_id:salonId,rating}]);
   alert('Thanks! You rated '+rating+' stars ⭐');
 }
-
 loadSalons();
 </script>
 </body>
-          </html>
+</html>
