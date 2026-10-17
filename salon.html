@@ -39,6 +39,8 @@ input{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font
 <div class="box">
 <div class="logo">Book<span>My</span>Salon</div>
 <p style="margin:10px 0"><a href="index.html">← Back to all salons</a></p>
+<!-- ADD ONLY - Logout, hidden until logged in -->
+<p id="logoutRow" style="margin:0 0 10px;display:none"><a href="#" onclick="logoutUser();return false;" style="font-size:13px;color:#666">🚪 Logout</a></p>
 <div id="salonDetail"><p class="small">Loading salon...</p></div>
 <div class="card">
 <h3>Book this salon</h3>
@@ -89,11 +91,45 @@ async function confirmBooking(){
   const booking_date=document.getElementById('bookingDate').value;
   const booking_time=document.getElementById('bookingTime').value;
   if(!customer_name||!customer_phone||!booking_date||!booking_time){ alert('Please fill all fields'); return; }
+  // ADD ONLY - stay logged in as customer
+  try{
+    localStorage.setItem('bms_role','customer');
+    localStorage.setItem('bms_customer_name', customer_name);
+    localStorage.setItem('bms_customer_phone', customer_phone);
+    updateLogoutVisibility();
+  }catch(e){}
   const {error}=await supabaseClient.from('bookings').insert([{salon_id:salon.id,service:selectedService.name,price:selectedService.price,customer_name,customer_phone,booking_date,booking_time,status:'pending'}]);
   if(error){ alert(error.message); return; }
   document.getElementById('bookingSuccess').style.display='block';
 }
+// ADD ONLY - stay logged in helpers
+function updateLogoutVisibility(){
+  try{
+    const hasLogin = localStorage.getItem('bms_customer_phone') || localStorage.getItem('bms_owner_phone');
+    document.getElementById('logoutRow').style.display = hasLogin ? 'block' : 'none';
+  }catch(e){}
+}
+function logoutUser(){
+  try{
+    localStorage.removeItem('bms_role');
+    localStorage.removeItem('bms_customer_phone');
+    localStorage.removeItem('bms_customer_name');
+    localStorage.removeItem('bms_owner_phone');
+    localStorage.removeItem('bms_salon_id');
+  }catch(e){}
+  window.location.reload();
+}
+function restoreCustomerSession(){
+  try{
+    const phone = localStorage.getItem('bms_customer_phone');
+    const name = localStorage.getItem('bms_customer_name');
+    if(phone) document.getElementById('customerPhone').value = phone;
+    if(name) document.getElementById('customerName').value = name;
+    updateLogoutVisibility();
+  }catch(e){}
+}
 document.getElementById('bookingDate').min=new Date().toISOString().split('T')[0];
+restoreCustomerSession();
 load();
 </script>
 </body>
