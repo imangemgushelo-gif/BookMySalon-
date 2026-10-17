@@ -48,6 +48,10 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 .editBar .btn{flex:1;min-width:140px;text-align:center}
 .editBtnBig{width:100%;background:#2a0a45;color:#fff;border:0;padding:15px;border-radius:14px;font-weight:900;font-size:16px;cursor:pointer;margin-top:14px;box-shadow:0 6px 18px rgba(42,10,69,.25)}
 .opt{font-weight:400;color:#888;font-size:11px}
+.queuePreview{background:#f5f0ff;padding:12px;border-radius:12px;margin-top:12px;font-weight:700;font-size:14px}
+.quickRow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.quickRow .btn{flex:1;min-width:48px}
+.queueBtn{width:52px;height:52px;font-size:24px;font-weight:900;border-radius:14px;border:1px solid #e9dfff;background:#f5f0ff;color:#2a0a45;cursor:pointer;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -67,6 +71,7 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 <p class="small" id="salonOwnerTitle" style="margin-top:4px;font-weight:700;color:#2a0a45"></p>
 <p class="small" id="salonAddrTitle" style="margin-top:4px"></p>
 <p class="small" id="salonServicesTitle" style="margin-top:6px"></p>
+<p id="salonQueueTitle" style="margin-top:8px;font-weight:800;font-size:14px"></p>
 <button class="editBtnBig" onclick="goToEdit()">✏️ Edit Salon</button>
 <p class="small" style="text-align:center;margin-top:8px">All fields are optional — leave blank anything you don't want to change.</p>
 <div class="editBar">
@@ -102,6 +107,36 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 <button class="btnFull" id="saveSalonBtn" onclick="saveSalon()">💾 Save Salon Details</button>
 <div class="success" id="saveSalonMsg">✅ Salon updated!</div>
 </div>
+
+<div class="card" id="queueCard">
+<h3>🚶‍♂️ Walk-in Queue / Live Wait Time</h3>
+<p class="small">Customers see this live on Home & Salon Page. Set ANY number — not just 2.</p>
+<label>Queue Status</label>
+<select id="queue_enabled">
+<option value="false">OFF — Don't show queue</option>
+<option value="true">ON — Show live queue</option>
+</select>
+<label>People Waiting Right Now <span class="opt">(type any number)</span></label>
+<div style="display:flex;gap:8px;align-items:center">
+<button type="button" class="queueBtn" onclick="changeQueue(-1)">−</button>
+<input id="people_waiting" type="number" min="0" max="200" value="0" style="text-align:center;font-size:24px;font-weight:900;padding:12px" oninput="updateQueuePreview()">
+<button type="button" class="queueBtn" onclick="changeQueue(1)">+</button>
+</div>
+<div class="quickRow">
+<button class="btn btn-light" onclick="setQueue(0)">0 - No Wait</button>
+<button class="btn btn-light" onclick="setQueue(1)">1</button>
+<button class="btn btn-light" onclick="setQueue(3)">3</button>
+<button class="btn btn-light" onclick="setQueue(5)">5</button>
+<button class="btn btn-light" onclick="setQueue(10)">10</button>
+<button class="btn btn-light" onclick="setQueue(20)">20</button>
+</div>
+<label>Avg Time Per Customer (minutes)</label>
+<input id="avg_service_minutes" type="number" min="5" max="180" value="30" placeholder="e.g. 30" oninput="updateQueuePreview()">
+<div class="queuePreview" id="queuePreview">🟢 Preview: No wait — Walk in now!</div>
+<button class="btnFull" style="background:#16a34a" id="saveQueueBtn" onclick="saveQueue()">🔄 Update Queue Live →</button>
+<div class="success" id="queueSuccess">✅ Queue updated live!</div>
+</div>
+
 </div>
 <div id="photosTab" class="hidden">
 <div class="card">
@@ -130,11 +165,11 @@ function normalizePhone(p){ return String(p||'').replace(/[^0-9]/g,''); }
 function showDashTab(tab){ document.getElementById('tabEdit').classList.toggle('active',tab==='edit'); document.getElementById('tabPhotos').classList.toggle('active',tab==='photos'); document.getElementById('tabBookings').classList.toggle('active',tab==='bookings'); document.getElementById('editTab').classList.toggle('hidden',tab!=='edit'); document.getElementById('photosTab').classList.toggle('hidden',tab!=='photos'); document.getElementById('bookingsTab').classList.toggle('hidden',tab!=='bookings'); if(tab==='bookings') loadBookings(); }
 function goToEdit(){ showDashTab('edit'); setTimeout(()=>{ document.getElementById('editCard').scrollIntoView({behavior:'smooth',block:'start'}); },100); }
 async function login(){ const raw=document.getElementById('loginPhone').value.trim(); if(!raw){ alert('Enter your phone number'); return; } const phone=normalizePhone(raw); const btn=document.getElementById('loginBtn'); btn.textContent='Logging in...'; btn.disabled=true; const { data, error } = await supabaseClient.from('salons').select('*').order('created_at',{ascending:false}); btn.textContent='Login →'; btn.disabled=false; if(error){ alert(error.message); return; } const found=(data||[]).find(s=>{ const sp=normalizePhone(s.owner_phone); return sp===phone || sp.endsWith(phone.slice(-9)) || phone.endsWith(sp.slice(-9)); }); if(!found){ alert('No salon found with that phone number.'); return; } currentSalon=found; photos = Array.isArray(found.photos) ? [...found.photos] : (found.photo_url ? [found.photo_url] : []); services = Array.isArray(found.services) ? JSON.parse(JSON.stringify(found.services)) : []; fillForm(); document.getElementById('loginBox').classList.add('hidden'); document.getElementById('dashBox').classList.remove('hidden'); document.getElementById('viewPageBtn').href='salon.html?id='+found.id; loadBookings(); }
-function fillForm(){ document.getElementById('salonNameTitle').textContent=currentSalon.name||'My Salon'; document.getElementById('salonOwnerTitle').textContent=currentSalon.owner_name ? '👤 Owner: '+currentSalon.owner_name : ''; document.getElementById('salonAddrTitle').textContent=currentSalon.address||''; document.getElementById('salonServicesTitle').textContent=(currentSalon.services||[]).map(s=>s.name+' - R'+s.price).join(' • '); document.getElementById('editName').value=currentSalon.name||''; document.getElementById('editCategory').value=currentSalon.category||'Salon'; document.getElementById('editOwnerName').value=currentSalon.owner_name||''; document.getElementById('editOwnerPhone').value=currentSalon.owner_phone||''; document.getElementById('editAddress').value=currentSalon.address||''; document.getElementById('editDescription').value=currentSalon.description||''; renderServicesEditor(); renderPhotos(); }
+function queueText(s){ if(!s) return ''; if(!s.queue_enabled) return 'Queue: OFF'; const w=Number(s.people_waiting||0); const avg=Number(s.avg_service_minutes||30); const total=w*avg; if(w===0) return '🟢 No wait — Walk in now!'; if(total<60) return `⏳ ${w} waiting • ~${total} min wait`; return `⏳ ${w} waiting • ~${Math.floor(total/60)}h ${total%60}m wait`; }
+function fillForm(){ document.getElementById('salonNameTitle').textContent=currentSalon.name||'My Salon'; document.getElementById('salonOwnerTitle').textContent=currentSalon.owner_name ? '👤 Owner: '+currentSalon.owner_name : ''; document.getElementById('salonAddrTitle').textContent=currentSalon.address||''; document.getElementById('salonServicesTitle').textContent=(currentSalon.services||[]).map(s=>s.name+' - R'+s.price).join(' • '); document.getElementById('salonQueueTitle').textContent=queueText(currentSalon); document.getElementById('editName').value=currentSalon.name||''; document.getElementById('editCategory').value=currentSalon.category||'Salon'; document.getElementById('editOwnerName').value=currentSalon.owner_name||''; document.getElementById('editOwnerPhone').value=currentSalon.owner_phone||''; document.getElementById('editAddress').value=currentSalon.address||''; document.getElementById('editDescription').value=currentSalon.description||''; document.getElementById('queue_enabled').value=String(currentSalon.queue_enabled||false); document.getElementById('people_waiting').value=currentSalon.people_waiting ?? 0; document.getElementById('avg_service_minutes').value=currentSalon.avg_service_minutes || 30; updateQueuePreview(); renderServicesEditor(); renderPhotos(); }
 function renderServicesEditor(){ const box=document.getElementById('servicesEditor'); if(services.length===0) services=[{name:'',price:''}]; box.innerHTML=services.map((s,i)=>`<div class="serviceRow"><input placeholder="Service e.g. Fade (optional)" value="${esc(s.name)}" oninput="services[${i}].name=this.value"><input type="number" placeholder="Price" value="${s.price}" style="width:100px" oninput="services[${i}].price=this.value"><button class="del" onclick="removeService(${i})">✕</button></div>`).join(''); }
 function addServiceRow(){ services.push({name:'',price:''}); renderServicesEditor(); }
 function removeService(i){ services.splice(i,1); if(services.length===0) services.push({name:'',price:''}); renderServicesEditor(); }
-// FIX: NO REQUIRED FIELDS - blank = keep old value, never blocks save
 async function saveSalon(){
   const nameInput=document.getElementById('editName').value.trim();
   const category=document.getElementById('editCategory').value;
@@ -142,17 +177,14 @@ async function saveSalon(){
   const phoneInput=document.getElementById('editOwnerPhone').value.trim();
   const addressInput=document.getElementById('editAddress').value.trim();
   const descInput=document.getElementById('editDescription').value.trim();
-  // If blank, keep existing value - so owner is never forced to fill
   const name = nameInput || currentSalon.name || 'My Salon';
   const owner_name = ownerInput || currentSalon.owner_name || '';
   const owner_phone = phoneInput || currentSalon.owner_phone || '';
   const address = addressInput || currentSalon.address || '';
-  // Description CAN be cleared on purpose, so use input as-is
   const description = descInput;
   let cleanServices=services.filter(s=>s.name.trim()!=='').map(s=>({name:s.name.trim(),price:Number(s.price)||0}));
   if(cleanServices.length===0) cleanServices = currentSalon.services || [];
   const btn=document.getElementById('saveSalonBtn'); btn.textContent='Saving...'; btn.disabled=true;
-  // Try full update, fallback if owner_name column still missing
   let data, error;
   const res1 = await supabaseClient.from('salons').update({name,category,owner_name,owner_phone,address,description,services:cleanServices}).eq('id',currentSalon.id).select().single();
   data=res1.data; error=res1.error;
@@ -166,6 +198,35 @@ async function saveSalon(){
   currentSalon=data; services=JSON.parse(JSON.stringify(data.services||[])); fillForm();
   const msg=document.getElementById('saveSalonMsg'); msg.style.display='block'; setTimeout(()=>msg.style.display='none',2500);
 }
+// --- QUEUE ---
+function changeQueue(delta){ const el=document.getElementById('people_waiting'); let v=parseInt(el.value||0)+delta; if(v<0) v=0; if(v>200) v=200; el.value=v; updateQueuePreview(); }
+function setQueue(n){ document.getElementById('people_waiting').value=n; updateQueuePreview(); }
+function updateQueuePreview(){
+  const waiting=parseInt(document.getElementById('people_waiting').value||0);
+  const avg=parseInt(document.getElementById('avg_service_minutes').value||30);
+  const enabled=document.getElementById('queue_enabled').value==='true';
+  const el=document.getElementById('queuePreview');
+  if(!enabled){ el.textContent='Queue is OFF — customers will not see it.'; return; }
+  const total=waiting*avg;
+  if(waiting===0) el.textContent='🟢 Preview: No wait — Walk in now!';
+  else if(total<60) el.textContent=`⏳ Preview: ${waiting} waiting • ~${total} min wait`;
+  else el.textContent=`⏳ Preview: ${waiting} waiting • ~${Math.floor(total/60)}h ${total%60}m wait`;
+}
+async function saveQueue(){
+  if(!currentSalon) return;
+  const people_waiting=parseInt(document.getElementById('people_waiting').value||0);
+  const avg_service_minutes=parseInt(document.getElementById('avg_service_minutes').value||30);
+  const queue_enabled=document.getElementById('queue_enabled').value==='true';
+  if(people_waiting<0){ alert('People waiting cannot be negative'); return; }
+  if(avg_service_minutes<5){ alert('Avg time must be at least 5 minutes'); return; }
+  const btn=document.getElementById('saveQueueBtn'); btn.textContent='Updating...'; btn.disabled=true;
+  const { data, error } = await supabaseClient.from('salons').update({queue_enabled, people_waiting, avg_service_minutes}).eq('id', currentSalon.id).select().single();
+  btn.textContent='🔄 Update Queue Live →'; btn.disabled=false;
+  if(error){ alert('Error: '+error.message+'\n\nRun this SQL in Supabase first:\nALTER TABLE salons ADD COLUMN IF NOT EXISTS queue_enabled boolean DEFAULT false;\nALTER TABLE salons ADD COLUMN IF NOT EXISTS people_waiting int DEFAULT 0;\nALTER TABLE salons ADD COLUMN IF NOT EXISTS avg_service_minutes int DEFAULT 30;'); return; }
+  currentSalon=data; fillForm();
+  const msg=document.getElementById('queueSuccess'); msg.style.display='block'; setTimeout(()=>msg.style.display='none',3000);
+}
+document.getElementById('queue_enabled').addEventListener('change', updateQueuePreview);
 function renderPhotos(){ document.getElementById('photoCount').textContent=photos.length; const grid=document.getElementById('photoGrid'); if(photos.length===0){ grid.innerHTML='<p class="small">No photos yet. Add some below.</p>'; return; } grid.innerHTML=photos.map((p,i)=>`<div class="photo"><img src="${p}"><button class="x" onclick="removePhoto(${i})">✕</button>${i===0?'<span class="cover">COVER</span>':''}</div>`).join(''); }
 function removePhoto(i){ if(!confirm('Remove this photo?')) return; photos.splice(i,1); renderPhotos(); }
 async function savePhotos(){ const files=document.getElementById('newPhotos').files; if(photos.length + files.length > 10){ alert('Max 10 photos total. Remove some first.'); return; } const btn=document.getElementById('savePhotosBtn'); btn.textContent='Uploading...'; btn.disabled=true; for(let f of files){ try{ const fileName=Date.now()+'-'+Math.random().toString(36).slice(2)+'-'+f.name.replace(/[^a-zA-Z0-9.]/g,''); const { error:upErr } = await supabaseClient.storage.from('salon-photos').upload(fileName, f); if(!upErr){ const { data:pub } = supabaseClient.storage.from('salon-photos').getPublicUrl(fileName); photos.push(pub.publicUrl); } else { const b64=await fileToBase64(f); photos.push(b64); } }catch(e){ const b64=await fileToBase64(f); photos.push(b64); } } const { data, error } = await supabaseClient.from('salons').update({photos,photo_url:photos[0]||null}).eq('id',currentSalon.id).select().single(); btn.textContent='💾 Save Photos'; btn.disabled=false; if(error){ alert('Error: '+error.message); return; } currentSalon=data; document.getElementById('newPhotos').value=''; renderPhotos(); const msg=document.getElementById('savePhotosMsg'); msg.style.display='block'; setTimeout(()=>msg.style.display='none',2500); alert('✅ Photos saved!'); }
@@ -175,4 +236,4 @@ async function updateBooking(id,status){ const { error } = await supabaseClient.
 async function copyLink(){ const url=location.origin+location.pathname.replace('dashboard.html','')+'salon.html?id='+currentSalon.id; try{ await navigator.clipboard.writeText(url); alert('✅ Link copied! Share it on WhatsApp.'); } catch(e){ prompt('Copy your salon link:', url); } }
 </script>
 </body>
-  </html>
+</html>
