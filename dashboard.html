@@ -26,21 +26,35 @@ input{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-si
 .accept{background:#16a34a;color:white}
 .reject{background:#ef4444;color:white}
 a{color:#ff4d6d}
+.tabs{display:flex;gap:8px;margin:16px 0 10px}
+.tabs button{flex:1;padding:11px;border-radius:12px;border:1px solid #ddd;background:white;font-weight:700;cursor:pointer}
+.tabs button.active{background:#111;color:white;border-color:#111}
+.rating-big{font-size:32px;font-weight:800;text-align:center}
+.stars-gold{color:#ffc107;font-size:20px}
+.review{border-top:1px solid #eee;padding:10px 0}
+.review:last-child{border-bottom:0}
 </style>
 </head>
 <body>
 <div class="box">
 <h1>Owner <span>Dashboard</span></h1>
-<p>Manage your bookings inside BookMySalon. No WhatsApp needed.</p>
+<p>Manage your bookings and see your reviews inside BookMySalon.</p>
 
 <div class="card" id="loginCard">
 <label style="font-weight:700;font-size:13px">Your Phone Number (used to register)</label>
 <input id="ownerPhone" placeholder="Enter your phone number">
-<button class="btn btn-pink" onclick="login()">View My Bookings →</button>
+<button class="btn btn-pink" onclick="login()">View My Dashboard →</button>
 </div>
 
 <div id="salonInfo"></div>
+
+<div id="tabs" style="display:none" class="tabs">
+  <button id="tabBookings" class="active" onclick="showTab('bookings')">📅 Bookings</button>
+  <button id="tabRatings" onclick="showTab('ratings')">⭐ My Reviews</button>
+</div>
+
 <div id="bookings"></div>
+<div id="ratings" style="display:none"></div>
 
 <p style="text-align:center;margin-top:16px"><a href="index.html">← Back to Home</a> • <a href="register.html">Register Salon</a></p>
 </div>
@@ -48,6 +62,17 @@ a{color:#ff4d6d}
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let mySalonId = null;
+let currentTab = 'bookings';
+
+function showTab(tab){
+  currentTab = tab;
+  document.getElementById('tabBookings').classList.toggle('active', tab==='bookings');
+  document.getElementById('tabRatings').classList.toggle('active', tab==='ratings');
+  document.getElementById('bookings').style.display = tab==='bookings' ? 'block' : 'none';
+  document.getElementById('ratings').style.display = tab==='ratings' ? 'block' : 'none';
+  if(tab==='ratings') loadRatings();
+  if(tab==='bookings') loadBookings();
+}
 
 async function login(){
   const phone = document.getElementById('ownerPhone').value.trim();
@@ -62,15 +87,27 @@ async function login(){
   }
   const salon = salons[0];
   mySalonId = salon.id;
+  document.getElementById('tabs').style.display = 'flex';
   document.getElementById('salonInfo').innerHTML = `
     <div class="card">
       <div class="row"><b style="font-size:18px">${salon.name}</b><span class="badge confirmed">LIVE</span></div>
       <p class="small">${salon.address} • ${salon.phone}</p>
       <p class="small">Services: ${salon.services && salon.services.length>0 ? salon.services.map(s=>s.name+' - R'+s.price).join(', ') : 'Not added yet'}</p>
+      <div id="salonRatingSummary" class="small" style="margin-top:6px">Loading rating...</div>
     </div>
-    <h3 style="margin:12px 0 8px">📅 Bookings</h3>
   `;
   loadBookings();
+  loadRatingSummary();
+}
+
+async function loadRatingSummary(){
+  const { data } = await supabaseClient.from('ratings').select('rating').eq('salon_id', mySalonId);
+  if(!data || data.length===0){
+    document.getElementById('salonRatingSummary').innerHTML = '⭐ New • No ratings yet';
+    return;
+  }
+  const avg = data.reduce((a,b)=>a+b.rating,0)/data.length;
+  document.getElementById('salonRatingSummary').innerHTML = `⭐ <b style="color:#111;font-size:15px">${avg.toFixed(1)} average</b> • ${data.length} ${data.length===1?'review':'reviews'}`;
 }
 
 async function loadBookings(){
@@ -80,7 +117,7 @@ async function loadBookings(){
     document.getElementById('bookings').innerHTML = `<div class="card">No bookings yet.<br><span class="small">When customers book you, they will show here instantly. Keep checking here.</span></div>`;
     return;
   }
-  document.getElementById('bookings').innerHTML = data.map(b=>{
+  document.getElementById('bookings').innerHTML = `<h3 style="margin:0 0 8px">📅 Bookings</h3>` + data.map(b=>{
     const badgeClass = b.status==='confirmed' ? 'confirmed' : b.status==='cancelled' ? 'cancelled' : 'pending';
     return `
     <div class="card">
@@ -91,9 +128,39 @@ async function loadBookings(){
         <button class="accept" onclick="updateStatus('${b.id}','confirmed')">✅ Confirm</button>
         <button class="reject" onclick="updateStatus('${b.id}','cancelled')">❌ Cancel</button>
       </div>
-      <p class="small" style="margin-top:8px">Reply to customer inside BookMySalon - customer will see your update in My Bookings.</p>
     </div>`;
   }).join('');
+}
+
+async function loadRatings(){
+  const { data, error } = await supabaseClient.from('ratings').select('*').eq('salon_id', mySalonId).order('created_at', {ascending:false});
+  if(error){ alert(error.message); return; }
+  if(!data || data.length===0){
+    document.getElementById('ratings').innerHTML = `<div class="card"><h3>⭐ My Reviews</h3><p class="small">No reviews yet. When customers rate you in My Bookings, they will show here.</p></div>`;
+    return;
+  }
+  const avg = data.reduce((a,b)=>a+b.rating,0)/data.length;
+  const stars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg));
+  const breakdown = [5,4,3,2,1].map(n=>{
+    const count = data.filter(r=>r.rating===n).length;
+    const pct = Math.round(count/data.length*100);
+    return `<div style="display:flex;gap:8px;align-items:center;font-size:13px"><span style="width:20px">${n}★</span><div style="flex:1;background:#eee;height:8px;border-radius:10px;overflow:hidden"><div style="width:${pct}%;background:#ffc107;height:8px"></div></div><span>${count}</span></div>`;
+  }).join('');
+
+  document.getElementById('ratings').innerHTML = `
+    <div class="card">
+      <h3>⭐ My Reviews</h3>
+      <div class="rating-big">${avg.toFixed(1)} / 5</div>
+      <p style="text-align:center;color:#ffc107" class="stars-gold">${stars}</p>
+      <p style="text-align:center" class="small">Based on ${data.length} ${data.length===1?'review':'reviews'}</p>
+      <div style="margin-top:12px;display:grid;gap:6px">${breakdown}</div>
+    </div>
+    ${data.map(r=>{
+      const rStars = '★'.repeat(r.rating) + '☆'.repeat(5-r.rating);
+      const date = new Date(r.created_at).toLocaleDateString('en-ZA');
+      return `<div class="card review"><div class="row"><span style="color:#ffc107">${rStars}</span><span class="small">${date}</span></div><p style="margin-top:6px">${r.comment ? r.comment : '<span class="small">No comment - just stars</span>'}</p><p class="small">From: ${r.customer_phone || 'Customer'}</p></div>`;
+    }).join('')}
+  `;
 }
 
 async function updateStatus(id, status){
