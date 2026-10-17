@@ -43,157 +43,92 @@ a{color:#2a0a45}
 <a href="index.html" style="text-decoration:none;font-weight:700">← Back to Home</a>
 <div class="logo" style="margin-top:10px">Book<span>My</span>Salon</div>
 <p>Owner Dashboard — Manage your salon & bookings.</p>
-
 <div id="loginBox" class="card">
 <label>Enter your salon phone number</label>
 <input id="phoneInput" placeholder="e.g. 073 771 5535">
 <button class="btn btn-dark" onclick="login()">View My Dashboard →</button>
 </div>
-
 <div id="dashboard" style="display:none">
-  <div class="card">
-    <div class="row"><b id="salonName" style="font-size:20px"></b><span class="badge" style="background:#dcfce7;color:#166534">LIVE</span></div>
-    <p class="small" id="salonAddress"></p>
-    <p class="small" id="salonServices"></p>
-  </div>
-
-  <div class="tabs">
-    <button id="tabPhotos" class="active" onclick="showTab('photos')">📸 Edit Photos</button>
-    <button id="tabBookings" onclick="showTab('bookings')">📅 Bookings</button>
-  </div>
-
-  <!-- PHOTOS TAB -->
-  <div id="photosTab">
-    <div class="card">
-      <b>Your Photos (<span id="photoCount">0</span>/10)</b>
-      <p class="small">First photo = main cover photo. Tap ✕ to remove a photo. Add new photos below.</p>
-      <div class="preview" id="preview"></div>
-
-      <label>Add More Photos</label>
-      <input type="file" id="photoInput" accept="image/*" multiple onchange="handleNewPhotos(event)">
-      <div class="hint">Select multiple at once. You can have max 10 photos total.</div>
-
-      <button class="btn btn-green" onclick="savePhotos()">💾 Save Photos</button>
-      <div class="success" id="photoSuccess">✅ Photos updated! Check the home page — your salon now shows all photos with swipe.</div>
-    </div>
-  </div>
-
-  <!-- BOOKINGS TAB -->
-  <div id="bookingsTab" style="display:none">
-    <div id="bookingsList"></div>
-  </div>
+<div class="card"><div class="row"><b id="salonName" style="font-size:20px"></b><span class="badge" style="background:#dcfce7;color:#166534">LIVE</span></div><p class="small" id="salonAddress"></p><p class="small" id="salonServices"></p></div>
+<div class="tabs"><button id="tabPhotos" class="active" onclick="showTab('photos')">📸 Edit Photos</button><button id="tabBookings" onclick="showTab('bookings')">📅 Bookings</button></div>
+<div id="photosTab"><div class="card"><b>Your Photos (<span id="photoCount">0</span>/10)</b><p class="small">First photo = main cover photo. Tap ✕ to remove a photo. Add new photos below.</p><div class="preview" id="preview"></div><label>Add More Photos</label><input type="file" id="photoInput" accept="image/*" multiple onchange="handleNewPhotos(event)"><div class="hint">Select multiple at once. Max 10 photos total.</div><button class="btn btn-green" onclick="savePhotos()">💾 Save Photos</button><div class="success" id="photoSuccess">✅ Photos updated! Check the home page — your salon now shows all photos with swipe.</div></div></div>
+<div id="bookingsTab" style="display:none"><div id="bookingsList"></div></div>
 </div>
 </div>
-
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
-let currentSalon = null;
-let photos = [];
-
+let currentSalon=null;
+let photos=[];
+function normalizePhone(p){ return String(p||'').replace(/[^0-9]/g,''); }
 function showTab(tab){
-  document.getElementById('tabPhotos').classList.toggle('active', tab==='photos');
-  document.getElementById('tabBookings').classList.toggle('active', tab==='bookings');
-  document.getElementById('photosTab').style.display = tab==='photos' ? 'block' : 'none';
-  document.getElementById('bookingsTab').style.display = tab==='bookings' ? 'block' : 'none';
+  document.getElementById('tabPhotos').classList.toggle('active',tab==='photos');
+  document.getElementById('tabBookings').classList.toggle('active',tab==='bookings');
+  document.getElementById('photosTab').style.display=tab==='photos'?'block':'none';
+  document.getElementById('bookingsTab').style.display=tab==='bookings'?'block':'none';
 }
-
 async function login(){
-  const phone = document.getElementById('phoneInput').value.trim();
-  if(!phone){ alert('Enter your phone number'); return; }
-  const { data, error } = await supabaseClient.from('salons').select('*').eq('owner_phone', phone).maybeSingle();
-  if(error || !data){ alert('No salon found for that number. Check the number you used when registering.'); return; }
-  currentSalon = data;
-  // Load photos: prefer photos array, fallback to single photo_url
-  if(data.photos && Array.isArray(data.photos) && data.photos.length>0) photos = [...data.photos];
-  else if(data.photo_url) photos = [data.photo_url];
-  else photos = [];
-
+  const phoneRaw=document.getElementById('phoneInput').value.trim();
+  if(!phoneRaw){ alert('Enter your phone number'); return; }
+  const phoneNorm=normalizePhone(phoneRaw);
+  const { data, error } = await supabaseClient.from('salons').select('*');
+  if(error){ alert('Error: '+error.message); return; }
+  const found=(data||[]).find(s=>{
+    const stored=normalizePhone(s.owner_phone);
+    return stored===phoneNorm || stored.endsWith(phoneNorm.slice(-9)) || phoneNorm.endsWith(stored.slice(-9));
+  });
+  if(!found){ alert('No salon found for that number. Check the number you used when registering.'); return; }
+  currentSalon=found;
+  if(found.photos && Array.isArray(found.photos) && found.photos.length>0) photos=[...found.photos];
+  else if(found.photo_url) photos=[found.photo_url];
+  else photos=[];
   document.getElementById('loginBox').style.display='none';
   document.getElementById('dashboard').style.display='block';
-  document.getElementById('salonName').textContent = data.name;
-  document.getElementById('salonAddress').textContent = data.address;
-  document.getElementById('salonServices').textContent = (data.services||[]).map(s=>s.name+' - R'+s.price).join(' • ');
-  renderPreview();
-  loadBookings();
+  document.getElementById('salonName').textContent=found.name;
+  document.getElementById('salonAddress').textContent=found.address;
+  document.getElementById('salonServices').textContent=(found.services||[]).map(s=>s.name+' - R'+s.price).join(' • ');
+  renderPreview(); loadBookings();
 }
-
 function renderPreview(){
-  document.getElementById('photoCount').textContent = photos.length;
-  if(photos.length===0){
-    document.getElementById('preview').innerHTML = '<p class="small">No photos yet. Add some below.</p>';
-    return;
-  }
-  document.getElementById('preview').innerHTML = photos.map((p,i)=>`
-    <div class="preview-wrap">
-      <img src="${p}">
-      ${i===0 ? '<span class="cover">COVER</span>' : ''}
-      <button onclick="removePhoto(${i})">✕</button>
-    </div>`).join('');
+  document.getElementById('photoCount').textContent=photos.length;
+  if(photos.length===0){ document.getElementById('preview').innerHTML='<p class="small">No photos yet. Add some below.</p>'; return; }
+  document.getElementById('preview').innerHTML=photos.map((p,i)=>`<div class="preview-wrap"><img src="${p}">${i===0?'<span class="cover">COVER</span>':''}<button onclick="removePhoto(${i})">✕</button></div>`).join('');
 }
-
-function removePhoto(i){
-  if(!confirm('Remove this photo?')) return;
-  photos.splice(i,1);
-  renderPreview();
-}
-
+function removePhoto(i){ if(!confirm('Remove this photo?')) return; photos.splice(i,1); renderPreview(); }
 function handleNewPhotos(e){
-  const files = Array.from(e.target.files);
-  if(photos.length + files.length > 10){ alert('Max 10 photos total. You have '+photos.length+' already.'); e.target.value=''; return; }
+  const files=Array.from(e.target.files);
+  if(photos.length+files.length>10){ alert('Max 10 photos total. You have '+photos.length+' already.'); e.target.value=''; return; }
   files.forEach(file=>{
-    const reader = new FileReader();
-    reader.onload = (ev)=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const canvas = document.createElement('canvas');
-        const max = 1200;
-        let w = img.width, h = img.height;
-        if(w > max){ h = h * max / w; w = max; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        photos.push(canvas.toDataURL('image/jpeg', 0.8));
-        renderPreview();
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas'); const max=1200; let w=img.width,h=img.height;
+        if(w>max){ h=h*max/w; w=max; }
+        canvas.width=w; canvas.height=h; canvas.getContext('2d').drawImage(img,0,0,w,h);
+        photos.push(canvas.toDataURL('image/jpeg',0.8)); renderPreview();
       };
-      img.src = ev.target.result;
+      img.src=ev.target.result;
     };
     reader.readAsDataURL(file);
   });
   e.target.value='';
 }
-
 async function savePhotos(){
   if(photos.length===0){ alert('Add at least 1 photo'); return; }
-  const { error } = await supabaseClient.from('salons').update({
-    photos: photos,
-    photo_url: photos[0]
-  }).eq('id', currentSalon.id);
+  const { error } = await supabaseClient.from('salons').update({photos:photos,photo_url:photos[0]}).eq('id',currentSalon.id);
   if(error){ alert('Error: '+error.message); return; }
   document.getElementById('photoSuccess').style.display='block';
-  setTimeout(()=> document.getElementById('photoSuccess').style.display='none', 3000);
+  setTimeout(()=>document.getElementById('photoSuccess').style.display='none',3000);
 }
-
 async function loadBookings(){
-  const { data } = await supabaseClient.from('bookings').select('*').eq('salon_id', currentSalon.id).order('created_at',{ascending:false});
-  if(!data || data.length===0){
-    document.getElementById('bookingsList').innerHTML = '<div class="card">No bookings yet.</div>';
-    return;
-  }
-  document.getElementById('bookingsList').innerHTML = data.map(b=>{
-    const color = b.status==='confirmed' ? '#dcfce7;color:#166534' : b.status==='cancelled' ? '#fee2e2;color:#991b1b' : '#fef9c3;color:#854d0e';
-    return `<div class="card">
-      <div class="row"><b>${b.customer_name}</b><span class="badge" style="background:${color}">${b.status.toUpperCase()}</span></div>
-      <p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}<br>📞 ${b.customer_phone}</p>
-      ${b.status==='pending' ? `
-      <div class="row"><button class="btn btn-green" style="flex:1" onclick="updateBooking('${b.id}','confirmed')">✅ Confirm</button>
-      <button class="btn btn-red" style="flex:1" onclick="updateBooking('${b.id}','cancelled')">❌ Decline</button></div>` : ''}
-    </div>`;
+  const { data } = await supabaseClient.from('bookings').select('*').eq('salon_id',currentSalon.id).order('created_at',{ascending:false});
+  if(!data || data.length===0){ document.getElementById('bookingsList').innerHTML='<div class="card">No bookings yet.</div>'; return; }
+  document.getElementById('bookingsList').innerHTML=data.map(b=>{
+    const color=b.status==='confirmed'?'#dcfce7;color:#166534':b.status==='cancelled'?'#fee2e2;color:#991b1b':'#fef9c3;color:#854d0e';
+    return `<div class="card"><div class="row"><b>${b.customer_name}</b><span class="badge" style="background:${color}">${b.status.toUpperCase()}</span></div><p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}<br>📞 ${b.customer_phone}</p>${b.status==='pending'?`<div class="row"><button class="btn btn-green" style="flex:1" onclick="updateBooking('${b.id}','confirmed')">✅ Confirm</button><button class="btn btn-red" style="flex:1" onclick="updateBooking('${b.id}','cancelled')">❌ Decline</button></div>`:''}</div>`;
   }).join('');
 }
-
-async function updateBooking(id, status){
-  await supabaseClient.from('bookings').update({status}).eq('id', id);
-  loadBookings();
-}
+async function updateBooking(id,status){ await supabaseClient.from('bookings').update({status}).eq('id',id); loadBookings(); }
 </script>
 </body>
-                                                                                     </html>
+  </html>
