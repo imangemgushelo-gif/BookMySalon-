@@ -61,6 +61,16 @@ input:focus,select:focus{border-color:#2a0a45}
 .gallery-dots span.active{background:#2a0a45;width:14px;border-radius:10px}
 .gallery-count{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);color:white;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
 .gallery-hint{font-size:12px;color:#999;text-align:center;padding:4px 0 0}
+/* ADD ONLY - Category filter */
+.cats{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex-shrink:0;padding:9px 14px;border-radius:20px;border:1.5px solid #e5e5e5;background:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;color:#111}
+.cat.active{background:#2a0a45;color:#fff;border-color:#2a0a45}
+/* ADD ONLY - View Salon + Book Now side by side */
+.card-actions{display:flex;gap:10px;margin-top:12px}
+.btn-white{background:#fff;color:#2a0a45;border:1.5px solid #2a0a45;text-decoration:none;text-align:center}
+.card-actions .btn{flex:1}
+.card-actions a.btn{padding:11px 10px;font-size:14px}
 </style>
 </head>
 <body>
@@ -96,6 +106,16 @@ input:focus,select:focus{border-color:#2a0a45}
 <option value="Cambridge">Cambridge</option>
 <option value="Amalinda">Amalinda</option>
 </select>
+<!-- ADD ONLY - Category filter -->
+<div class="cats" id="categoryFilter">
+<button class="cat active" data-cat="" onclick="setCategory('',this)">All</button>
+<button class="cat" data-cat="Barbershop" onclick="setCategory('Barbershop',this)">💈 Barbershop</button>
+<button class="cat" data-cat="Salon" onclick="setCategory('Salon',this)">💇‍♀️ Salon</button>
+<button class="cat" data-cat="Braids" onclick="setCategory('Braids',this)">🧶 Braids</button>
+<button class="cat" data-cat="Nails" onclick="setCategory('Nails',this)">💅 Nails</button>
+<button class="cat" data-cat="Beauty" onclick="setCategory('Beauty',this)">✨ Beauty</button>
+<button class="cat" data-cat="Makeup" onclick="setCategory('Makeup',this)">💄 Makeup</button>
+</div>
 <div id="salonList"><p class="small">Loading salons...</p></div>
 </div>
 <div id="myTab" style="display:none">
@@ -149,6 +169,14 @@ let selectedSalon = null;
 let selectedService = null;
 let ratingBooking = null;
 let ratingStars = 0;
+// ADD ONLY - selected category
+let selectedCategory = '';
+function setCategory(cat, el){
+selectedCategory = cat;
+document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active'));
+if(el) el.classList.add('active');
+renderSalons();
+}
 function showTab(tab){
 document.getElementById('tabHome').classList.toggle('active', tab==='home');
 document.getElementById('tabMy').classList.toggle('active', tab==='my');
@@ -214,7 +242,9 @@ const area = document.getElementById('areaFilter').value;
 const filtered = allSalons.filter(s=>{
 const matchQ = !q || s.name.toLowerCase().includes(q) || (s.services||[]).some(x=>x.name.toLowerCase().includes(q));
 const matchArea = !area || (s.address||'').toLowerCase().includes(area.toLowerCase());
-return matchQ && matchArea;
+// ADD ONLY - category filter
+const matchCat = !selectedCategory || (s.category||'') === selectedCategory;
+return matchQ && matchArea && matchCat;
 });
 if(filtered.length===0){
 document.getElementById('salonList').innerHTML = `<div class="card">No salons found.<br><span class="small">Try another search or area. Are you a salon owner? <a href="register.html">Register here</a>.</span></div>`;
@@ -235,7 +265,11 @@ ${galleryHTML(s)}
 <p class="small">${servicesText || 'Services coming soon'}</p>
 <div class="row" style="margin-top:12px">
 <span style="font-weight:800">From R${minPrice}</span>
-<button class="btn" style="width:auto;padding:11px 18px" onclick="openBooking('${s.id}')">Book Now →</button>
+</div>
+<!-- ADD ONLY - View Salon button next to Book Now, nothing else changed -->
+<div class="card-actions">
+<a class="btn btn-white" href="salon.html?id=${s.id}">👁️ View Salon</a>
+<button class="btn" onclick="openBooking('${s.id}')">Book Now →</button>
 </div>
 </div>
 </div>`;
@@ -370,4 +404,4 @@ loadSalons();
 restoreCustomerSession();
 </script>
 </body>
-  </html>;
+  </html>
