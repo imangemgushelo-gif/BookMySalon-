@@ -29,6 +29,8 @@ a{color:#ff4d6d}
 <div class="box">
 <h1>My <span>Bookings</span></h1>
 <p>Enter your phone number to see status and rate your salon.</p>
+<!-- ADD ONLY - Logout, hidden until logged in -->
+<p id="logoutRow" style="text-align:right;display:none;margin:0 0 8px"><a href="#" onclick="logoutUser();return false;" style="font-size:13px">🚪 Logout</a></p>
 <div class="card">
 <input id="custPhone" placeholder="Enter your phone number">
 <button class="btn" onclick="check()">Check My Bookings →</button>
@@ -49,6 +51,12 @@ function setStars(n, bookingId){
 async function check(){
   const phone = document.getElementById('custPhone').value.trim();
   if(!phone){ alert('Enter your phone number'); return; }
+  // ADD ONLY - remember customer so they stay logged in
+  try{
+    localStorage.setItem('bms_role','customer');
+    localStorage.setItem('bms_customer_phone', phone);
+    updateLogoutVisibility();
+  }catch(e){}
   const clean = phone.replace(/\s/g,'');
   const { data, error } = await supabaseClient.from('bookings').select('*, salons(name, address)').or(`customer_phone.eq.${phone},customer_phone.eq.${clean}`).order('booking_date',{ascending:false});
   if(error){ alert(error.message); return; }
@@ -85,6 +93,34 @@ async function submitRating(salonId, bookingId){
   selectedRating = 0;
   check();
 }
+// ADD ONLY - stay logged in helpers for customer
+function updateLogoutVisibility(){
+  try{
+    const hasLogin = localStorage.getItem('bms_customer_phone') || localStorage.getItem('bms_owner_phone');
+    document.getElementById('logoutRow').style.display = hasLogin ? 'block' : 'none';
+  }catch(e){}
+}
+function logoutUser(){
+  try{
+    localStorage.removeItem('bms_role');
+    localStorage.removeItem('bms_customer_phone');
+    localStorage.removeItem('bms_customer_name');
+    localStorage.removeItem('bms_owner_phone');
+    localStorage.removeItem('bms_salon_id');
+  }catch(e){}
+  window.location.reload();
+}
+function restoreCustomerSession(){
+  try{
+    const phone = localStorage.getItem('bms_customer_phone');
+    updateLogoutVisibility();
+    if(phone){
+      document.getElementById('custPhone').value = phone;
+      check();
+    }
+  }catch(e){}
+}
+restoreCustomerSession();
 </script>
 </body>
 </html>
