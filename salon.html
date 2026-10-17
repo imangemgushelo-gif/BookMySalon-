@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salon - BookMySalon</title>
+<meta name="theme-color" content="#2a0a45">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#fff;color:#111;padding-bottom:110px}
+.wrap{max-width:700px;margin:0 auto;padding:0 16px}
+.top{padding:12px 16px;position:sticky;top:0;background:#fff;z-index:50;border-bottom:1px solid #f0f0f0}
+.top a{color:#2a0a45;text-decoration:none;font-weight:700;font-size:14px}
+.logo{font-size:26px;font-weight:900;color:#2a0a45}
+.logo span{color:#c2a06e}
+.gallery{position:relative;background:#f5f5f5}
+.gScroll{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gScroll::-webkit-scrollbar{display:none}
+.gScroll img{width:100%;height:340px;object-fit:cover;flex-shrink:0;scroll-snap-align:start}
+.count{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:700;padding:5px 9px;border-radius:20px}
+.dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
+.dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.6)}
+.dots span.active{background:#fff;width:18px;border-radius:10px}
+h1{font-size:28px;margin:14px 0 4px;line-height:1.1}
+.addr{color:#777;font-size:14px}
+.card{background:#fff;border:1px solid #eee;border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+.card h3{margin-bottom:8px;font-size:17px}
+.desc{color:#444;line-height:1.65;font-size:15px;white-space:pre-line}
+.service{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #f1f1f1}
+.service:last-child{border:0}
+.service b{font-size:15px}
+.service .price{color:#2a0a45;font-weight:800;font-size:15px}
+.btnBook{background:#2a0a45;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;flex-shrink:0}
+.btnFull{width:100%;background:#2a0a45;color:#fff;padding:15px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}
+.btnCall{display:block;text-align:center;background:#f1f1f1;color:#111;text-decoration:none;padding:13px;border-radius:12px;font-weight:700;margin-top:8px}
+.btnShare{display:block;text-align:center;background:#fff;color:#2a0a45;border:1.5px solid #2a0a45;text-decoration:none;padding:12px;border-radius:12px;font-weight:700;margin-top:8px;cursor:pointer;width:100%}
+.stickyBar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;padding:12px 16px;z-index:60}
+.stickyBar .wrap{display:flex;gap:10px;padding:0}
+.stickyBar .btnFull{flex:1;margin:0}
+.stickyBar .callBtn{background:#f1f1f1;color:#111;text-decoration:none;padding:15px 18px;border-radius:12px;font-weight:800}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.sheet{background:#fff;width:100%;max-width:600px;border-radius:22px 22px 0 0;padding:20px 18px 28px;max-height:92vh;overflow-y:auto}
+label{font-weight:700;font-size:13px;display:block;margin:12px 0 6px}
+input{width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;outline:none}
+input:focus{border-color:#2a0a45}
+.serviceBtn{padding:10px 14px;border-radius:20px;border:2px solid #e5e5e5;background:#fff;font-weight:700;cursor:pointer;margin:4px 4px 4px 0;font-size:13px}
+.serviceBtn.active{background:#2a0a45;color:#fff;border-color:#2a0a45}
+.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:12px;color:#166534;font-size:14px}
+.small{font-size:13px;color:#777}
+.ownerBox{background:#f5f0ff;border:1px solid #e9dfff}
+.ownerBox a{color:#2a0a45}
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap" style="padding:0"><a href="index.html">← Back to Home</a></div></div>
+<div class="wrap" id="content"><p style="padding:40px;text-align:center;color:#777">Loading salon...</p></div>
+<div class="stickyBar" id="stickyBar" style="display:none"><div class="wrap"><a class="callBtn" id="stickyCall" href="#">📞 Call</a><button class="btnFull" onclick="openBooking(0)">Book Now →</button></div></div>
+
+<div class="modal" id="bookingModal" onclick="if(event.target===this) closeBooking()">
+<div class="sheet">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><h2 id="bName">Book</h2><button onclick="closeBooking()" style="background:#f1f1f1;border:0;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px">✕</button></div>
+<label>Choose Service *</label><div id="serviceList"></div>
+<label>Your Name *</label><input id="customerName" placeholder="e.g. Sihle">
+<label>Your Phone *</label><input id="customerPhone" placeholder="e.g. 073 123 4567">
+<label>Date *</label><input type="date" id="bookingDate">
+<label>Time *</label><input type="time" id="bookingTime" value="10:00">
+<button class="btnFull" id="confirmBtn" onclick="confirmBooking()" style="margin-top:16px">Confirm Booking →</button>
+<div class="success" id="bookingSuccess">✅ Booking requested! The salon will confirm it.</div>
+</div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
+let salon=null, selectedService=null;
+function esc(t){return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function normalizePhone(p){return String(p||'').replace(/[^0-9]/g,'')}
+async function load(){
+  const id=new URLSearchParams(location.search).get('id');
+  if(!id){ document.getElementById('content').innerHTML='<p style="padding:40px;text-align:center">No salon selected. <a href="index.html">Go Home</a></p>'; return; }
+  const { data, error } = await supabaseClient.from('salons').select('*').eq('id',id).single();
+  if(error || !data){ document.getElementById('content').innerHTML='<p style="padding:40px;text-align:center">Salon not found. <a href="index.html">Go Home</a></p>'; return; }
+  salon=data;
+  document.title=data.name+' - BookMySalon';
+  const photos=(data.photos && Array.isArray(data.photos) && data.photos.length>0)?data.photos:[data.photo_url].filter(Boolean);
+  if(photos.length===0) photos.push('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80');
+  document.getElementById('stickyBar').style.display='block';
+  document.getElementById('stickyCall').href='tel:'+data.owner_phone;
+  document.getElementById('content').innerHTML=`
+  <div class="gallery"><div class="gScroll" id="gScroll" onscroll="updateDots(${photos.length})">${photos.map(p=>`<img src="${p}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'">`).join('')}</div><div class="count"><span id="count">1</span> / ${photos.length}</div><div class="dots" id="dots">${photos.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('')}</div></div>
+  <h1>${esc(data.name)}</h1>
+  <p class="addr">📍 ${esc(data.address||'')}</p>
+  <div class="card"><h3>About ${esc(data.name)}</h3>${data.description ? `<p class="desc">${esc(data.description)}</p>` : `<p class="desc" style="color:#999">No description yet. Owner can add one from the Dashboard.</p>`}</div>
+  <div class="card"><h3>Services & Prices</h3>${(data.services||[]).length===0 ? '<p class="small">No services listed.</p>' : (data.services||[]).map((s,i)=>`<div class="service"><div><b>${esc(s.name)}</b><div class="price">R${s.price}</div></div><button class="btnBook" onclick="openBooking(${i})">Book →</button></div>`).join('')}</div>
+  <div class="card"><h3>Share this salon</h3><p class="small" style="margin-bottom:10px">Send this link to customers on WhatsApp, Facebook or TikTok.</p><button class="btnShare" onclick="shareSalon()">🔗 Copy Link / Share</button><a class="btnCall" href="tel:${data.owner_phone}">📞 Call ${esc(data.name)}</a></div>
+  <div class="card ownerBox"><h3>Are you the owner?</h3><p class="small">Manage this salon, photos, description and bookings.</p><a href="dashboard.html" style="display:block;margin-top:10px;font-weight:700">Go to Owner Dashboard →</a></div>
+  `;
+}
+function updateDots(total){
+  const el=document.getElementById('gScroll'); if(!el) return;
+  const idx=Math.round(el.scrollLeft/el.clientWidth);
+  const c=document.getElementById('count'); if(c) c.textContent=idx+1;
+  document.querySelectorAll('#dots span').forEach((d,i)=>d.classList.toggle('active',i===idx));
+}
+async function shareSalon(){
+  const url=location.href;
+  const text=`Book at ${salon.name} on BookMySalon: ${url}`;
+  if(navigator.share){ try{ await navigator.share({title:salon.name,text,url}); return; }catch(e){} }
+  try{ await navigator.clipboard.writeText(url); alert('✅ Link copied! Paste it on WhatsApp / Facebook.'); }
+  catch(e){ prompt('Copy this link:', url); }
+}
+function openBooking(i){
+  if(!salon.services || salon.services.length===0){ alert('No services listed for this salon yet.'); return; }
+  selectedService=salon.services[i]||salon.services[0];
+  document.getElementById('bName').textContent='Book - '+salon.name;
+  document.getElementById('bookingSuccess').style.display='none';
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('bookingDate').value=today;
+  document.getElementById('bookingDate').min=today;
+  document.getElementById('bookingTime').value='10:00';
+  document.getElementById('serviceList').innerHTML=salon.services.map((s,idx)=>`<button type="button" class="serviceBtn ${idx===i?'active':''}" onclick="selectService(${idx})">${esc(s.name)} - R${s.price}</button>`).join('');
+  document.getElementById('bookingModal').classList.add('open');
+}
+function selectService(i){ selectedService=salon.services[i]; document.querySelectorAll('.serviceBtn').forEach((b,idx)=>b.classList.toggle('active',idx===i)); }
+function closeBooking(){ document.getElementById('bookingModal').classList.remove('open'); }
+async function confirmBooking(){
+  const name=document.getElementById('customerName').value.trim();
+  const phone=normalizePhone(document.getElementById('customerPhone').value.trim());
+  const date=document.getElementById('bookingDate').value;
+  const time=document.getElementById('bookingTime').value;
+  if(!name||!phone){ alert('Enter your name and phone'); return; }
+  if(!date||!time){ alert('Choose date and time'); return; }
+  const btn=document.getElementById('confirmBtn'); btn.textContent='Booking...'; btn.disabled=true;
+  const { error } = await supabaseClient.from('bookings').insert([{salon_id:salon.id,customer_name:name,customer_phone:phone,service:selectedService.name,price:selectedService.price,booking_date:date,booking_time:time,status:'pending'}]);
+  btn.textContent='Confirm Booking →'; btn.disabled=false;
+  if(error){ alert(error.message); return; }
+  document.getElementById('bookingSuccess').style.display='block';
+  setTimeout(()=>{ closeBooking(); window.location.href='index.html'; },1200);
+}
+load();
+</script>
+</body>
+  </html>
