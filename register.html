@@ -22,46 +22,38 @@ input{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-si
 .success{background:#dcfce7;border:1px solid #86efac;padding:14px;border-radius:12px;display:none;margin-top:14px;font-size:14px}
 .small{font-size:13px;color:#777}
 a{color:#ff4d6d}
+.gallery{display:flex;gap:8px;overflow-x:auto;margin-top:8px;padding-bottom:4px}
+.gallery img{width:110px;height:110px;object-fit:cover;border-radius:12px;flex-shrink:0}
 </style>
 </head>
 <body>
 <div class="box">
 <h1>Register Your <span>Salon</span></h1>
 <p>Join BookMySalon. Customers in East London will find you and book you.</p>
-
 <div class="card">
   <label>Salon Name *</label>
   <input id="salonName" placeholder="e.g. Glamour Hair Salon">
-
   <label>Your Phone Number *</label>
   <input id="salonPhone" placeholder="e.g. 082 123 4567">
   <p class="small">You will use this number to log into your Dashboard later.</p>
-
   <label>Address / Area *</label>
   <input id="salonAddress" placeholder="e.g. 12 Oxford Street, Southernwood, East London">
-
-  <label>Salon Photo (shows on Home page)</label>
-  <input type="file" id="salonPhoto" accept="image/*">
-  <img id="photoPreview" style="width:100%;border-radius:12px;display:none;margin-top:8px;max-height:220px;object-fit:cover">
-
+  <label>Salon Photos (up to 10 - first one is your main cover)</label>
+  <input type="file" id="salonPhotos" accept="image/*" multiple>
+  <div class="gallery" id="photoPreview"></div>
+  <p class="small">Tip: Upload your best braids / nails / cuts. Good photos = more bookings.</p>
   <label>Your Services & Prices *</label>
   <div id="servicesList"></div>
   <button class="btn btn-grey" onclick="addServiceRow()" type="button">+ Add Service</button>
-
   <button class="btn" onclick="registerSalon()" id="registerBtn">Register My Salon →</button>
-  <div class="success" id="successMsg">✅ Success! Your salon is now live on BookMySalon.<br><br><a href="index.html">View Home Page →</a> • <a href="dashboard.html">Go to Dashboard →</a></div>
+  <div class="success" id="successMsg">✅ Success! Your salon is now live.<br><br><a href="index.html">View Home Page →</a> • <a href="dashboard.html">Go to Dashboard →</a></div>
 </div>
-
 <p style="text-align:center;margin-top:16px"><a href="index.html">← Back to Home</a> • <a href="dashboard.html">Owner Dashboard</a></p>
 </div>
-
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
-
 let services = [{name:'', price:''}];
-let selectedPhotoFile = null;
-
-// --- Services ---
+let selectedPhotoFiles = [];
 function renderServices(){
   const container = document.getElementById('servicesList');
   container.innerHTML = services.map((s,i)=>`
@@ -69,77 +61,49 @@ function renderServices(){
       <input placeholder="Service e.g. Braids" value="${s.name || ''}" oninput="services[${i}].name=this.value">
       <input placeholder="Price R" type="number" style="width:110px" value="${s.price || ''}" oninput="services[${i}].price=this.value">
       <button type="button" onclick="removeService(${i})">✕</button>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 function addServiceRow(){ services.push({name:'', price:''}); renderServices(); }
-function removeService(i){
-  services.splice(i,1);
-  if(services.length===0) services.push({name:'', price:''});
-  renderServices();
-}
+function removeService(i){ services.splice(i,1); if(services.length===0) services.push({name:'',price:''}); renderServices(); }
 renderServices();
-
-// --- Photo Preview ---
-document.getElementById('salonPhoto').addEventListener('change', (e)=>{
-  selectedPhotoFile = e.target.files[0];
-  if(selectedPhotoFile){
-    const url = URL.createObjectURL(selectedPhotoFile);
-    const preview = document.getElementById('photoPreview');
-    preview.src = url;
-    preview.style.display = 'block';
-  }
+document.getElementById('salonPhotos').addEventListener('change', (e)=>{
+  selectedPhotoFiles = Array.from(e.target.files).slice(0,10);
+  const preview = document.getElementById('photoPreview');
+  preview.innerHTML = '';
+  selectedPhotoFiles.forEach(f=>{
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    preview.appendChild(img);
+  });
 });
-
-// --- Upload Photo to Supabase Storage ---
-async function uploadPhoto(file){
-  const fileName = Date.now() + '-' + file.name.replace(/\s/g,'');
+async function uploadOnePhoto(file){
+  const fileName = Date.now() + '-' + Math.random().toString(36).slice(2,7) + '-' + file.name.replace(/\s/g,'');
   const { error } = await supabaseClient.storage.from('salon-photos').upload(fileName, file);
   if(error) throw error;
   const { data } = supabaseClient.storage.from('salon-photos').getPublicUrl(fileName);
   return data.publicUrl;
 }
-
-// --- Register ---
 async function registerSalon(){
   const name = document.getElementById('salonName').value.trim();
   const phone = document.getElementById('salonPhone').value.trim();
   const address = document.getElementById('salonAddress').value.trim();
-
-  if(!name || !phone || !address){
-    alert('Please fill in salon name, phone and address');
-    return;
-  }
-
+  if(!name || !phone || !address){ alert('Please fill in salon name, phone and address'); return; }
   const cleanServices = services.filter(s=>s.name.trim()!=='').map(s=>({name:s.name.trim(), price: parseInt(s.price)||0}));
-  if(cleanServices.length===0){
-    alert('Please add at least one service');
-    return;
-  }
-
+  if(cleanServices.length===0){ alert('Please add at least one service'); return; }
   const btn = document.getElementById('registerBtn');
-  btn.textContent = 'Registering... Please wait';
-  btn.disabled = true;
-
+  btn.textContent = 'Registering... Please wait'; btn.disabled = true;
   try {
+    let photos = [];
     let photo_url = null;
-    if(selectedPhotoFile){
-      photo_url = await uploadPhoto(selectedPhotoFile);
-    }
-
-    const { error } = await supabaseClient.from('salons').insert([{ name, phone, address, services: cleanServices, photo_url }]);
+    for(const f of selectedPhotoFiles){ const url = await uploadOnePhoto(f); photos.push(url); }
+    if(photos.length>0) photo_url = photos[0];
+    const { error } = await supabaseClient.from('salons').insert([{ name, phone, address, services: cleanServices, photo_url, photos }]);
     if(error) throw error;
-
     document.getElementById('successMsg').style.display = 'block';
     btn.textContent = '✅ Registered!';
     window.scrollTo({top:0, behavior:'smooth'});
-
-  } catch(e){
-    alert('Error: ' + e.message);
-    btn.textContent = 'Register My Salon →';
-    btn.disabled = false;
-  }
+  } catch(e){ alert('Error: ' + e.message); btn.textContent = 'Register My Salon →'; btn.disabled = false; }
 }
 </script>
 </body>
-  </html>
+</html>
