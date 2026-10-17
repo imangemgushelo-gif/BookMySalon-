@@ -104,10 +104,21 @@ async function registerSalon(){
   }
   btn.textContent='Register My Salon →'; btn.disabled=false;
   if(error){ alert('Error: '+error.message); return; }
+  // ADD ONLY - stay logged in as owner after registering
+  try{
+    localStorage.setItem('bms_role','owner');
+    localStorage.setItem('bms_owner_phone', owner_phone);
+    if(data && data.id) localStorage.setItem('bms_salon_id', data.id);
+  }catch(e){}
   const box=document.getElementById('successBox'); box.style.display='block';
-  box.innerHTML=`✅ <b>${name}</b> registered! Your salon page is ready.<br><br><a href="salon.html?id=${data.id}" style="color:#166534;font-weight:800">👁️ View My Salon Page →</a><br><a href="dashboard.html" style="color:#166534">Go to Dashboard →</a>`;
+  box.innerHTML=`✅ <b>${name}</b> registered! Your salon page is ready. You stay logged in until you Logout.<br><br><a href="salon.html?id=${data.id}" style="color:#166534;font-weight:800">👁️ View My Salon Page →</a><br><a href="dashboard.html" style="color:#166534">Go to Dashboard →</a>`;
   window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
 }
+// ADD ONLY - prefill owner phone if already logged in
+try{
+  const savedPhone = localStorage.getItem('bms_owner_phone');
+  if(savedPhone) document.getElementById('owner_phone').value = savedPhone;
+}catch(e){}
 renderServices();
 </script>
 </body>
