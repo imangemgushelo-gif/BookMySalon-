@@ -12,7 +12,7 @@ body{background:#fff5f7;padding:20px;padding-bottom:60px}
 h1{font-size:26px} h1 span{color:#ff4d6d}
 p{color:#666;margin:8px 0 16px;font-size:14px}
 .card{background:white;padding:18px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:12px}
-input,textarea{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;margin:6px 0 10px}
+input{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;margin:6px 0 10px}
 .btn{width:100%;background:#111;color:white;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
 .btn-pink{background:#ff4d6d}
 .btn-green{background:#16a34a}
@@ -72,6 +72,7 @@ let mySalonId = null;
 let mySalon = null;
 let currentTab = 'bookings';
 let editServices = [];
+let newEditPhotoFile = null;
 
 function showTab(tab){
   currentTab = tab;
@@ -100,24 +101,37 @@ async function login(){
   mySalon = salons[0];
   mySalonId = mySalon.id;
   editServices = [...(mySalon.services || [])];
+  newEditPhotoFile = null;
   document.getElementById('tabs').style.display = 'flex';
-  document.getElementById('salonInfo').innerHTML = `
-    <div class="card">
-      <div class="row"><b style="font-size:18px">${mySalon.name}</b><span class="badge confirmed">LIVE</span></div>
-      <p class="small">${mySalon.address} • ${mySalon.phone}</p>
-      <p class="small">Services: ${mySalon.services && mySalon.services.length>0 ? mySalon.services.map(s=>s.name+' - R'+s.price).join(', ') : 'Not added yet'}</p>
-      <div id="salonRatingSummary" class="small" style="margin-top:6px">Loading rating...</div>
-    </div>
-  `;
+  renderSalonHeader();
   loadBookings();
   loadRatingSummary();
 }
 
+function renderSalonHeader(){
+  document.getElementById('salonInfo').innerHTML = `
+    <div class="card" style="overflow:hidden;padding:0">
+      ${mySalon.photo_url ? `<img src="${mySalon.photo_url}" style="width:100%;height:180px;object-fit:cover;display:block">` : ``}
+      <div style="padding:18px">
+        <div class="row"><b style="font-size:18px">${mySalon.name}</b><span class="badge confirmed">LIVE</span></div>
+        <p class="small">${mySalon.address} • ${mySalon.phone}</p>
+        <p class="small">Services: ${mySalon.services && mySalon.services.length>0 ? mySalon.services.map(s=>s.name+' - R'+s.price).join(', ') : 'Not added yet'}</p>
+        <div id="salonRatingSummary" class="small" style="margin-top:6px">Loading rating...</div>
+      </div>
+    </div>
+  `;
+}
+
 async function loadRatingSummary(){
   const { data } = await supabaseClient.from('ratings').select('rating').eq('salon_id', mySalonId);
-  if(!data || data.length===0){ document.getElementById('salonRatingSummary').innerHTML = '⭐ New • No ratings yet'; return; }
+  if(!data || data.length===0){ 
+    const el = document.getElementById('salonRatingSummary');
+    if(el) el.innerHTML = '⭐ New • No ratings yet';
+    return;
+  }
   const avg = data.reduce((a,b)=>a+b.rating,0)/data.length;
-  document.getElementById('salonRatingSummary').innerHTML = `⭐ <b style="color:#111;font-size:15px">${avg.toFixed(1)} average</b> • ${data.length} ${data.length===1?'review':'reviews'}`;
+  const el = document.getElementById('salonRatingSummary');
+  if(el) el.innerHTML = `⭐ <b style="color:#111;font-size:15px">${avg.toFixed(1)} average</b> • ${data.length} ${data.length===1?'review':'reviews'}`;
 }
 
 async function loadBookings(){
@@ -166,9 +180,10 @@ async function loadRatings(){
   `;
 }
 
-// ✏️ EDIT SALON
+// ✏️ EDIT SALON + PHOTO
 function renderEditForm(){
   if(!mySalon) return;
+  newEditPhotoFile = null;
   document.getElementById('edit').innerHTML = `
     <div class="card">
       <h3>✏️ Edit My Salon</h3>
@@ -179,14 +194,34 @@ function renderEditForm(){
       <input id="editAddress" value="${mySalon.address || ''}" placeholder="e.g. 12 Oxford Street, Southernwood">
       <label>Phone Number</label>
       <input id="editPhone" value="${mySalon.phone || ''}">
+      <label>Salon Photo</label>
+      <input type="file" id="editPhoto" accept="image/*" onchange="previewEditPhoto(event)">
+      <img id="editPhotoPreview" src="${mySalon.photo_url || ''}" style="width:100%;border-radius:12px;margin:8px 0;${mySalon.photo_url ? '' : 'display:none'};max-height:220px;object-fit:cover">
       <label>Your Services & Prices</label>
       <div id="editServicesList"></div>
       <button class="btn" style="background:#f1f1f1;color:#111;margin-bottom:10px" onclick="addServiceRow()">+ Add Service</button>
-      <button class="btn btn-green" onclick="saveSalon()">💾 Save Changes</button>
+      <button class="btn btn-green" onclick="saveSalon()" id="saveBtn">💾 Save Changes</button>
       <div class="success" id="saveSuccess">✅ Saved! Your salon is updated on the Home page.</div>
     </div>
   `;
   renderServiceRows();
+}
+
+function previewEditPhoto(e){
+  newEditPhotoFile = e.target.files[0];
+  if(newEditPhotoFile){
+    const p = document.getElementById('editPhotoPreview');
+    p.src = URL.createObjectURL(newEditPhotoFile);
+    p.style.display = 'block';
+  }
+}
+
+async function uploadPhoto(file){
+  const fileName = Date.now() + '-' + file.name.replace(/\s/g,'');
+  const { error } = await supabaseClient.storage.from('salon-photos').upload(fileName, file);
+  if(error) throw error;
+  const { data } = supabaseClient.storage.from('salon-photos').getPublicUrl(fileName);
+  return data.publicUrl;
 }
 
 function renderServiceRows(){
@@ -213,22 +248,35 @@ async function saveSalon(){
   const cleanServices = editServices.filter(s=>s.name.trim()!=='').map(s=>({name:s.name.trim(), price: parseInt(s.price)||0}));
   if(cleanServices.length===0){ alert('Add at least one service'); return; }
 
-  const { error } = await supabaseClient.from('salons').update({ name, address, phone, services: cleanServices }).eq('id', mySalonId);
-  if(error){ alert(error.message); return; }
-  mySalon = {...mySalon, name, address, phone, services: cleanServices};
-  editServices = [...cleanServices];
-  document.getElementById('salonInfo').innerHTML = `
-    <div class="card">
-      <div class="row"><b style="font-size:18px">${mySalon.name}</b><span class="badge confirmed">LIVE</span></div>
-      <p class="small">${mySalon.address} • ${mySalon.phone}</p>
-      <p class="small">Services: ${mySalon.services.map(s=>s.name+' - R'+s.price).join(', ')}</p>
-      <div id="salonRatingSummary" class="small" style="margin-top:6px"></div>
-    </div>
-  `;
-  loadRatingSummary();
-  const ok = document.getElementById('saveSuccess');
-  ok.style.display='block';
-  setTimeout(()=> ok.style.display='none', 4000);
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'Saving... Please wait';
+  btn.disabled = true;
+
+  try {
+    let photo_url = mySalon.photo_url;
+    if(newEditPhotoFile){
+      photo_url = await uploadPhoto(newEditPhotoFile);
+    }
+
+    const { error } = await supabaseClient.from('salons').update({ name, address, phone, services: cleanServices, photo_url }).eq('id', mySalonId);
+    if(error) throw error;
+
+    mySalon = {...mySalon, name, address, phone, services: cleanServices, photo_url};
+    editServices = [...cleanServices];
+    newEditPhotoFile = null;
+    renderSalonHeader();
+    loadRatingSummary();
+    const ok = document.getElementById('saveSuccess');
+    ok.style.display='block';
+    setTimeout(()=> ok.style.display='none', 4000);
+    btn.textContent = '💾 Save Changes';
+    btn.disabled = false;
+
+  } catch(e){
+    alert('Error: ' + e.message);
+    btn.textContent = '💾 Save Changes';
+    btn.disabled = false;
+  }
 }
 
 async function updateStatus(id, status){
@@ -238,4 +286,4 @@ async function updateStatus(id, status){
 }
 </script>
 </body>
-</html>
+  </html>
