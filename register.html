@@ -7,99 +7,97 @@
 <meta name="theme-color" content="#2a0a45">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
-body{background:#fff;padding:20px;color:#111}
-.box{max-width:600px;margin:0 auto}
-.logo{font-size:32px;font-weight:900;color:#2a0a45}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#fff;color:#111;padding-bottom:90px}
+.wrap{max-width:600px;margin:0 auto;padding:0 16px}
+.logo{font-size:30px;font-weight:900;color:#2a0a45}
 .logo span{color:#c2a06e}
-p{color:#666;font-size:14px;margin:6px 0 16px}
-.card{background:#fff;padding:16px;border-radius:16px;border:1px solid #eee;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:14px}
-label{font-weight:700;font-size:13px;display:block;margin:10px 0 4px}
-input,select,textarea{width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;background:#fff;outline:none}
-input:focus{border-color:#2a0a45}
-.btn{width:100%;background:#2a0a45;color:#fff;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
-.btn-grey{background:#f1f1f1;color:#111}
-.row{display:flex;gap:8px}
-.row input{flex:1}
-.remove{background:#fee2e2;border:0;border-radius:12px;padding:0 14px;font-size:18px;cursor:pointer}
-.preview{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px;flex-wrap:wrap}
-.preview img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:2px solid #eee;flex-shrink:0}
-.preview-wrap{position:relative;flex-shrink:0}
-.preview-wrap button{position:absolute;top:-6px;right:-6px;background:#111;color:#fff;border:0;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px}
-.hint{font-size:12px;color:#999;margin-top:4px}
-.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:12px;color:#166534}
-a{color:#2a0a45}
+.card{background:#fff;border:1px solid #eee;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+h1{font-size:26px;margin:14px 0 4px}
+.small{font-size:13px;color:#777}
+label{font-weight:700;font-size:13px;display:block;margin:12px 0 6px}
+input,textarea,select{width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;outline:none;background:#fff;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:#2a0a45}
+.btnFull{width:100%;background:#2a0a45;color:#fff;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;margin-top:16px}
+.btnFull:disabled{opacity:.6}
+.serviceRow{display:flex;gap:8px;margin-bottom:8px}
+.serviceRow input{margin:0}
+.serviceRow .del{flex-shrink:0;width:42px;background:#fee2e2;color:#991b1b;border:0;border-radius:12px;font-weight:800;cursor:pointer}
+.btn-light{background:#f5f0ff;color:#2a0a45;border:1px solid #e9dfff;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+.preview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.preview img{width:100%;height:110px;object-fit:cover;border-radius:12px}
+.success{background:#dcfce7;border:1px solid #86efac;padding:14px;border-radius:12px;color:#166534;display:none;margin-top:12px}
 </style>
 </head>
 <body>
-<div class="box">
-<a href="index.html" style="text-decoration:none;font-weight:700">← Back</a>
-<div class="logo" style="margin-top:10px">Book<span>My</span>Salon</div>
-<p>Register your salon and start getting bookings.</p>
+<div class="wrap">
+<a href="index.html" style="display:inline-block;margin:14px 0;text-decoration:none;color:#2a0a45;font-weight:700">← Back to Home</a>
+<div class="logo">Book<span>My</span>Salon</div>
+<h1>Register Your Salon</h1>
+<p class="small">Fill this in once. Your salon gets its own page instantly.</p>
 <div class="card">
-<label>Salon Name *</label><input id="name" placeholder="e.g. Tyler's Barbershop">
-<label>Owner Name *</label><input id="owner" placeholder="Your full name">
-<label>Your Phone Number *</label><input id="phone" placeholder="e.g. 073 771 5535">
-<div class="hint">You will use this number to log into your Owner Dashboard.</div>
-<label>Address *</label><input id="address" placeholder="e.g. 5223 Nu2, Mdantsane, East London">
-<label>Your Services & Prices *</label>
-<div id="services"></div>
-<button class="btn btn-grey" type="button" onclick="addService()">+ Add Service</button>
-<label>Salon Photos * (up to 10)</label>
-<input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotos(event)">
-<div class="hint">Select multiple photos at once. First photo = main cover photo.</div>
+<label>Salon / Barbershop Name *</label><input id="name" placeholder="e.g. Tyler's barbershop">
+<label>Category *</label>
+<select id="category">
+<option value="Barbershop">💈 Barbershop</option>
+<option value="Salon" selected>💇‍♀️ Salon</option>
+<option value="Braids">🧶 Braids</option>
+<option value="Nails">💅 Nails</option>
+<option value="Beauty">✨ Beauty</option>
+<option value="Makeup">💄 Makeup</option>
+</select>
+<label>Owner Name *</label><input id="owner_name" placeholder="e.g. Tyler">
+<label>Owner Phone *</label><input id="owner_phone" placeholder="e.g. 073 123 4567">
+<label>Address / Location *</label><input id="address" placeholder="e.g. 5223 Nu2, Mdantsane, East London">
+<p class="small">Tip: Include area like Mdantsane, NU2, East London so Location filter finds you.</p>
+<label>About Your Salon (Description)</label><textarea id="description" rows="3" placeholder="e.g. We specialize in fades, clean cuts and beard trims. Walk-ins welcome."></textarea>
+<label>Services & Prices *</label><div id="servicesEditor"></div>
+<button class="btn-light" onclick="addServiceRow()">+ Add Service</button>
+<label>Photos (up to 10) *</label><input type="file" id="photosInput" accept="image/*" multiple>
 <div class="preview" id="preview"></div>
-<button class="btn" id="submitBtn" onclick="registerSalon()" style="margin-top:16px">Register My Salon →</button>
-<div class="success" id="success">✅ Salon registered! <a href="index.html">View it on the home page →</a></div>
+<p class="small">First photo = cover photo. You can add / delete photos later in Dashboard.</p>
+<button class="btnFull" id="registerBtn" onclick="registerSalon()">Register My Salon →</button>
+<div class="success" id="successBox"></div>
 </div>
 </div>
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
-let photos=[];
-function addService(name='',price=''){
-  const div=document.createElement('div'); div.className='row'; div.style.marginBottom='8px';
-  div.innerHTML=`<input placeholder="Service e.g. Fade" value="${name}"><input type="number" placeholder="Price e.g. 60" value="${price}"><button class="remove" onclick="this.parentElement.remove()">✕</button>`;
-  document.getElementById('services').appendChild(div);
-}
-addService('Fade','60');
-function handlePhotos(e){
-  const files=Array.from(e.target.files).slice(0,10-photos.length);
-  if(photos.length+files.length>10){ alert('Max 10 photos'); return; }
-  files.forEach(file=>{
-    const reader=new FileReader();
-    reader.onload=(ev)=>{
-      const img=new Image();
-      img.onload=()=>{
-        const canvas=document.createElement('canvas'); const max=1200; let w=img.width,h=img.height;
-        if(w>max){ h=h*max/w; w=max; }
-        canvas.width=w; canvas.height=h; canvas.getContext('2d').drawImage(img,0,0,w,h);
-        photos.push(canvas.toDataURL('image/jpeg',0.8)); renderPreview();
-      };
-      img.src=ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-  e.target.value='';
-}
-function renderPreview(){
-  document.getElementById('preview').innerHTML=photos.map((p,i)=>`<div class="preview-wrap"><img src="${p}"><button onclick="photos.splice(${i},1);renderPreview()">✕</button></div>`).join('');
-}
+let services=[{name:'Fade',price:60},{name:'Cut + Beard',price:120}];
+let selectedFiles=[];
+function renderServices(){ document.getElementById('servicesEditor').innerHTML=services.map((s,i)=>`<div class="serviceRow"><input placeholder="Service e.g. Fade" value="${s.name.replace(/"/g,'')}" oninput="services[${i}].name=this.value"><input type="number" placeholder="Price" value="${s.price}" style="width:100px" oninput="services[${i}].price=this.value"><button class="del" onclick="removeService(${i})">✕</button></div>`).join(''); }
+function addServiceRow(){ services.push({name:'',price:''}); renderServices(); }
+function removeService(i){ services.splice(i,1); if(services.length===0) services.push({name:'',price:''}); renderServices(); }
+document.getElementById('photosInput').addEventListener('change',e=>{ selectedFiles=[...e.target.files].slice(0,10); const p=document.getElementById('preview'); p.innerHTML=''; selectedFiles.forEach(f=>{ const url=URL.createObjectURL(f); p.innerHTML+=`<img src="${url}">`; }); });
+function fileToBase64(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f); }); }
 async function registerSalon(){
   const name=document.getElementById('name').value.trim();
-  const owner_name=document.getElementById('owner').value.trim();
-  const owner_phone=document.getElementById('phone').value.trim().replace(/[^0-9]/g,'');
+  const category=document.getElementById('category').value;
+  const owner_name=document.getElementById('owner_name').value.trim();
+  const owner_phone=document.getElementById('owner_phone').value.trim();
   const address=document.getElementById('address').value.trim();
-  const serviceRows=document.querySelectorAll('#services .row');
-  const services=Array.from(serviceRows).map(r=>{ const inputs=r.querySelectorAll('input'); return {name:inputs[0].value.trim(), price:parseFloat(inputs[1].value)||0}; }).filter(s=>s.name);
-  if(!name||!owner_name||!owner_phone||!address){ alert('Please fill all required fields'); return; }
-  if(services.length===0){ alert('Add at least 1 service'); return; }
-  if(photos.length===0){ alert('Please add at least 1 photo'); return; }
-  const btn=document.getElementById('submitBtn'); btn.textContent='Registering... Please wait'; btn.disabled=true;
-  const { error } = await supabaseClient.from('salons').insert([{name,owner_name,owner_phone,address,services,photos:photos,photo_url:photos[0]}]);
-  if(error){ alert('Error: '+error.message); btn.textContent='Register My Salon →'; btn.disabled=false; return; }
-  document.getElementById('success').style.display='block'; btn.textContent='✅ Registered!';
-  setTimeout(()=>window.location.href='index.html',1500);
+  const description=document.getElementById('description').value.trim();
+  if(!name||!owner_name||!owner_phone||!address){ alert('Please fill Name, Owner Name, Phone and Address'); return; }
+  const cleanServices=services.filter(s=>s.name.trim()!=='').map(s=>({name:s.name.trim(),price:Number(s.price)||0}));
+  if(cleanServices.length===0){ alert('Add at least 1 service'); return; }
+  if(selectedFiles.length===0){ alert('Please add at least 1 photo'); return; }
+  const btn=document.getElementById('registerBtn'); btn.textContent='Registering...'; btn.disabled=true;
+  let photos=[];
+  for(let f of selectedFiles){
+    try{
+      const fileName=Date.now()+'-'+Math.random().toString(36).slice(2)+'-'+f.name.replace(/[^a-zA-Z0-9.]/g,'');
+      const { error:upErr } = await supabaseClient.storage.from('salon-photos').upload(fileName, f);
+      if(!upErr){ const { data:pub } = supabaseClient.storage.from('salon-photos').getPublicUrl(fileName); photos.push(pub.publicUrl); }
+      else { photos.push(await fileToBase64(f)); }
+    }catch(e){ photos.push(await fileToBase64(f)); }
+  }
+  const { data, error } = await supabaseClient.from('salons').insert([{name,category,owner_name,owner_phone,address,description,services:cleanServices,photos:photos,photo_url:photos[0]}]).select().single();
+  btn.textContent='Register My Salon →'; btn.disabled=false;
+  if(error){ alert('Error: '+error.message); return; }
+  const box=document.getElementById('successBox'); box.style.display='block';
+  box.innerHTML=`✅ <b>${name}</b> registered! Your salon page is ready.<br><br><a href="salon.html?id=${data.id}" style="color:#166534;font-weight:800">👁️ View My Salon Page →</a><br><a href="dashboard.html" style="color:#166534">Go to Dashboard →</a>`;
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
 }
+renderServices();
 </script>
 </body>
-  </html>
+                                    </html>
