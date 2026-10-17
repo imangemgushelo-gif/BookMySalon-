@@ -4,309 +4,295 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BookMySalon - Find & Book Salons in East London</title>
-<meta name="description" content="BookMySalon - Find. Book. Glow. Salon Booking App for East London.">
+<meta name="description" content="Find and book salons, barbershops and beauty salons in East London.">
 <meta name="theme-color" content="#2a0a45">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/png" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
-body{background:#ffffff;padding:20px;padding-bottom:80px;color:#111}
-.box{max-width:600px;margin:0 auto}
-.logo{font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1;margin:4px 0 2px;color:#2a0a45}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif}
+body{background:#fff;color:#111;padding-bottom:90px}
+.topbar{background:#fff;padding:14px 16px 10px;position:sticky;top:0;z-index:50;border-bottom:1px solid #f0f0f0}
+.logo{font-size:30px;font-weight:900;color:#2a0a45;letter-spacing:-0.5px}
 .logo span{color:#c2a06e}
-.tagline{color:#666;margin:0 0 16px;font-size:14px}
-h1{font-size:28px;color:#111} h1 span{color:#2a0a45}
-p{color:#666;margin:8px 0 16px;font-size:14px}
-.card{background:#ffffff;padding:16px;border-radius:16px;border:1px solid #eee;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:14px;overflow:hidden}
-input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;margin:6px 0 10px;background:#ffffff;color:#111;outline:none}
-input:focus,select:focus{border-color:#2a0a45}
-.btn{width:100%;background:#2a0a45;color:white;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
-.btn-dark{background:#111}
-.btn-grey{background:#f1f1f1;color:#111}
+.topbar p{font-size:13px;color:#666;margin-top:2px}
+.wrap{max-width:700px;margin:0 auto;padding:0 16px}
+.tabs{display:flex;gap:8px;margin:14px 0}
+.tabs button{flex:1;padding:12px;border-radius:14px;border:1px solid #e5e5e5;background:#fff;font-weight:700;cursor:pointer;font-size:14px}
+.tabs button.active{background:#2a0a45;color:#fff;border-color:#2a0a45}
+.search{width:100%;padding:13px 14px 13px 42px;border:1.5px solid #e5e5e5;border-radius:14px;font-size:15px;outline:none;background:#fff}
+.searchWrap{position:relative;margin-bottom:14px}
+.searchWrap:before{content:"🔍";position:absolute;left:14px;top:13px}
+.search:focus{border-color:#2a0a45}
+.actions{display:flex;gap:8px;margin-bottom:16px}
+.actions a{flex:1;text-align:center;text-decoration:none;padding:12px;border-radius:14px;font-weight:700;font-size:14px}
+.btn-purple{background:#2a0a45;color:#fff}
+.btn-light{background:#f5f0ff;color:#2a0a45;border:1px solid #e9dfff}
+.sectionTitle{font-size:18px;font-weight:800;margin:6px 0 12px}
+.card{background:#fff;border:1px solid #eee;border-radius:18px;overflow:hidden;margin-bottom:16px;box-shadow:0 4px 18px rgba(0,0,0,.06)}
+.gallery{position:relative;overflow:hidden;background:#f5f5f5}
+.galleryScroll{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.galleryScroll::-webkit-scrollbar{display:none}
+.galleryScroll img{width:100%;height:280px;object-fit:cover;flex-shrink:0;scroll-snap-align:start}
+.badgeCount{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:700;padding:5px 9px;border-radius:20px}
+.dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
+.dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.6)}
+.dots span.active{background:#fff;width:18px;border-radius:10px}
+.cardBody{padding:14px}
+.cardBody h3{font-size:19px}
+.addr{font-size:13px;color:#777;margin:4px 0 8px}
+.services{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.services span{background:#f5f0ff;color:#2a0a45;font-size:12px;font-weight:700;padding:6px 10px;border-radius:20px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
-.live{background:#dcfce7;color:#166534}
-.small{font-size:13px;color:#777}
-.stars{color:#ffc107}
-.tabs{display:flex;gap:8px;margin:16px 0 12px}
-.tabs button{flex:1;padding:11px;border-radius:12px;border:1px solid #e5e5e5;background:white;color:#111;font-weight:700;cursor:pointer}
-.tabs button.active{background:#2a0a45;color:white;border-color:#2a0a45}
-.service-btn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px;border:1px solid #eee;border-radius:12px;background:#ffffff;margin-bottom:8px;cursor:pointer;text-align:left;font-size:14px;color:#111}
-.service-btn b{color:#111}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:99}
+.btn{padding:12px 16px;border:0;border-radius:12px;font-weight:800;cursor:pointer;font-size:14px}
+.btnBook{background:#2a0a45;color:#fff;flex:1}
+.btnCall{background:#f1f1f1;color:#111;text-decoration:none;padding:12px 14px;border-radius:12px;font-weight:700;font-size:14px}
+.empty{text-align:center;padding:40px 10px;color:#777}
+.empty b{color:#111;font-size:18px;display:block;margin-bottom:6px}
+/* Modal */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}
-.modal-box{background:#ffffff;width:100%;max-width:600px;border-radius:20px 20px 0 0;padding:20px;max-height:90vh;overflow-y:auto}
-.top-links{display:flex;gap:10px;margin-top:10px}
-.top-links a{flex:1;text-align:center;background:white;padding:10px;border-radius:12px;text-decoration:none;color:#111;font-weight:700;font-size:13px;border:1px solid #eee;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:10px;font-size:14px;color:#166534}
-.star-btn{font-size:32px;cursor:pointer;background:none;border:0;color:#ddd;padding:0 2px}
-.star-btn.active{color:#ffc107}
-.gallery-wrap{position:relative}
-.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.gallery::-webkit-scrollbar{display:none}
-.gallery img{width:100%;height:220px;object-fit:cover;flex-shrink:0;scroll-snap-align:start;display:block}
-.gallery-dots{display:flex;gap:5px;justify-content:center;padding:8px 0 0}
-.gallery-dots span{width:6px;height:6px;border-radius:50%;background:#ddd;display:block}
-.gallery-dots span.active{background:#2a0a45;width:14px;border-radius:10px}
-.gallery-count{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);color:white;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
-.gallery-hint{font-size:12px;color:#999;text-align:center;padding:4px 0 0}
+.sheet{background:#fff;width:100%;max-width:600px;border-radius:22px 22px 0 0;padding:20px 18px 28px;max-height:92vh;overflow-y:auto}
+.sheetHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.sheetHead h2{font-size:22px}
+.close{background:#f1f1f1;border:0;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0}
+label{font-weight:700;font-size:13px;display:block;margin:12px 0 6px}
+input,select{width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;outline:none;background:#fff}
+input:focus{border-color:#2a0a45}
+.serviceBtn{padding:10px 14px;border-radius:20px;border:2px solid #e5e5e5;background:#fff;color:#111;font-weight:700;cursor:pointer;margin:4px 4px 4px 0;font-size:13px}
+.serviceBtn.active{background:#2a0a45;color:#fff;border-color:#2a0a45}
+.btnFull{width:100%;background:#2a0a45;color:#fff;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;margin-top:16px}
+.btnFull:disabled{opacity:.6}
+.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;color:#166534;font-size:14px;margin-top:12px;display:none}
+.bookingItem{background:#fff;border:1px solid #eee;border-radius:16px;padding:14px;margin-bottom:10px}
+.badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:800}
+.small{font-size:13px;color:#777}
+.stars{font-size:26px;letter-spacing:4px;cursor:pointer}
+.star{cursor:pointer;color:#ddd}
+.star.on{color:#f59e0b}
 </style>
 </head>
 <body>
-<div class="box">
-<div class="logo">Book<span>My</span>Salon</div>
-<p class="tagline">Find. Book. Glow. ✨</p>
-<h1>Find Your <span>Salon</span> 💇‍♀️</h1>
-<p>Book braids, cuts, nails & more in East London.</p>
-<div class="top-links">
-<a href="register.html">➕ Register Salon</a>
-<a href="dashboard.html">👤 Owner Dashboard</a>
+
+<div class="topbar">
+  <div class="wrap" style="padding:0">
+    <div class="logo">Book<span>My</span>Salon</div>
+    <p>Find & book salons in East London • Mdantsane • NU2</p>
+  </div>
 </div>
-<div class="tabs">
-<button id="tabHome" class="active" onclick="showTab('home')">🏠 Find Salon</button>
-<button id="tabMy" onclick="showTab('my')">📅 My Bookings</button>
+
+<div class="wrap">
+  <div class="tabs">
+    <button id="tabFind" class="active" onclick="showTab('find')">🏠 Find Salon</button>
+    <button id="tabMy" onclick="showTab('my')">📅 My Bookings</button>
+  </div>
+
+  <!-- FIND TAB -->
+  <div id="findTab">
+    <div class="searchWrap">
+      <input class="search" id="searchInput" placeholder="Search salon or service e.g. Braids" oninput="renderSalons()">
+    </div>
+    <div class="actions">
+      <a href="register.html" class="btn-purple">+ Register Salon</a>
+      <a href="dashboard.html" class="btn-light">Owner Dashboard</a>
+    </div>
+    <div class="sectionTitle">Salons Near You</div>
+    <div id="salonList"><div class="empty">Loading salons...</div></div>
+  </div>
+
+  <!-- MY BOOKINGS TAB -->
+  <div id="myTab" style="display:none">
+    <label>Enter your phone number to see your bookings</label>
+    <input id="myPhone" placeholder="e.g. 073 771 5535">
+    <button class="btnFull" onclick="loadMyBookings()">View My Bookings</button>
+    <div id="myBookingsList" style="margin-top:16px"></div>
+  </div>
 </div>
-<div id="homeTab">
-<input id="searchInput" placeholder="🔍 Search salon or service e.g. Braids" oninput="loadSalons()">
-<select id="areaFilter" onchange="loadSalons()">
-<option value="">📍 All Areas in East London</option>
-<option value="Southernwood">Southernwood</option>
-<option value="Quigney">Quigney</option>
-<option value="Vincent">Vincent</option>
-<option value="Beacon Bay">Beacon Bay</option>
-<option value="Gonubie">Gonubie</option>
-<option value="Mdantsane">Mdantsane</option>
-<option value="Duncan Village">Duncan Village</option>
-<option value="Nahoon">Nahoon</option>
-<option value="Cambridge">Cambridge</option>
-<option value="Amalinda">Amalinda</option>
-</select>
-<div id="salonList"><p class="small">Loading salons...</p></div>
+
+<!-- BOOKING MODAL -->
+<div class="modal" id="bookingModal" onclick="if(event.target===this) closeBooking()">
+  <div class="sheet">
+    <div class="sheetHead">
+      <div>
+        <h2 id="bookingSalonName">Salon Name</h2>
+        <p class="small" id="bookingSalonAddress"></p>
+      </div>
+      <button class="close" onclick="closeBooking()">✕</button>
+    </div>
+
+    <label>Choose Service *</label>
+    <div id="serviceList"></div>
+
+    <label>Your Name *</label>
+    <input id="customerName" placeholder="e.g. Sihle">
+
+    <label>Your Phone *</label>
+    <input id="customerPhone" placeholder="e.g. 073 123 4567">
+
+    <label>Date *</label>
+    <input type="date" id="bookingDate">
+
+    <label>Time *</label>
+    <input type="time" id="bookingTime" value="10:00">
+
+    <button class="btnFull" id="confirmBtn" onclick="confirmBooking()">Confirm Booking →</button>
+    <div class="success" id="bookingSuccess">✅ Booking requested! The salon will confirm it. Check My Bookings for status.</div>
+  </div>
 </div>
-<div id="myTab" style="display:none">
-<div class="card">
-<label style="font-weight:700;font-size:13px">Enter your phone number to see your bookings</label>
-<input id="myPhone" placeholder="e.g. 082 123 4567">
-<button class="btn btn-dark" onclick="loadMyBookings()">View My Bookings →</button>
-</div>
-<div id="myBookingsList"></div>
-</div>
-</div>
-<div class="modal" id="bookingModal">
-<div class="modal-box">
-<div class="row"><h2 id="modalSalonName">Book</h2><button onclick="closeModal()" style="background:#f1f1f1;border:0;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer">✕</button></div>
-<p class="small" id="modalSalonAddress"></p>
-<div id="modalServices"></div>
-<label style="font-weight:700;font-size:13px">Your Name</label>
-<input id="customerName" placeholder="Your full name">
-<label style="font-weight:700;font-size:13px">Your Phone</label>
-<input id="customerPhone" placeholder="Your phone number">
-<label style="font-weight:700;font-size:13px">Date</label>
-<input type="date" id="bookingDate">
-<label style="font-weight:700;font-size:13px">Time</label>
-<input type="time" id="bookingTime" value="10:00">
-<button class="btn" onclick="confirmBooking()">Confirm Booking →</button>
-<div class="success" id="bookingSuccess">✅ Booking sent! The salon owner will confirm it. Check My Bookings for status.</div>
-</div>
-</div>
-<div class="modal" id="ratingModal">
-<div class="modal-box">
-<div class="row"><h2>Rate Your Experience ⭐</h2><button onclick="closeRatingModal()" style="background:#f1f1f1;border:0;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer">✕</button></div>
-<p class="small" id="ratingSalonName"></p>
-<div style="text-align:center;margin:14px 0">
-<button class="star-btn" onclick="setStars(1)">★</button>
-<button class="star-btn" onclick="setStars(2)">★</button>
-<button class="star-btn" onclick="setStars(3)">★</button>
-<button class="star-btn" onclick="setStars(4)">★</button>
-<button class="star-btn" onclick="setStars(5)">★</button>
-</div>
-<label style="font-weight:700;font-size:13px">Comment (optional)</label>
-<input id="ratingComment" placeholder="How was it? e.g. Great braids, on time!">
-<button class="btn" onclick="submitRating()">Submit Rating →</button>
-<div class="success" id="ratingSuccess">✅ Thank you! Your rating is live.</div>
-</div>
-</div>
+
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
-let allSalons = [];
-let allRatings = {};
-let selectedSalon = null;
+let salons = [];
+let currentSalon = null;
 let selectedService = null;
-let ratingBooking = null;
-let ratingStars = 0;
+
 function showTab(tab){
-document.getElementById('tabHome').classList.toggle('active', tab==='home');
-document.getElementById('tabMy').classList.toggle('active', tab==='my');
-document.getElementById('homeTab').style.display = tab==='home' ? 'block' : 'none';
-document.getElementById('myTab').style.display = tab==='my' ? 'block' : 'none';
+  document.getElementById('tabFind').classList.toggle('active', tab==='find');
+  document.getElementById('tabMy').classList.toggle('active', tab==='my');
+  document.getElementById('findTab').style.display = tab==='find' ? 'block' : 'none';
+  document.getElementById('myTab').style.display = tab==='my' ? 'block' : 'none';
 }
+
 async function loadSalons(){
-const { data: salons } = await supabaseClient.from('salons').select('*').order('created_at', {ascending:false});
-const { data: ratings } = await supabaseClient.from('ratings').select('*');
-allSalons = salons || [];
-allRatings = {};
-(ratings||[]).forEach(r=>{
-if(!allRatings[r.salon_id]) allRatings[r.salon_id] = [];
-allRatings[r.salon_id].push(r);
-});
-renderSalons();
+  const { data, error } = await supabaseClient.from('salons').select('*').order('created_at', {ascending:false});
+  if(error){ document.getElementById('salonList').innerHTML = '<div class="empty"><b>Could not load salons</b>'+error.message+'</div>'; return; }
+  salons = data || [];
+  renderSalons();
 }
-function getRating(salonId){
-const list = allRatings[salonId] || [];
-if(list.length===0) return {avg:0, count:0};
-const avg = list.reduce((a,b)=>a+b.rating,0)/list.length;
-return {avg, count:list.length};
+
+function getPhotos(s){
+  if(s.photos && Array.isArray(s.photos) && s.photos.length>0) return s.photos;
+  if(s.photo_url) return [s.photo_url];
+  return ['https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'];
 }
-function getGallery(s){
-if(s.photos && Array.isArray(s.photos) && s.photos.length>0) return s.photos.slice(0,10);
-if(s.photo_url) return [s.photo_url];
-return [];
-}
-function galleryHTML(s){
-const gallery = getGallery(s);
-if(gallery.length===0){
-return `<div style="height:180px;background:linear-gradient(135deg,#2a0a45,#6b21a8);display:flex;align-items:center;justify-content:center;font-size:50px">💇‍♀️</div>`;
-}
-if(gallery.length===1){
-return `<img src="${gallery[0]}" style="width:100%;height:220px;object-fit:cover;display:block">`;
-}
-const dots = gallery.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('');
-return `
-<div class="gallery-wrap">
-<div class="gallery" id="gal-${s.id}" onscroll="updateDots('${s.id}', this)">
-${gallery.map(u=>`<img src="${u}" loading="lazy">`).join('')}
-</div>
-<span class="gallery-count" id="gal-count-${s.id}">1 / ${gallery.length}</span>
-</div>
-<div class="gallery-dots" id="gal-dots-${s.id}">${dots}</div>
-<p class="gallery-hint">← Swipe to see ${gallery.length} photos →</p>`;
-}
-function updateDots(salonId, el){
-const idx = Math.round(el.scrollLeft / el.clientWidth);
-const dotsEl = document.getElementById('gal-dots-'+salonId);
-const countEl = document.getElementById('gal-count-'+salonId);
-if(dotsEl){
-dotsEl.querySelectorAll('span').forEach((d,i)=> d.classList.toggle('active', i===idx));
-}
-if(countEl){
-const total = dotsEl ? dotsEl.querySelectorAll('span').length : 0;
-countEl.textContent = (idx+1) + ' / ' + total;
-}
-}
+
 function renderSalons(){
-const q = document.getElementById('searchInput').value.toLowerCase();
-const area = document.getElementById('areaFilter').value;
-const filtered = allSalons.filter(s=>{
-const matchQ = !q || s.name.toLowerCase().includes(q) || (s.services||[]).some(x=>x.name.toLowerCase().includes(q));
-const matchArea = !area || (s.address||'').toLowerCase().includes(area.toLowerCase());
-return matchQ && matchArea;
-});
-if(filtered.length===0){
-document.getElementById('salonList').innerHTML = `<div class="card">No salons found.<br><span class="small">Try another search or area. Are you a salon owner? <a href="register.html">Register here</a>.</span></div>`;
-return;
+  const q = (document.getElementById('searchInput').value || '').toLowerCase();
+  const filtered = salons.filter(s => {
+    if(!q) return true;
+    const servicesText = (s.services||[]).map(x=>x.name).join(' ').toLowerCase();
+    return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || servicesText.includes(q);
+  });
+  if(filtered.length===0){
+    document.getElementById('salonList').innerHTML = '<div class="empty"><b>No salons found</b>Try a different search or be the first to register.</div>';
+    return;
+  }
+  document.getElementById('salonList').innerHTML = filtered.map(s => {
+    const photos = getPhotos(s);
+    const services = (s.services||[]).map(x=>`<span>${x.name} - R${x.price}</span>`).join('');
+    return `
+    <div class="card">
+      <div class="gallery">
+        <div class="galleryScroll" id="gal-${s.id}" onscroll="updateDots('${s.id}', ${photos.length})">
+          ${photos.map(p=>`<img src="${p}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'">`).join('')}
+        </div>
+        ${photos.length>1 ? `<div class="badgeCount"><span id="count-${s.id}">1</span> / ${photos.length}</div><div class="dots" id="dots-${s.id}">${photos.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('')}</div>` : ''}
+      </div>
+      <div class="cardBody">
+        <h3>${escapeHtml(s.name)}</h3>
+        <div class="addr">📍 ${escapeHtml(s.address||'')}</div>
+        <div class="services">${services || '<span>No services listed</span>'}</div>
+        <div class="row" style="margin-top:12px">
+          <a class="btnCall" href="tel:${s.owner_phone}">📞 Call</a>
+          <button class="btn btnBook" onclick="openBooking('${s.id}')">Book Now →</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
-document.getElementById('salonList').innerHTML = filtered.map(s=>{
-const r = getRating(s.id);
-const ratingText = r.count===0 ? '⭐ New • No ratings yet' : `⭐ <b>${r.avg.toFixed(1)}</b> (${r.count} ${r.count===1?'review':'reviews'})`;
-const servicesText = (s.services||[]).map(x=>x.name+' - R'+x.price).join(' • ');
-const minPrice = (s.services||[]).length ? Math.min(...s.services.map(x=>x.price)) : 0;
-return `
-<div class="card" style="padding:0">
-${galleryHTML(s)}
-<div style="padding:16px">
-<div class="row"><b style="font-size:18px">${s.name}</b><span class="badge live">LIVE</span></div>
-<p class="small" style="margin:6px 0">${s.address}</p>
-<p style="margin:4px 0;font-size:14px">${ratingText}</p>
-<p class="small">${servicesText || 'Services coming soon'}</p>
-<div class="row" style="margin-top:12px">
-<span style="font-weight:800">From R${minPrice}</span>
-<button class="btn" style="width:auto;padding:11px 18px" onclick="openBooking('${s.id}')">Book Now →</button>
-</div>
-</div>
-</div>`;
-}).join('');
+
+function updateDots(id, total){
+  const el = document.getElementById('gal-'+id);
+  if(!el) return;
+  const idx = Math.round(el.scrollLeft / el.clientWidth);
+  const countEl = document.getElementById('count-'+id);
+  if(countEl) countEl.textContent = idx+1;
+  const dots = document.querySelectorAll('#dots-'+id+' span');
+  dots.forEach((d,i)=> d.classList.toggle('active', i===idx));
 }
+
+function escapeHtml(t){ return String(t||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 function openBooking(salonId){
-selectedSalon = allSalons.find(s=>s.id===salonId);
-selectedService = null;
-document.getElementById('modalSalonName').textContent = selectedSalon.name;
-document.getElementById('modalSalonAddress').textContent = selectedSalon.address;
-document.getElementById('bookingSuccess').style.display='none';
-document.getElementById('modalServices').innerHTML = `<label style="font-weight:700;font-size:13px">Choose Service</label>` + (selectedSalon.services||[]).map((svc,i)=>`
-<button class="service-btn" id="svc-${i}" onclick="selectService(${i})"><span>${svc.name}</span><b>R${svc.price}</b></button>
-`).join('');
-document.getElementById('bookingModal').classList.add('open');
+  currentSalon = salons.find(s => s.id === salonId);
+  if(!currentSalon) return;
+  // AUTO-SELECT first service so "Please choose a service" never happens
+  selectedService = (currentSalon.services && currentSalon.services.length>0) ? currentSalon.services[0] : null;
+  document.getElementById('bookingSalonName').textContent = currentSalon.name;
+  document.getElementById('bookingSalonAddress').textContent = currentSalon.address || '';
+  document.getElementById('bookingSuccess').style.display='none';
+  document.getElementById('customerName').value='';
+  document.getElementById('customerPhone').value='';
+  // Default date = today, time = 10:00
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('bookingDate').value = today;
+  document.getElementById('bookingDate').min = today;
+  document.getElementById('bookingTime').value = '10:00';
+  const box = document.getElementById('serviceList');
+  if(!currentSalon.services || currentSalon.services.length===0){
+    box.innerHTML = '<p class="small">No services listed for this salon.</p>';
+  } else {
+    box.innerHTML = currentSalon.services.map((s,i)=>`<button type="button" class="serviceBtn ${i===0?'active':''}" onclick="selectService(${i})">${escapeHtml(s.name)} - R${s.price}</button>`).join('');
+  }
+  document.getElementById('bookingModal').classList.add('open');
 }
-function selectService(i){
-selectedService = selectedSalon.services[i];
-document.querySelectorAll('.service-btn').forEach(b=>{ b.style.borderColor='#eee'; b.style.background='#ffffff'; });
-const el = document.getElementById('svc-'+i);
-el.style.borderColor='#2a0a45'; el.style.background='#f3e8ff';
+
+function selectService(index){
+  selectedService = currentSalon.services[index];
+  document.querySelectorAll('.serviceBtn').forEach((b,i)=> b.classList.toggle('active', i===index));
 }
-function closeModal(){ document.getElementById('bookingModal').classList.remove('open'); }
+
+function closeBooking(){ document.getElementById('bookingModal').classList.remove('open'); }
+
 async function confirmBooking(){
-if(!selectedService){ alert('Please choose a service'); return; }
-const customer_name = document.getElementById('customerName').value.trim();
-const customer_phone = document.getElementById('customerPhone').value.trim();
-const booking_date = document.getElementById('bookingDate').value;
-const booking_time = document.getElementById('bookingTime').value;
-if(!customer_name || !customer_phone || !booking_date || !booking_time){ alert('Please fill all fields'); return; }
-const { error } = await supabaseClient.from('bookings').insert([{ salon_id:selectedSalon.id, service:selectedService.name, price:selectedService.price, customer_name, customer_phone, booking_date, booking_time, status:'pending' }]);
-if(error){ alert(error.message); return; }
-document.getElementById('bookingSuccess').style.display='block';
-setTimeout(()=>{ closeModal(); showTab('my'); document.getElementById('myPhone').value = customer_phone; loadMyBookings(); }, 1200);
+  if(!selectedService){ alert('Please choose a service'); return; }
+  const customer_name = document.getElementById('customerName').value.trim();
+  const customer_phone = document.getElementById('customerPhone').value.trim();
+  const booking_date = document.getElementById('bookingDate').value;
+  const booking_time = document.getElementById('bookingTime').value;
+  if(!customer_name || !customer_phone){ alert('Please enter your name and phone number'); return; }
+  if(!booking_date || !booking_time){ alert('Please choose date and time'); return; }
+  const btn = document.getElementById('confirmBtn');
+  btn.textContent='Booking...'; btn.disabled=true;
+  const { error } = await supabaseClient.from('bookings').insert([{
+    salon_id: currentSalon.id,
+    customer_name,
+    customer_phone,
+    service: selectedService.name,
+    price: selectedService.price,
+    booking_date,
+    booking_time,
+    status: 'pending'
+  }]);
+  btn.textContent='Confirm Booking →'; btn.disabled=false;
+  if(error){ alert('Error: '+error.message); return; }
+  document.getElementById('bookingSuccess').style.display='block';
+  setTimeout(()=>{ closeBooking(); showTab('my'); document.getElementById('myPhone').value = customer_phone; loadMyBookings(); }, 1200);
 }
+
 async function loadMyBookings(){
-const phone = document.getElementById('myPhone').value.trim();
-if(!phone){ alert('Enter your phone number'); return; }
-const { data: bookings } = await supabaseClient.from('bookings').select('*, salons(name)').eq('customer_phone', phone).order('booking_date',{ascending:false});
-if(!bookings || bookings.length===0){
-document.getElementById('myBookingsList').innerHTML = `<div class="card">No bookings found for ${phone}.</div>`;
-return;
+  const phone = document.getElementById('myPhone').value.trim();
+  if(!phone){ alert('Enter your phone number'); return; }
+  const { data, error } = await supabaseClient.from('bookings').select('*, salons(name, address)').eq('customer_phone', phone).order('created_at',{ascending:false});
+  const list = document.getElementById('myBookingsList');
+  if(error || !data || data.length===0){ list.innerHTML='<div class="empty"><b>No bookings found</b>Try booking a salon first.</div>'; return; }
+  list.innerHTML = data.map(b=>{
+    const color = b.status==='confirmed' ? 'background:#dcfce7;color:#166534' : b.status==='cancelled' ? 'background:#fee2e2;color:#991b1b' : 'background:#fef9c3;color:#854d0e';
+    return `<div class="bookingItem">
+      <div class="row"><b>${escapeHtml(b.salons?.name||'Salon')}</b><span class="badge" style="${color}">${b.status.toUpperCase()}</span></div>
+      <p class="small" style="margin-top:6px">${escapeHtml(b.service)} - R${b.price}<br>📍 ${escapeHtml(b.salons?.address||'')}<br>📅 ${b.booking_date} at ${b.booking_time}</p>
+      <div style="margin-top:10px"><span class="small">Rate this salon:</span><div>${[1,2,3,4,5].map(n=>`<span class="star" onclick="rateSalon('${b.salon_id}', ${n}, this)">★</span>`).join('')}</div></div>
+    </div>`;
+  }).join('');
 }
-document.getElementById('myBookingsList').innerHTML = bookings.map(b=>{
-const badgeColor = b.status==='confirmed' ? '#dcfce7;color:#166534' : b.status==='cancelled' ? '#fee2e2;color:#991b1b' : '#fef9c3;color:#854d0e';
-const canRate = b.status==='confirmed';
-return `
-<div class="card">
-<div class="row"><b>${b.salons?.name || 'Salon'}</b><span class="badge" style="background:${badgeColor}">${b.status.toUpperCase()}</span></div>
-<p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}</p>
-${canRate ? `<button class="btn btn-dark" onclick="openRating('${b.id}','${b.salon_id}','${(b.salons?.name||'Salon').replace(/'/g,"")}')">⭐ Rate This Salon</button>` : `<p class="small">You can rate once the salon confirms your booking.</p>`}
-</div>`;
-}).join('');
+
+async function rateSalon(salonId, rating, el){
+  const parent = el.parentElement;
+  parent.querySelectorAll('.star').forEach((s,i)=> s.classList.toggle('on', i < rating));
+  await supabaseClient.from('ratings').insert([{salon_id: salonId, rating}]);
+  alert('Thanks! You rated '+rating+' stars ⭐');
 }
-function openRating(bookingId, salonId, salonName){
-ratingBooking = {bookingId, salonId};
-ratingStars = 0;
-document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('active'));
-document.getElementById('ratingSalonName').textContent = salonName;
-document.getElementById('ratingComment').value='';
-document.getElementById('ratingSuccess').style.display='none';
-document.getElementById('ratingModal').classList.add('open');
-}
-function closeRatingModal(){ document.getElementById('ratingModal').classList.remove('open'); }
-function setStars(n){
-ratingStars = n;
-document.querySelectorAll('.star-btn').forEach((b,i)=> b.classList.toggle('active', i<n));
-}
-async function submitRating(){
-if(ratingStars===0){ alert('Please tap a star rating'); return; }
-const comment = document.getElementById('ratingComment').value.trim();
-const phone = document.getElementById('myPhone').value.trim();
-const { error } = await supabaseClient.from('ratings').insert([{ salon_id: ratingBooking.salonId, booking_id: ratingBooking.bookingId, customer_phone: phone, rating: ratingStars, comment }]);
-if(error){ alert(error.message); return; }
-document.getElementById('ratingSuccess').style.display='block';
-setTimeout(()=>{ closeRatingModal(); loadMyBookings(); loadSalons(); }, 1000);
-}
-document.getElementById('bookingDate').min = new Date().toISOString().split('T')[0];
+
 loadSalons();
-if ("serviceWorker" in navigator) {
-window.addEventListener("load", () => {
-navigator.serviceWorker.register("/sw.js").catch(()=>{});
-});
-}
 </script>
 </body>
-  </html>
+          </html>
