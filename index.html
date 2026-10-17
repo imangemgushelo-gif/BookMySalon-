@@ -5,267 +5,308 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BookMySalon - Find & Book Salons in East London</title>
 <meta name="description" content="BookMySalon - Find. Book. Glow. Salon Booking App for East London.">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#2a0a45">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
-body{background:#000;color:#fff;padding:20px;padding-bottom:90px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#ffffff;padding:20px;padding-bottom:80px;color:#111}
 .box{max-width:600px;margin:0 auto}
-h1{font-size:28px;color:#fff} h1 span{color:#D4AF37}
-p{color:#bbb;margin:8px 0 16px;font-size:14px}
-.card{background:#111;padding:16px;border-radius:16px;border:1px solid #222;box-shadow:0 4px 16px rgba(0,0,0,.5);margin-bottom:14px;overflow:hidden}
-input,select{width:100%;padding:13px;border:1.5px solid #2a2a2a;border-radius:12px;font-size:15px;margin:6px 0 10px;background:#1a1a1a;color:#fff;outline:none}
-input:focus,select:focus{border-color:#D4AF37}
-input::placeholder{color:#777}
-select option{background:#111}
-.btn{width:100%;background:#D4AF37;color:#000;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}
-.btn-dark{background:#D4AF37;color:#000}
-.btn-grey{background:#222;color:#fff}
+.logo{font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1;margin:4px 0 2px;color:#2a0a45}
+.logo span{color:#c2a06e}
+.tagline{color:#666;margin:0 0 16px;font-size:14px}
+h1{font-size:28px;color:#111} h1 span{color:#2a0a45}
+p{color:#666;margin:8px 0 16px;font-size:14px}
+.card{background:#ffffff;padding:16px;border-radius:16px;border:1px solid #eee;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:14px;overflow:hidden}
+input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;margin:6px 0 10px;background:#ffffff;color:#111;outline:none}
+input:focus,select:focus{border-color:#2a0a45}
+.btn{width:100%;background:#2a0a45;color:white;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
+.btn-dark{background:#111}
+.btn-grey{background:#f1f1f1;color:#111}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
-.live{background:#22c55e;color:#000}
-.small{font-size:13px;color:#999}
-.stars{color:#D4AF37}
+.live{background:#dcfce7;color:#166534}
+.small{font-size:13px;color:#777}
+.stars{color:#ffc107}
 .tabs{display:flex;gap:8px;margin:16px 0 12px}
-.tabs button{flex:1;padding:11px;border-radius:12px;border:1px solid #2a2a2a;background:#111;color:#fff;font-weight:700;cursor:pointer}
-.tabs button.active{background:#D4AF37;color:#000;border-color:#D4AF37}
-.service-btn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px;border:1px solid #2a2a2a;border-radius:12px;background:#1a1a1a;margin-bottom:8px;cursor:pointer;text-align:left;font-size:14px;color:#fff}
-.service-btn b{color:#D4AF37}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;z-index:99}
+.tabs button{flex:1;padding:11px;border-radius:12px;border:1px solid #e5e5e5;background:white;color:#111;font-weight:700;cursor:pointer}
+.tabs button.active{background:#2a0a45;color:white;border-color:#2a0a45}
+.service-btn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px;border:1px solid #eee;border-radius:12px;background:#ffffff;margin-bottom:8px;cursor:pointer;text-align:left;font-size:14px;color:#111}
+.service-btn b{color:#111}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:99}
 .modal.open{display:flex}
-.modal-box{background:#111;width:100%;max-width:600px;border-radius:20px 20px 0 0;padding:20px;max-height:90vh;overflow-y:auto;border:1px solid #2a2a2a}
-.modal-box h2{color:#fff}
+.modal-box{background:#ffffff;width:100%;max-width:600px;border-radius:20px 20px 0 0;padding:20px;max-height:90vh;overflow-y:auto}
 .top-links{display:flex;gap:10px;margin-top:10px}
-.top-links a{flex:1;text-align:center;background:#111;padding:10px;border-radius:12px;text-decoration:none;color:#fff;font-weight:700;font-size:13px;border:1px solid #2a2a2a}
-.top-links a:first-child{border-color:#D4AF37;color:#D4AF37}
-.success{background:#14532d;border:1px solid #22c55e;color:#dcfce7;padding:12px;border-radius:12px;display:none;margin-top:10px;font-size:14px}
-.star-btn{font-size:32px;cursor:pointer;background:none;border:0;color:#333;padding:0 2px}
-.star-btn.active{color:#D4AF37}
-/* GALLERY - up to 10 photos */
+.top-links a{flex:1;text-align:center;background:white;padding:10px;border-radius:12px;text-decoration:none;color:#111;font-weight:700;font-size:13px;border:1px solid #eee;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:10px;font-size:14px;color:#166534}
+.star-btn{font-size:32px;cursor:pointer;background:none;border:0;color:#ddd;padding:0 2px}
+.star-btn.active{color:#ffc107}
 .gallery-wrap{position:relative}
-.gallery{ display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .gallery::-webkit-scrollbar{display:none}
 .gallery img{width:100%;height:220px;object-fit:cover;flex-shrink:0;scroll-snap-align:start;display:block}
 .gallery-dots{display:flex;gap:5px;justify-content:center;padding:8px 0 0}
-.gallery-dots span{width:6px;height:6px;border-radius:50%;background:#333;display:block}
-.gallery-dots span.active{background:#D4AF37;width:14px;border-radius:10px}
-.gallery-count{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);color:white;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
-.gallery-hint{font-size:12px;color:#777;text-align:center;padding:4px 0 0}
-/* BOTTOM NAV */
-nav{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;border-top:1px solid #222;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 0 12px;z-index:20}
-nav a{text-align:center;font-size:11px;color:#888;text-decoration:none}
-nav a.active{color:#D4AF37;font-weight:700}
-nav a div{font-size:20px;margin-bottom:2px}
-label{color:#fff}
+.gallery-dots span{width:6px;height:6px;border-radius:50%;background:#ddd;display:block}
+.gallery-dots span.active{background:#2a0a45;width:14px;border-radius:10px}
+.gallery-count{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);color:white;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
+.gallery-hint{font-size:12px;color:#999;text-align:center;padding:4px 0 0}
 </style>
 </head>
 <body>
 <div class="box">
+<div class="logo">Book<span>My</span>Salon</div>
+<p class="tagline">Find. Book. Glow. ✨</p>
 <h1>Find Your <span>Salon</span> 💇‍♀️</h1>
-<p>Book braids, cuts, nails & more in East London. BookMySalon — Find. Book. Glow.</p>
-
+<p>Book braids, cuts, nails & more in East London.</p>
 <div class="top-links">
-  <a href="register.html">➕ Register Salon</a>
-  <a href="dashboard.html">👤 Owner Dashboard</a>
+<a href="register.html">➕ Register Salon</a>
+<a href="dashboard.html">👤 Owner Dashboard</a>
 </div>
-
 <div class="tabs">
-  <button id="tabHome" class="active" onclick="showTab('home')">🏠 Find Salon</button>
-  <button id="tabMy" onclick="showTab('my')">📅 My Bookings</button>
+<button id="tabHome" class="active" onclick="showTab('home')">🏠 Find Salon</button>
+<button id="tabMy" onclick="showTab('my')">📅 My Bookings</button>
 </div>
-
-<!-- HOME TAB -->
 <div id="homeTab">
-  <input id="searchInput" placeholder="🔍 Search salon or service e.g. Braids" oninput="loadSalons()">
-  <select id="areaFilter" onchange="loadSalons()">
-    <option value="">📍 All Areas in East London</option>
-    <option value="Southernwood">Southernwood</option>
-    <option value="Quigney">Quigney</option>
-    <option value="Vincent">Vincent</option>
-    <option value="Beacon Bay">Beacon Bay</option>
-    <option value="Gonubie">Gonubie</option>
-    <option value="Mdantsane">Mdantsane</option>
-    <option value="Duncan Village">Duncan Village</option>
-    <option value="Nahoon">Nahoon</option>
-    <option value="Cambridge">Cambridge</option>
-    <option value="Amalinda">Amalinda</option>
-  </select>
-  <div id="salonList"><p class="small">Loading salons...</p></div>
+<input id="searchInput" placeholder="🔍 Search salon or service e.g. Braids" oninput="loadSalons()">
+<select id="areaFilter" onchange="loadSalons()">
+<option value="">📍 All Areas in East London</option>
+<option value="Southernwood">Southernwood</option>
+<option value="Quigney">Quigney</option>
+<option value="Vincent">Vincent</option>
+<option value="Beacon Bay">Beacon Bay</option>
+<option value="Gonubie">Gonubie</option>
+<option value="Mdantsane">Mdantsane</option>
+<option value="Duncan Village">Duncan Village</option>
+<option value="Nahoon">Nahoon</option>
+<option value="Cambridge">Cambridge</option>
+<option value="Amalinda">Amalinda</option>
+</select>
+<div id="salonList"><p class="small">Loading salons...</p></div>
 </div>
-
-<!-- MY BOOKINGS TAB -->
 <div id="myTab" style="display:none">
-  <div class="card">
-    <label style="font-weight:700;font-size:13px">Enter your phone number to see your bookings</label>
-    <input id="myPhone" placeholder="e.g. 082 123 4567">
-    <button class="btn btn-dark" onclick="loadMyBookings()">View My Bookings →</button>
-  </div>
-  <div id="myBookingsList"></div>
+<div class="card">
+<label style="font-weight:700;font-size:13px">Enter your phone number to see your bookings</label>
+<input id="myPhone" placeholder="e.g. 082 123 4567">
+<button class="btn btn-dark" onclick="loadMyBookings()">View My Bookings →</button>
 </div>
-
+<div id="myBookingsList"></div>
 </div>
-
-<!-- BOOKING MODAL -->
+</div>
 <div class="modal" id="bookingModal">
-  <div class="modal-box">
-    <div class="row"><h2 id="modalSalonName">Book</h2><button onclick="closeModal()" style="background:#222;color:#fff;border:0;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer">✕</button></div>
-    <p class="small" id="modalSalonAddress"></p>
-    <div id="modalServices"></div>
-    <label style="font-weight:700;font-size:13px">Your Name</label>
-    <input id="customerName" placeholder="Your full name">
-    <label style="font-weight:700;font-size:13px">Your Phone</label>
-    <input id="customerPhone" placeholder="Your phone number">
-    <label style="font-weight:700;font-size:13px">Date</label>
-    <input type="date" id="bookingDate">
-    <label style="font-weight:700;font-size:13px">Time</label>
-    <input type="time" id="bookingTime" value="10:00">
-    <button class="btn" onclick="confirmBooking()">Confirm Booking →</button>
-    <div class="success" id="bookingSuccess">✅ Booking sent! The salon owner will confirm it. Check My Bookings for status.</div>
-  </div>
+<div class="modal-box">
+<div class="row"><h2 id="modalSalonName">Book</h2><button onclick="closeModal()" style="background:#f1f1f1;border:0;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer">✕</button></div>
+<p class="small" id="modalSalonAddress"></p>
+<div id="modalServices"></div>
+<label style="font-weight:700;font-size:13px">Your Name</label>
+<input id="customerName" placeholder="Your full name">
+<label style="font-weight:700;font-size:13px">Your Phone</label>
+<input id="customerPhone" placeholder="Your phone number">
+<label style="font-weight:700;font-size:13px">Date</label>
+<input type="date" id="bookingDate">
+<label style="font-weight:700;font-size:13px">Time</label>
+<input type="time" id="bookingTime" value="10:00">
+<button class="btn" onclick="confirmBooking()">Confirm Booking →</button>
+<div class="success" id="bookingSuccess">✅ Booking sent! The salon owner will confirm it. Check My Bookings for status.</div>
 </div>
-
-<!-- RATING MODAL -->
+</div>
 <div class="modal" id="ratingModal">
-  <div class="modal-box">
-    <div class="row"><h2>Rate Your Experience ⭐</h2><button onclick="closeRatingModal()" style="background:#222;color:#fff;border:0;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer">✕</button></div>
-    <p class="small" id="ratingSalonName"></p>
-    <div style="text-align:center;margin:14px 0">
-      <button class="star-btn" onclick="setStars(1)">★</button>
-      <button class="star-btn" onclick="setStars(2)">★</button>
-      <button class="star-btn" onclick="setStars(3)">★</button>
-      <button class="star-btn" onclick="setStars(4)">★</button>
-      <button class="star-btn" onclick="setStars(5)">★</button>
-    </div>
-    <label style="font-weight:700;font-size:13px">Comment (optional)</label>
-    <input id="ratingComment" placeholder="How was it? e.g. Great braids, on time!">
-    <button class="btn" onclick="submitRating()">Submit Rating →</button>
-    <div class="success" id="ratingSuccess">✅ Thank you! Your rating is live.</div>
-  </div>
+<div class="modal-box">
+<div class="row"><h2>Rate Your Experience ⭐</h2><button onclick="closeRatingModal()" style="background:#f1f1f1;border:0;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer">✕</button></div>
+<p class="small" id="ratingSalonName"></p>
+<div style="text-align:center;margin:14px 0">
+<button class="star-btn" onclick="setStars(1)">★</button>
+<button class="star-btn" onclick="setStars(2)">★</button>
+<button class="star-btn" onclick="setStars(3)">★</button>
+<button class="star-btn" onclick="setStars(4)">★</button>
+<button class="star-btn" onclick="setStars(5)">★</button>
 </div>
-
-<nav>
-  <a href="index.html" class="active"><div>🏠</div>Home</a>
-  <a href="my-bookings.html"><div>📅</div>My Bookings</a>
-  <a href="dashboard.html"><div>📊</div>Dashboard</a>
-  <a href="register.html"><div>👤</div>Account</a>
-</nav>
-
+<label style="font-weight:700;font-size:13px">Comment (optional)</label>
+<input id="ratingComment" placeholder="How was it? e.g. Great braids, on time!">
+<button class="btn" onclick="submitRating()">Submit Rating →</button>
+<div class="success" id="ratingSuccess">✅ Thank you! Your rating is live.</div>
+</div>
+</div>
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
-
 let allSalons = [];
 let allRatings = {};
 let selectedSalon = null;
 let selectedService = null;
 let ratingBooking = null;
 let ratingStars = 0;
-
 function showTab(tab){
-  document.getElementById('tabHome').classList.toggle('active', tab==='home');
-  document.getElementById('tabMy').classList.toggle('active', tab==='my');
-  document.getElementById('homeTab').style.display = tab==='home' ? 'block' : 'none';
-  document.getElementById('myTab').style.display = tab==='my' ? 'block' : 'none';
+document.getElementById('tabHome').classList.toggle('active', tab==='home');
+document.getElementById('tabMy').classList.toggle('active', tab==='my');
+document.getElementById('homeTab').style.display = tab==='home' ? 'block' : 'none';
+document.getElementById('myTab').style.display = tab==='my' ? 'block' : 'none';
 }
-
 async function loadSalons(){
-  const { data: salons } = await supabaseClient.from('salons').select('*').order('created_at', {ascending:false});
-  const { data: ratings } = await supabaseClient.from('ratings').select('*');
-  allSalons = salons || [];
-  allRatings = {};
-  (ratings||[]).forEach(r=>{
-    if(!allRatings[r.salon_id]) allRatings[r.salon_id] = [];
-    allRatings[r.salon_id].push(r);
-  });
-  renderSalons();
+const { data: salons } = await supabaseClient.from('salons').select('*').order('created_at', {ascending:false});
+const { data: ratings } = await supabaseClient.from('ratings').select('*');
+allSalons = salons || [];
+allRatings = {};
+(ratings||[]).forEach(r=>{
+if(!allRatings[r.salon_id]) allRatings[r.salon_id] = [];
+allRatings[r.salon_id].push(r);
+});
+renderSalons();
 }
-
 function getRating(salonId){
-  const list = allRatings[salonId] || [];
-  if(list.length===0) return {avg:0, count:0};
-  const avg = list.reduce((a,b)=>a+b.rating,0)/list.length;
-  return {avg, count:list.length};
+const list = allRatings[salonId] || [];
+if(list.length===0) return {avg:0, count:0};
+const avg = list.reduce((a,b)=>a+b.rating,0)/list.length;
+return {avg, count:list.length};
 }
-
 function getGallery(s){
-  if(s.photos && Array.isArray(s.photos) && s.photos.length>0) return s.photos.slice(0,10);
-  if(s.photo_url) return [s.photo_url];
-  return [];
+if(s.photos && Array.isArray(s.photos) && s.photos.length>0) return s.photos.slice(0,10);
+if(s.photo_url) return [s.photo_url];
+return [];
 }
-
 function galleryHTML(s){
-  const gallery = getGallery(s);
-  if(gallery.length===0){
-    return `<div style="height:180px;background:linear-gradient(135deg,#111,#3a2d00);display:flex;align-items:center;justify-content:center;font-size:50px">💇‍♀️</div>`;
-  }
-  if(gallery.length===1){
-    return `<img src="${gallery[0]}" style="width:100%;height:220px;object-fit:cover;display:block">`;
-  }
-  const dots = gallery.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('');
-  return `
-  <div class="gallery-wrap">
-    <div class="gallery" id="gal-${s.id}" onscroll="updateDots('${s.id}', this)">
-      ${gallery.map(u=>`<img src="${u}" loading="lazy">`).join('')}
-    </div>
-    <span class="gallery-count" id="gal-count-${s.id}">1 / ${gallery.length}</span>
-  </div>
-  <div class="gallery-dots" id="gal-dots-${s.id}">${dots}</div>
-  <p class="gallery-hint">← Swipe to see ${gallery.length} photos →</p>`;
+const gallery = getGallery(s);
+if(gallery.length===0){
+return `<div style="height:180px;background:linear-gradient(135deg,#2a0a45,#6b21a8);display:flex;align-items:center;justify-content:center;font-size:50px">💇‍♀️</div>`;
 }
-
+if(gallery.length===1){
+return `<img src="${gallery[0]}" style="width:100%;height:220px;object-fit:cover;display:block">`;
+}
+const dots = gallery.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('');
+return `
+<div class="gallery-wrap">
+<div class="gallery" id="gal-${s.id}" onscroll="updateDots('${s.id}', this)">
+${gallery.map(u=>`<img src="${u}" loading="lazy">`).join('')}
+</div>
+<span class="gallery-count" id="gal-count-${s.id}">1 / ${gallery.length}</span>
+</div>
+<div class="gallery-dots" id="gal-dots-${s.id}">${dots}</div>
+<p class="gallery-hint">← Swipe to see ${gallery.length} photos →</p>`;
+}
 function updateDots(salonId, el){
-  const idx = Math.round(el.scrollLeft / el.clientWidth);
-  const dotsEl = document.getElementById('gal-dots-'+salonId);
-  const countEl = document.getElementById('gal-count-'+salonId);
-  if(dotsEl){
-    dotsEl.querySelectorAll('span').forEach((d,i)=> d.classList.toggle('active', i===idx));
-  }
-  if(countEl){
-    const total = dotsEl ? dotsEl.querySelectorAll('span').length : 0;
-    countEl.textContent = (idx+1) + ' / ' + total;
-  }
+const idx = Math.round(el.scrollLeft / el.clientWidth);
+const dotsEl = document.getElementById('gal-dots-'+salonId);
+const countEl = document.getElementById('gal-count-'+salonId);
+if(dotsEl){
+dotsEl.querySelectorAll('span').forEach((d,i)=> d.classList.toggle('active', i===idx));
 }
-
+if(countEl){
+const total = dotsEl ? dotsEl.querySelectorAll('span').length : 0;
+countEl.textContent = (idx+1) + ' / ' + total;
+}
+}
 function renderSalons(){
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  const area = document.getElementById('areaFilter').value;
-  const filtered = allSalons.filter(s=>{
-    const matchQ = !q || s.name.toLowerCase().includes(q) || (s.services||[]).some(x=>x.name.toLowerCase().includes(q));
-    const matchArea = !area || (s.address||'').toLowerCase().includes(area.toLowerCase());
-    return matchQ && matchArea;
-  });
-  if(filtered.length===0){
-    document.getElementById('salonList').innerHTML = `<div class="card">No salons found.<br><span class="small">Try another search or area. Are you a salon owner? <a href="register.html" style="color:#D4AF37">Register here</a>.</span></div>`;
-    return;
-  }
-  document.getElementById('salonList').innerHTML = filtered.map(s=>{
-    const r = getRating(s.id);
-    const ratingText = r.count===0 ? '⭐ New • No ratings yet' : `⭐ <b style="color:#D4AF37">${r.avg.toFixed(1)}</b> (${r.count} ${r.count===1?'review':'reviews'})`;
-    const servicesText = (s.services||[]).map(x=>x.name+' - R'+x.price).join(' • ');
-    const minPrice = (s.services||[]).length ? Math.min(...s.services.map(x=>x.price)) : 0;
-    return `
-    <div class="card" style="padding:0">
-      ${galleryHTML(s)}
-      <div style="padding:16px">
-        <div class="row"><b style="font-size:18px;color:#fff">${s.name}</b><span class="badge live">LIVE</span></div>
-        <p class="small" style="margin:6px 0">${s.address}</p>
-        <p style="margin:4px 0;font-size:14px;color:#fff">${ratingText}</p>
-        <p class="small">${servicesText || 'Services coming soon'}</p>
-        <div class="row" style="margin-top:12px">
-          <span style="font-weight:800;color:#fff">From R${minPrice}</span>
-          <button class="btn" style="width:auto;padding:11px 18px" onclick="openBooking('${s.id}')">Book Now →</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+const q = document.getElementById('searchInput').value.toLowerCase();
+const area = document.getElementById('areaFilter').value;
+const filtered = allSalons.filter(s=>{
+const matchQ = !q || s.name.toLowerCase().includes(q) || (s.services||[]).some(x=>x.name.toLowerCase().includes(q));
+const matchArea = !area || (s.address||'').toLowerCase().includes(area.toLowerCase());
+return matchQ && matchArea;
+});
+if(filtered.length===0){
+document.getElementById('salonList').innerHTML = `<div class="card">No salons found.<br><span class="small">Try another search or area. Are you a salon owner? <a href="register.html">Register here</a>.</span></div>`;
+return;
 }
-
+document.getElementById('salonList').innerHTML = filtered.map(s=>{
+const r = getRating(s.id);
+const ratingText = r.count===0 ? '⭐ New • No ratings yet' : `⭐ <b>${r.avg.toFixed(1)}</b> (${r.count} ${r.count===1?'review':'reviews'})`;
+const servicesText = (s.services||[]).map(x=>x.name+' - R'+x.price).join(' • ');
+const minPrice = (s.services||[]).length ? Math.min(...s.services.map(x=>x.price)) : 0;
+return `
+<div class="card" style="padding:0">
+${galleryHTML(s)}
+<div style="padding:16px">
+<div class="row"><b style="font-size:18px">${s.name}</b><span class="badge live">LIVE</span></div>
+<p class="small" style="margin:6px 0">${s.address}</p>
+<p style="margin:4px 0;font-size:14px">${ratingText}</p>
+<p class="small">${servicesText || 'Services coming soon'}</p>
+<div class="row" style="margin-top:12px">
+<span style="font-weight:800">From R${minPrice}</span>
+<button class="btn" style="width:auto;padding:11px 18px" onclick="openBooking('${s.id}')">Book Now →</button>
+</div>
+</div>
+</div>`;
+}).join('');
+}
 function openBooking(salonId){
-  selectedSalon = allSalons.find(s=>s.id===salonId);
-  selectedService = null;
-  document.getElementById('modalSalonName').textContent = selectedSalon.name;
-  document.getElementById('modalSalonAddress').textContent = selectedSalon.address;
-  document.getElementById('bookingSuccess').style.display='none';
-  document.getElementById('modalServices').innerHTML = `<label style="font-weight:700;font-size:13px">Choose Service</
+selectedSalon = allSalons.find(s=>s.id===salonId);
+selectedService = null;
+document.getElementById('modalSalonName').textContent = selectedSalon.name;
+document.getElementById('modalSalonAddress').textContent = selectedSalon.address;
+document.getElementById('bookingSuccess').style.display='none';
+document.getElementById('modalServices').innerHTML = `<label style="font-weight:700;font-size:13px">Choose Service</label>` + (selectedSalon.services||[]).map((svc,i)=>`
+<button class="service-btn" id="svc-${i}" onclick="selectService(${i})"><span>${svc.name}</span><b>R${svc.price}</b></button>
+`).join('');
+document.getElementById('bookingModal').classList.add('open');
+}
+function selectService(i){
+selectedService = selectedSalon.services[i];
+document.querySelectorAll('.service-btn').forEach(b=>{ b.style.borderColor='#eee'; b.style.background='#ffffff'; });
+const el = document.getElementById('svc-'+i);
+el.style.borderColor='#2a0a45'; el.style.background='#f3e8ff';
+}
+function closeModal(){ document.getElementById('bookingModal').classList.remove('open'); }
+async function confirmBooking(){
+if(!selectedService){ alert('Please choose a service'); return; }
+const customer_name = document.getElementById('customerName').value.trim();
+const customer_phone = document.getElementById('customerPhone').value.trim();
+const booking_date = document.getElementById('bookingDate').value;
+const booking_time = document.getElementById('bookingTime').value;
+if(!customer_name || !customer_phone || !booking_date || !booking_time){ alert('Please fill all fields'); return; }
+const { error } = await supabaseClient.from('bookings').insert([{ salon_id:selectedSalon.id, service:selectedService.name, price:selectedService.price, customer_name, customer_phone, booking_date, booking_time, status:'pending' }]);
+if(error){ alert(error.message); return; }
+document.getElementById('bookingSuccess').style.display='block';
+setTimeout(()=>{ closeModal(); showTab('my'); document.getElementById('myPhone').value = customer_phone; loadMyBookings(); }, 1200);
+}
+async function loadMyBookings(){
+const phone = document.getElementById('myPhone').value.trim();
+if(!phone){ alert('Enter your phone number'); return; }
+const { data: bookings } = await supabaseClient.from('bookings').select('*, salons(name)').eq('customer_phone', phone).order('booking_date',{ascending:false});
+if(!bookings || bookings.length===0){
+document.getElementById('myBookingsList').innerHTML = `<div class="card">No bookings found for ${phone}.</div>`;
+return;
+}
+document.getElementById('myBookingsList').innerHTML = bookings.map(b=>{
+const badgeColor = b.status==='confirmed' ? '#dcfce7;color:#166534' : b.status==='cancelled' ? '#fee2e2;color:#991b1b' : '#fef9c3;color:#854d0e';
+const canRate = b.status==='confirmed';
+return `
+<div class="card">
+<div class="row"><b>${b.salons?.name || 'Salon'}</b><span class="badge" style="background:${badgeColor}">${b.status.toUpperCase()}</span></div>
+<p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}</p>
+${canRate ? `<button class="btn btn-dark" onclick="openRating('${b.id}','${b.salon_id}','${(b.salons?.name||'Salon').replace(/'/g,"")}')">⭐ Rate This Salon</button>` : `<p class="small">You can rate once the salon confirms your booking.</p>`}
+</div>`;
+}).join('');
+}
+function openRating(bookingId, salonId, salonName){
+ratingBooking = {bookingId, salonId};
+ratingStars = 0;
+document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('active'));
+document.getElementById('ratingSalonName').textContent = salonName;
+document.getElementById('ratingComment').value='';
+document.getElementById('ratingSuccess').style.display='none';
+document.getElementById('ratingModal').classList.add('open');
+}
+function closeRatingModal(){ document.getElementById('ratingModal').classList.remove('open'); }
+function setStars(n){
+ratingStars = n;
+document.querySelectorAll('.star-btn').forEach((b,i)=> b.classList.toggle('active', i<n));
+}
+async function submitRating(){
+if(ratingStars===0){ alert('Please tap a star rating'); return; }
+const comment = document.getElementById('ratingComment').value.trim();
+const phone = document.getElementById('myPhone').value.trim();
+const { error } = await supabaseClient.from('ratings').insert([{ salon_id: ratingBooking.salonId, booking_id: ratingBooking.bookingId, customer_phone: phone, rating: ratingStars, comment }]);
+if(error){ alert(error.message); return; }
+document.getElementById('ratingSuccess').style.display='block';
+setTimeout(()=>{ closeRatingModal(); loadMyBookings(); loadSalons(); }, 1000);
+}
+document.getElementById('bookingDate').min = new Date().toISOString().split('T')[0];
+loadSalons();
+if ("serviceWorker" in navigator) {
+window.addEventListener("load", () => {
+navigator.serviceWorker.register("/sw.js").catch(()=>{});
+});
+}
+</script>
+</body>
+  </html>
