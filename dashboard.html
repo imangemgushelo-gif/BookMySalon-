@@ -7,128 +7,280 @@
 <meta name="theme-color" content="#2a0a45">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
-body{background:#fff;padding:20px;color:#111;padding-bottom:80px}
-.box{max-width:600px;margin:0 auto}
-.logo{font-size:32px;font-weight:900;color:#2a0a45}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#fff;color:#111;padding-bottom:90px}
+.topbar{background:#fff;padding:14px 16px 10px;position:sticky;top:0;z-index:50;border-bottom:1px solid #f0f0f0}
+.logo{font-size:30px;font-weight:900;color:#2a0a45}
 .logo span{color:#c2a06e}
-p{color:#666;font-size:14px;margin:6px 0 16px}
-.card{background:#fff;padding:16px;border-radius:16px;border:1px solid #eee;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:14px}
-label{font-weight:700;font-size:13px;display:block;margin:10px 0 4px}
-input{width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;background:#fff;outline:none}
-input:focus{border-color:#2a0a45}
-.btn{width:100%;background:#2a0a45;color:#fff;padding:13px;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px}
-.btn-dark{background:#111}
-.btn-green{background:#16a34a}
-.btn-red{background:#dc2626}
-.btn-grey{background:#f1f1f1;color:#111}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
+.wrap{max-width:700px;margin:0 auto;padding:0 16px}
+.card{background:#fff;border:1px solid #eee;border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+h1{font-size:28px;margin:14px 0 4px}
+h3{font-size:18px;margin-bottom:8px}
 .small{font-size:13px;color:#777}
-a{color:#2a0a45}
-.preview{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px;flex-wrap:wrap}
-.preview-wrap{position:relative;flex-shrink:0}
-.preview-wrap img{width:110px;height:110px;object-fit:cover;border-radius:12px;border:2px solid #eee;display:block}
-.preview-wrap button{position:absolute;top:-6px;right:-6px;background:#111;color:#fff;border:0;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:13px;z-index:2}
-.preview-wrap .cover{position:absolute;bottom:4px;left:4px;background:#2a0a45;color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:20px}
-.hint{font-size:12px;color:#999;margin-top:4px}
-.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:12px;color:#166534;font-size:14px}
+label{font-weight:700;font-size:13px;display:block;margin:12px 0 6px}
+input,textarea,select{width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;outline:none;background:#fff;resize:vertical}
+input:focus,textarea:focus{border-color:#2a0a45}
+.btn{padding:12px 16px;border:0;border-radius:12px;font-weight:800;cursor:pointer;font-size:14px}
+.btn-purple{background:#2a0a45;color:#fff}
+.btn-green{background:#16a34a;color:#fff}
+.btn-light{background:#f5f0ff;color:#2a0a45;border:1px solid #e9dfff}
+.btn-grey{background:#f1f1f1;color:#111}
+.btn-red{background:#fee2e2;color:#991b1b}
+.btnFull{width:100%;background:#2a0a45;color:#fff;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;margin-top:12px}
+.btnFull:disabled{opacity:.6}
 .tabs{display:flex;gap:8px;margin:14px 0}
-.tabs button{flex:1;padding:11px;border-radius:12px;border:1px solid #e5e5e5;background:white;font-weight:700;cursor:pointer}
-.tabs button.active{background:#2a0a45;color:white;border-color:#2a0a45}
+.tabs button{flex:1;padding:12px;border-radius:14px;border:1px solid #e5e5e5;background:#fff;font-weight:700;cursor:pointer;font-size:14px}
+.tabs button.active{background:#2a0a45;color:#fff;border-color:#2a0a45}
+.badge{display:inline-block;background:#dcfce7;color:#166534;font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photo{position:relative;border-radius:14px;overflow:hidden;background:#f5f5f5}
+.photo img{width:100%;height:150px;object-fit:cover;display:block}
+.photo .x{position:absolute;top:6px;right:6px;background:#000;color:#fff;border:0;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer}
+.photo .cover{position:absolute;bottom:6px;left:6px;background:#2a0a45;color:#fff;font-size:11px;font-weight:800;padding:4px 8px;border-radius:8px}
+.serviceRow{display:flex;gap:8px;margin-bottom:8px}
+.serviceRow input{margin:0}
+.serviceRow .del{flex-shrink:0;width:42px;background:#fee2e2;color:#991b1b;border:0;border-radius:12px;font-weight:800;cursor:pointer}
+.bookingItem{background:#fff;border:1px solid #eee;border-radius:16px;padding:14px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;color:#166534;font-size:14px;display:none;margin-top:12px}
+.hidden{display:none}
 </style>
 </head>
 <body>
-<div class="box">
-<a href="index.html" style="text-decoration:none;font-weight:700">← Back to Home</a>
-<div class="logo" style="margin-top:10px">Book<span>My</span>Salon</div>
-<p>Owner Dashboard — Manage your salon & bookings.</p>
+<div class="topbar"><div class="wrap" style="padding:0"><a href="index.html" style="text-decoration:none;color:#2a0a45;font-weight:700">← Back to Home</a><div class="logo" style="margin-top:8px">Book<span>My</span>Salon</div><p class="small">Owner Dashboard — Manage your salon & bookings.</p></div></div>
+<div class="wrap">
+
+<!-- LOGIN -->
 <div id="loginBox" class="card">
-<label>Enter your salon phone number</label>
-<input id="phoneInput" placeholder="e.g. 073 771 5535">
-<button class="btn btn-dark" onclick="login()">View My Dashboard →</button>
+<h1 style="font-size:24px">Owner Login</h1>
+<p class="small">Enter the phone number you used to register.</p>
+<label>Owner Phone Number *</label>
+<input id="loginPhone" placeholder="e.g. 073 771 5535">
+<button class="btnFull" id="loginBtn" onclick="login()">Login →</button>
+<div class="success" id="loginMsg"></div>
 </div>
-<div id="dashboard" style="display:none">
-<div class="card"><div class="row"><b id="salonName" style="font-size:20px"></b><span class="badge" style="background:#dcfce7;color:#166534">LIVE</span></div><p class="small" id="salonAddress"></p><p class="small" id="salonServices"></p></div>
-<div class="tabs"><button id="tabPhotos" class="active" onclick="showTab('photos')">📸 Edit Photos</button><button id="tabBookings" onclick="showTab('bookings')">📅 Bookings</button></div>
-<div id="photosTab"><div class="card"><b>Your Photos (<span id="photoCount">0</span>/10)</b><p class="small">First photo = main cover photo. Tap ✕ to remove a photo. Add new photos below.</p><div class="preview" id="preview"></div><label>Add More Photos</label><input type="file" id="photoInput" accept="image/*" multiple onchange="handleNewPhotos(event)"><div class="hint">Select multiple at once. Max 10 photos total.</div><button class="btn btn-green" onclick="savePhotos()">💾 Save Photos</button><div class="success" id="photoSuccess">✅ Photos updated! Check the home page — your salon now shows all photos with swipe.</div></div></div>
-<div id="bookingsTab" style="display:none"><div id="bookingsList"></div></div>
+
+<!-- DASHBOARD -->
+<div id="dashBox" class="hidden">
+<div class="card">
+<div class="row"><h1 id="salonNameTitle" style="margin:0">My Salon</h1><span class="badge">LIVE</span></div>
+<p class="small" id="salonAddrTitle" style="margin-top:4px"></p>
+<p class="small" id="salonServicesTitle" style="margin-top:6px"></p>
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+<a id="viewPageBtn" href="#" class="btn btn-purple" style="text-decoration:none">👁️ View My Salon Page</a>
+<button class="btn btn-grey" onclick="copyLink()">🔗 Copy My Link</button>
 </div>
 </div>
+
+<div class="tabs">
+<button id="tabEdit" class="active" onclick="showDashTab('edit')">✏️ Edit Salon</button>
+<button id="tabPhotos" onclick="showDashTab('photos')">📸 Edit Photos</button>
+<button id="tabBookings" onclick="showDashTab('bookings')">📅 Bookings</button>
+</div>
+
+<!-- EDIT SALON TAB -->
+<div id="editTab">
+<div class="card">
+<h3>✏️ Edit Salon Details</h3>
+<p class="small">Change anything and tap Save. It updates your salon page instantly.</p>
+
+<label>Salon / Barbershop Name *</label>
+<input id="editName" placeholder="e.g. Tyler's barbershop">
+
+<label>Owner Name *</label>
+<input id="editOwnerName" placeholder="e.g. Tyler">
+
+<label>Owner Phone *</label>
+<input id="editOwnerPhone" placeholder="e.g. 073 123 4567">
+
+<label>Address *</label>
+<input id="editAddress" placeholder="e.g. 5223 Nu2, Mdantsane, East London">
+
+<label>About Your Salon (Description)</label>
+<textarea id="editDescription" rows="4" placeholder="e.g. We specialize in fades, clean cuts and beard trims. Walk-ins welcome. 5 years experience in Mdantsane."></textarea>
+
+<label>Services & Prices</label>
+<div id="servicesEditor"></div>
+<button class="btn btn-light" onclick="addServiceRow()">+ Add Service</button>
+
+<button class="btnFull" id="saveSalonBtn" onclick="saveSalon()">💾 Save Salon Details</button>
+<div class="success" id="saveSalonMsg">✅ Salon updated!</div>
+</div>
+</div>
+
+<!-- PHOTOS TAB -->
+<div id="photosTab" class="hidden">
+<div class="card">
+<h3>Your Photos (<span id="photoCount">0</span>/10)</h3>
+<p class="small">First photo = main cover photo. Tap ✕ to remove a photo. Add new photos below.</p>
+<div class="grid" id="photoGrid" style="margin-top:12px"></div>
+<label style="margin-top:16px">Add More Photos</label>
+<input type="file" id="newPhotos" accept="image/*" multiple>
+<p class="small" style="margin-top:6px">Select multiple at once. Max 10 photos total.</p>
+<button class="btnFull" style="background:#16a34a" id="savePhotosBtn" onclick="savePhotos()">💾 Save Photos</button>
+<div class="success" id="savePhotosMsg">✅ Photos saved!</div>
+</div>
+</div>
+
+<!-- BOOKINGS TAB -->
+<div id="bookingsTab" class="hidden">
+<div class="card">
+<h3>📅 Bookings</h3>
+<div id="bookingsList"><p class="small">Loading...</p></div>
+<button class="btn btn-grey" style="width:100%;margin-top:10px" onclick="loadBookings()">🔄 Refresh Bookings</button>
+</div>
+</div>
+
+</div>
+</div>
+
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let currentSalon=null;
 let photos=[];
+let services=[];
+
+function esc(t){ return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function normalizePhone(p){ return String(p||'').replace(/[^0-9]/g,''); }
-function showTab(tab){
+
+function showDashTab(tab){
+  document.getElementById('tabEdit').classList.toggle('active',tab==='edit');
   document.getElementById('tabPhotos').classList.toggle('active',tab==='photos');
   document.getElementById('tabBookings').classList.toggle('active',tab==='bookings');
-  document.getElementById('photosTab').style.display=tab==='photos'?'block':'none';
-  document.getElementById('bookingsTab').style.display=tab==='bookings'?'block':'none';
+  document.getElementById('editTab').classList.toggle('hidden',tab!=='edit');
+  document.getElementById('photosTab').classList.toggle('hidden',tab!=='photos');
+  document.getElementById('bookingsTab').classList.toggle('hidden',tab!=='bookings');
+  if(tab==='bookings') loadBookings();
 }
+
 async function login(){
-  const phoneRaw=document.getElementById('phoneInput').value.trim();
-  if(!phoneRaw){ alert('Enter your phone number'); return; }
-  const phoneNorm=normalizePhone(phoneRaw);
-  const { data, error } = await supabaseClient.from('salons').select('*');
-  if(error){ alert('Error: '+error.message); return; }
+  const raw=document.getElementById('loginPhone').value.trim();
+  if(!raw){ alert('Enter your phone number'); return; }
+  const phone=normalizePhone(raw);
+  const btn=document.getElementById('loginBtn'); btn.textContent='Logging in...'; btn.disabled=true;
+  const { data, error } = await supabaseClient.from('salons').select('*').order('created_at',{ascending:false});
+  btn.textContent='Login →'; btn.disabled=false;
+  if(error){ alert(error.message); return; }
   const found=(data||[]).find(s=>{
-    const stored=normalizePhone(s.owner_phone);
-    return stored===phoneNorm || stored.endsWith(phoneNorm.slice(-9)) || phoneNorm.endsWith(stored.slice(-9));
+    const sp=normalizePhone(s.owner_phone);
+    return sp===phone || sp.endsWith(phone.slice(-9)) || phone.endsWith(sp.slice(-9));
   });
-  if(!found){ alert('No salon found for that number. Check the number you used when registering.'); return; }
+  if(!found){ alert('No salon found with that phone number. Check the number you registered with.'); return; }
   currentSalon=found;
-  if(found.photos && Array.isArray(found.photos) && found.photos.length>0) photos=[...found.photos];
-  else if(found.photo_url) photos=[found.photo_url];
-  else photos=[];
-  document.getElementById('loginBox').style.display='none';
-  document.getElementById('dashboard').style.display='block';
-  document.getElementById('salonName').textContent=found.name;
-  document.getElementById('salonAddress').textContent=found.address;
-  document.getElementById('salonServices').textContent=(found.services||[]).map(s=>s.name+' - R'+s.price).join(' • ');
-  renderPreview(); loadBookings();
+  photos = Array.isArray(found.photos) ? [...found.photos] : (found.photo_url ? [found.photo_url] : []);
+  services = Array.isArray(found.services) ? JSON.parse(JSON.stringify(found.services)) : [];
+  fillForm();
+  document.getElementById('loginBox').classList.add('hidden');
+  document.getElementById('dashBox').classList.remove('hidden');
+  document.getElementById('viewPageBtn').href='salon.html?id='+found.id;
+  loadBookings();
 }
-function renderPreview(){
-  document.getElementById('photoCount').textContent=photos.length;
-  if(photos.length===0){ document.getElementById('preview').innerHTML='<p class="small">No photos yet. Add some below.</p>'; return; }
-  document.getElementById('preview').innerHTML=photos.map((p,i)=>`<div class="preview-wrap"><img src="${p}">${i===0?'<span class="cover">COVER</span>':''}<button onclick="removePhoto(${i})">✕</button></div>`).join('');
+
+function fillForm(){
+  document.getElementById('salonNameTitle').textContent=currentSalon.name;
+  document.getElementById('salonAddrTitle').textContent=currentSalon.address||'';
+  document.getElementById('salonServicesTitle').textContent=(currentSalon.services||[]).map(s=>s.name+' - R'+s.price).join(' • ');
+  document.getElementById('editName').value=currentSalon.name||'';
+  document.getElementById('editOwnerName').value=currentSalon.owner_name||'';
+  document.getElementById('editOwnerPhone').value=currentSalon.owner_phone||'';
+  document.getElementById('editAddress').value=currentSalon.address||'';
+  document.getElementById('editDescription').value=currentSalon.description||'';
+  renderServicesEditor();
+  renderPhotos();
 }
-function removePhoto(i){ if(!confirm('Remove this photo?')) return; photos.splice(i,1); renderPreview(); }
-function handleNewPhotos(e){
-  const files=Array.from(e.target.files);
-  if(photos.length+files.length>10){ alert('Max 10 photos total. You have '+photos.length+' already.'); e.target.value=''; return; }
-  files.forEach(file=>{
-    const reader=new FileReader();
-    reader.onload=(ev)=>{
-      const img=new Image();
-      img.onload=()=>{
-        const canvas=document.createElement('canvas'); const max=1200; let w=img.width,h=img.height;
-        if(w>max){ h=h*max/w; w=max; }
-        canvas.width=w; canvas.height=h; canvas.getContext('2d').drawImage(img,0,0,w,h);
-        photos.push(canvas.toDataURL('image/jpeg',0.8)); renderPreview();
-      };
-      img.src=ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-  e.target.value='';
+
+function renderServicesEditor(){
+  const box=document.getElementById('servicesEditor');
+  if(services.length===0) services=[{name:'',price:''}];
+  box.innerHTML=services.map((s,i)=>`
+    <div class="serviceRow">
+      <input placeholder="Service e.g. Fade" value="${esc(s.name)}" oninput="services[${i}].name=this.value">
+      <input type="number" placeholder="Price" value="${s.price}" style="width:100px" oninput="services[${i}].price=this.value">
+      <button class="del" onclick="removeService(${i})">✕</button>
+    </div>`).join('');
 }
-async function savePhotos(){
-  if(photos.length===0){ alert('Add at least 1 photo'); return; }
-  const { error } = await supabaseClient.from('salons').update({photos:photos,photo_url:photos[0]}).eq('id',currentSalon.id);
+function addServiceRow(){ services.push({name:'',price:''}); renderServicesEditor(); }
+function removeService(i){ services.splice(i,1); if(services.length===0) services.push({name:'',price:''}); renderServicesEditor(); }
+
+async function saveSalon(){
+  const name=document.getElementById('editName').value.trim();
+  const owner_name=document.getElementById('editOwnerName').value.trim();
+  const owner_phone=document.getElementById('editOwnerPhone').value.trim();
+  const address=document.getElementById('editAddress').value.trim();
+  const description=document.getElementById('editDescription').value.trim();
+  if(!name||!owner_name||!owner_phone||!address){ alert('Please fill Name, Owner Name, Phone and Address'); return; }
+  const cleanServices=services.filter(s=>s.name.trim()!=='').map(s=>({name:s.name.trim(),price:Number(s.price)||0}));
+  if(cleanServices.length===0){ alert('Add at least 1 service'); return; }
+  const btn=document.getElementById('saveSalonBtn'); btn.textContent='Saving...'; btn.disabled=true;
+  const { data, error } = await supabaseClient.from('salons').update({name,owner_name,owner_phone,address,description,services:cleanServices}).eq('id',currentSalon.id).select().single();
+  btn.textContent='💾 Save Salon Details'; btn.disabled=false;
   if(error){ alert('Error: '+error.message); return; }
-  document.getElementById('photoSuccess').style.display='block';
-  setTimeout(()=>document.getElementById('photoSuccess').style.display='none',3000);
+  currentSalon=data;
+  services=JSON.parse(JSON.stringify(data.services||[]));
+  fillForm();
+  const msg=document.getElementById('saveSalonMsg'); msg.style.display='block'; setTimeout(()=>msg.style.display='none',2500);
+  alert('✅ Salon updated! Your salon page is updated too.');
 }
+
+function renderPhotos(){
+  document.getElementById('photoCount').textContent=photos.length;
+  const grid=document.getElementById('photoGrid');
+  if(photos.length===0){ grid.innerHTML='<p class="small">No photos yet. Add some below.</p>'; return; }
+  grid.innerHTML=photos.map((p,i)=>`<div class="photo"><img src="${p}"><button class="x" onclick="removePhoto(${i})">✕</button>${i===0?'<span class="cover">COVER</span>':''}</div>`).join('');
+}
+function removePhoto(i){ if(!confirm('Remove this photo?')) return; photos.splice(i,1); renderPhotos(); }
+
+async function savePhotos(){
+  const files=document.getElementById('newPhotos').files;
+  if(photos.length + files.length > 10){ alert('Max 10 photos total. Remove some first.'); return; }
+  const btn=document.getElementById('savePhotosBtn'); btn.textContent='Uploading...'; btn.disabled=true;
+  // Upload new files to Supabase Storage if bucket exists, else use base64
+  for(let f of files){
+    try{
+      const fileName=Date.now()+'-'+Math.random().toString(36).slice(2)+'-'+f.name.replace(/[^a-zA-Z0-9.]/g,'');
+      const { error:upErr } = await supabaseClient.storage.from('salon-photos').upload(fileName, f);
+      if(!upErr){
+        const { data:pub } = supabaseClient.storage.from('salon-photos').getPublicUrl(fileName);
+        photos.push(pub.publicUrl);
+      } else {
+        // fallback base64
+        const b64=await fileToBase64(f); photos.push(b64);
+      }
+    }catch(e){
+      const b64=await fileToBase64(f); photos.push(b64);
+    }
+  }
+  const { data, error } = await supabaseClient.from('salons').update({photos,photo_url:photos[0]||null}).eq('id',currentSalon.id).select().single();
+  btn.textContent='💾 Save Photos'; btn.disabled=false;
+  if(error){ alert('Error: '+error.message); return; }
+  currentSalon=data; document.getElementById('newPhotos').value='';
+  renderPhotos();
+  const msg=document.getElementById('savePhotosMsg'); msg.style.display='block'; setTimeout(()=>msg.style.display='none',2500);
+  alert('✅ Photos saved!');
+}
+function fileToBase64(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f); }); }
+
 async function loadBookings(){
-  const { data } = await supabaseClient.from('bookings').select('*').eq('salon_id',currentSalon.id).order('created_at',{ascending:false});
-  if(!data || data.length===0){ document.getElementById('bookingsList').innerHTML='<div class="card">No bookings yet.</div>'; return; }
-  document.getElementById('bookingsList').innerHTML=data.map(b=>{
-    const color=b.status==='confirmed'?'#dcfce7;color:#166534':b.status==='cancelled'?'#fee2e2;color:#991b1b':'#fef9c3;color:#854d0e';
-    return `<div class="card"><div class="row"><b>${b.customer_name}</b><span class="badge" style="background:${color}">${b.status.toUpperCase()}</span></div><p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}<br>📞 ${b.customer_phone}</p>${b.status==='pending'?`<div class="row"><button class="btn btn-green" style="flex:1" onclick="updateBooking('${b.id}','confirmed')">✅ Confirm</button><button class="btn btn-red" style="flex:1" onclick="updateBooking('${b.id}','cancelled')">❌ Decline</button></div>`:''}</div>`;
+  if(!currentSalon) return;
+  const list=document.getElementById('bookingsList');
+  const { data, error } = await supabaseClient.from('bookings').select('*').eq('salon_id',currentSalon.id).order('created_at',{ascending:false});
+  if(error){ list.innerHTML='<p class="small">Error: '+error.message+'</p>'; return; }
+  if(!data || data.length===0){ list.innerHTML='<p class="small">No bookings yet. Share your salon link to get bookings.</p>'; return; }
+  list.innerHTML=data.map(b=>{
+    const color=b.status==='confirmed'?'background:#dcfce7;color:#166534':b.status==='cancelled'?'background:#fee2e2;color:#991b1b':'background:#fef9c3;color:#854d0e';
+    return `<div class="bookingItem"><div class="row"><b>${esc(b.customer_name)}</b><span style="font-size:11px;padding:4px 8px;border-radius:20px;font-weight:800;${color}">${b.status.toUpperCase()}</span></div><p class="small" style="margin-top:6px">${esc(b.service)} - R${b.price}<br>📞 ${esc(b.customer_phone)}<br>📅 ${b.booking_date} at ${b.booking_time}</p><div style="display:flex;gap:8px;margin-top:10px">${b.status!=='confirmed'?`<button class="btn btn-green" onclick="updateBooking('${b.id}','confirmed')">✅ Confirm</button>`:''}${b.status!=='cancelled'?`<button class="btn btn-red" onclick="updateBooking('${b.id}','cancelled')">✕ Cancel</button>`:''}<a class="btn btn-grey" style="text-decoration:none" href="tel:${b.customer_phone}">📞 Call</a></div></div>`;
   }).join('');
 }
-async function updateBooking(id,status){ await supabaseClient.from('bookings').update({status}).eq('id',id); loadBookings(); }
+async function updateBooking(id,status){
+  const { error } = await supabaseClient.from('bookings').update({status}).eq('id',id);
+  if(error){ alert(error.message); return; }
+  loadBookings();
+}
+async function copyLink(){
+  const url=location.origin+location.pathname.replace('dashboard.html','')+'salon.html?id='+currentSalon.id;
+  try{ await navigator.clipboard.writeText(url); alert('✅ Link copied! Share it on WhatsApp.'); }
+  catch(e){ prompt('Copy your salon link:', url); }
+}
 </script>
 </body>
   </html>
