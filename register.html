@@ -28,11 +28,15 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 .preview img{width:100%;height:110px;object-fit:cover;border-radius:12px}
 .success{background:#dcfce7;border:1px solid #86efac;padding:14px;border-radius:12px;color:#166534;display:none;margin-top:12px}
 .opt{font-weight:400;color:#888;font-size:11px}
+/* ADD ONLY - Live Location + Logout styles */
+.btn-grey{background:#f1f1f1;color:#111;border:1px solid #e5e5e5;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;width:100%}
 </style>
 </head>
 <body>
 <div class="wrap">
 <a href="index.html" style="display:inline-block;margin:14px 0;text-decoration:none;color:#2a0a45;font-weight:700">← Back to Home</a>
+<!-- ADD ONLY - Logout + My Bookings / Dashboard links -->
+<p id="logoutRow" style="text-align:right;display:none;margin:0 0 8px"><a href="#" onclick="logoutUser();return false;" style="font-size:13px;color:#666">🚪 Logout</a> • <a href="dashboard.html" style="font-size:13px">👤 Dashboard</a> • <a href="my-bookings.html" style="font-size:13px">📅 My Bookings</a></p>
 <div class="logo">Book<span>My</span>Salon</div>
 <h1>Register Your Salon</h1>
 <p class="small">Fill this in once. Your salon gets its own page instantly. Only Name + Phone are required — everything else is optional.</p>
@@ -51,6 +55,12 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 <label>Owner Phone *</label><input id="owner_phone" placeholder="e.g. 073 123 4567">
 <label>Address / Location <span class="opt">(optional)</span></label><input id="address" placeholder="e.g. 5223 Nu2, Mdantsane, East London">
 <p class="small">Tip: Include area like Mdantsane, NU2, East London so Location filter finds you.</p>
+<!-- ADD ONLY - Live Location -->
+<label>📍 Live Location (GPS) <span class="opt">(optional - helps customers find you + shows distance)</span></label>
+<p class="small" id="locStatus" style="margin:0 0 8px">Tap below while you are at your salon to pin your exact location.</p>
+<input id="salon_lat" placeholder="Latitude e.g. -32.9836" inputmode="decimal">
+<input id="salon_lng" placeholder="Longitude e.g. 27.8540" inputmode="decimal" style="margin-top:8px">
+<button class="btn-grey" type="button" onclick="captureSalonLocation()" style="margin-top:8px">📍 Use My Location - Set Salon Pin</button>
 <label>About Your Salon (Description) <span class="opt">(optional)</span></label><textarea id="description" rows="3" placeholder="e.g. We specialize in fades, clean cuts and beard trims. Walk-ins welcome."></textarea>
 <label>Services & Prices <span class="opt">(optional - leave blank if you want)</span></label><div id="servicesEditor"></div>
 <button class="btn-light" onclick="addServiceRow()">+ Add Service</button>
@@ -65,6 +75,37 @@ input:focus,textarea:focus,select:focus{border-color:#2a0a45}
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let services=[{name:'Fade',price:60},{name:'Cut + Beard',price:120}];
 let selectedFiles=[];
+// ADD ONLY - Live Location state + Phone validation
+let salonLocation = null;
+try{
+  const savedLoc = localStorage.getItem('bms_user_location');
+  if(savedLoc){ salonLocation = JSON.parse(savedLoc); }
+}catch(e){}
+function normalizePhone(phone){ return (phone||'').replace(/[\s\-\(\)\+]/g,''); }
+function isValidSAPhone(phone){
+  const cleaned = normalizePhone(phone);
+  let p = cleaned;
+  if(p.startsWith('27') && p.length===11) p = '0' + p.slice(2);
+  if(!/^\d+$/.test(p)) return false;
+  if(p.length!==10) return false;
+  if(!p.startsWith('0')) return false;
+  return true;
+}
+function captureSalonLocation(){
+  if(!navigator.geolocation){ alert('Location is not supported on this device.'); return; }
+  const st = document.getElementById('locStatus');
+  st.textContent = '📍 Getting your location...';
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    salonLocation = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+    document.getElementById('salon_lat').value = pos.coords.latitude.toFixed(6);
+    document.getElementById('salon_lng').value = pos.coords.longitude.toFixed(6);
+    st.textContent = `✅ Location captured: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} - Customers will see how far you are.`;
+    try{ localStorage.setItem('bms_user_location', JSON.stringify(salonLocation)); }catch(e){}
+  }, ()=>{
+    st.textContent = 'Could not get location. Please allow Location permission and try again.';
+    alert('Could not get location. Please allow Location permission and try again.');
+  }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
+}
 function renderServices(){ document.getElementById('servicesEditor').innerHTML=services.map((s,i)=>`<div class="serviceRow"><input placeholder="Service e.g. Fade (optional)" value="${s.name.replace(/"/g,'')}" oninput="services[${i}].name=this.value"><input type="number" placeholder="Price" value="${s.price}" style="width:100px" oninput="services[${i}].price=this.value"><button class="del" onclick="removeService(${i})">✕</button></div>`).join(''); }
 function addServiceRow(){ services.push({name:'',price:''}); renderServices(); }
 function removeService(i){ services.splice(i,1); if(services.length===0) services.push({name:'',price:''}); renderServices(); }
@@ -80,6 +121,23 @@ async function registerSalon(){
   // ONLY Name + Phone are required. Everything else is optional.
   if(!name){ alert('Please enter Salon Name'); return; }
   if(!owner_phone){ alert('Please enter Phone (so you can login to Dashboard later)'); return; }
+  // ADD ONLY - Phone validation
+  if(!isValidSAPhone(owner_phone)){
+    alert('Please enter a valid SA phone number - 10 digits starting with 0, e.g. 073 123 4567');
+    document.getElementById('owner_phone').focus();
+    return;
+  }
+  // ADD ONLY - Prevent double registration (same phone = same salon)
+  try{
+    const { data: existing } = await supabaseClient.from('salons').select('id,name').eq('phone', owner_phone);
+    if(existing && existing.length>0){
+      const ex = existing[0];
+      if(confirm(`You already have a salon registered with this phone: "${ex.name}".\n\nTap OK to go to your existing salon instead of creating a duplicate.`)){
+        window.location.href = 'salon.html?id=' + ex.id;
+      }
+      return;
+    }
+  }catch(e){}
   // Services optional - can be empty
   const cleanServices=services.filter(s=>s.name.trim()!=='').map(s=>({name:s.name.trim(),price:Number(s.price)||0}));
   // Photos optional - can be empty
@@ -93,12 +151,32 @@ async function registerSalon(){
       else { photos.push(await fileToBase64(f)); }
     }catch(e){ photos.push(await fileToBase64(f)); }
   }
+  // ADD ONLY - Live Location values
+  const latVal = document.getElementById('salon_lat').value.trim();
+  const lngVal = document.getElementById('salon_lng').value.trim();
+  const locFields = {};
+  if(latVal!=='' && lngVal!==''){
+    locFields.latitude = parseFloat(latVal);
+    locFields.longitude = parseFloat(lngVal);
+    locFields.lat = parseFloat(latVal);
+    locFields.lng = parseFloat(lngVal);
+  } else if(salonLocation){
+    locFields.latitude = salonLocation.lat;
+    locFields.longitude = salonLocation.lng;
+    locFields.lat = salonLocation.lat;
+    locFields.lng = salonLocation.lng;
+  }
   // Try with owner_name first, fallback without it if column not yet created in Supabase
   let data, error;
-  const res1 = await supabaseClient.from('salons').insert([{name,category,owner_name:owner_name||'',owner_phone,address:address||'',description:description||'',services:cleanServices,photos:photos,photo_url:photos[0]||null}]).select().single();
+  const res1 = await supabaseClient.from('salons').insert([{name,category,owner_name:owner_name||'',owner_phone,address:address||'',description:description||'',services:cleanServices,photos:photos,photo_url:photos[0]||null, ...locFields}]).select().single();
   data=res1.data; error=res1.error;
+  // ADD ONLY - If latitude columns don't exist yet, retry without them so registration never fails
+  if(error && (String(error.message).includes('latitude') || String(error.message).includes('longitude') || String(error.message).includes('column'))){
+    const resRetry = await supabaseClient.from('salons').insert([{name,category,owner_name:owner_name||'',owner_phone,address:address||'',description:description||'',services:cleanServices,photos:photos,photo_url:photos[0]||null}]).select().single();
+    if(!resRetry.error){ data=resRetry.data; error=null; alert('⚠️ Registered, but GPS location was not saved. In Supabase add columns: latitude float8, longitude float8, lat float8, lng float8 - then Edit Salon to set location.'); }
+  }
   if(error && String(error.message).includes('owner_name')){
-    const res2 = await supabaseClient.from('salons').insert([{name,category,owner_phone,address:address||'',description:description||'',services:cleanServices,photos:photos,photo_url:photos[0]||null}]).select().single();
+    const res2 = await supabaseClient.from('salons').insert([{name,category,owner_phone,address:address||'',description:description||'',services:cleanServices,photos:photos,photo_url:photos[0]||null, ...locFields}]).select().single();
     data=res2.data; error=res2.error;
     if(!error) alert('⚠️ Registered, but owner_name column is missing in Supabase. Run: ALTER TABLE salons ADD COLUMN IF NOT EXISTS owner_name text DEFAULT \'\';');
   }
@@ -109,15 +187,41 @@ async function registerSalon(){
     localStorage.setItem('bms_role','owner');
     localStorage.setItem('bms_owner_phone', owner_phone);
     if(data && data.id) localStorage.setItem('bms_salon_id', data.id);
+    if(locFields.latitude) localStorage.setItem('bms_user_location', JSON.stringify({lat: locFields.latitude, lng: locFields.longitude}));
+    updateLogoutVisibility();
   }catch(e){}
   const box=document.getElementById('successBox'); box.style.display='block';
-  box.innerHTML=`✅ <b>${name}</b> registered! Your salon page is ready. You stay logged in until you Logout.<br><br><a href="salon.html?id=${data.id}" style="color:#166534;font-weight:800">👁️ View My Salon Page →</a><br><a href="dashboard.html" style="color:#166534">Go to Dashboard →</a>`;
+  box.innerHTML=`✅ <b>${name}</b> registered! Your salon page is ready. You stay logged in until you Logout.<br><br><a href="salon.html?id=${data.id}" style="color:#166534;font-weight:800">👁️ View My Salon Page →</a><br><a href="dashboard.html" style="color:#166534">Go to Dashboard →</a><br><a href="my-bookings.html" style="color:#166534">📅 View My Bookings Page →</a>`;
   window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
 }
-// ADD ONLY - prefill owner phone if already logged in
+// ADD ONLY - prefill owner phone if already logged in + logout helpers
+function updateLogoutVisibility(){
+  try{
+    const hasLogin = localStorage.getItem('bms_owner_phone') || localStorage.getItem('bms_customer_phone');
+    document.getElementById('logoutRow').style.display = hasLogin ? 'block' : 'none';
+  }catch(e){}
+}
+function logoutUser(){
+  try{
+    localStorage.removeItem('bms_role');
+    localStorage.removeItem('bms_customer_phone');
+    localStorage.removeItem('bms_customer_name');
+    localStorage.removeItem('bms_owner_phone');
+    localStorage.removeItem('bms_salon_id');
+    localStorage.removeItem('bms_user_location');
+  }catch(e){}
+  window.location.reload();
+}
 try{
   const savedPhone = localStorage.getItem('bms_owner_phone');
   if(savedPhone) document.getElementById('owner_phone').value = savedPhone;
+  updateLogoutVisibility();
+  // ADD ONLY - Prefill saved location if any
+  if(salonLocation){
+    document.getElementById('salon_lat').value = salonLocation.lat;
+    document.getElementById('salon_lng').value = salonLocation.lng;
+    document.getElementById('locStatus').textContent = '✅ Saved location found - you can tap Use My Location again to update it.';
+  }
 }catch(e){}
 renderServices();
 </script>
