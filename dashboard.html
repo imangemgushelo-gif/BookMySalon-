@@ -37,25 +37,48 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 .tabs{display:flex;gap:8px;margin:14px 0}
 .tabs button{flex:1;padding:11px;border-radius:12px;border:1px solid #e5e5e5;background:#fff;font-weight:700;cursor:pointer}
 .tabs button.active{background:#2a0a45;color:#fff}
-/* ADD ONLY - Delete + Live Location styles */
 .btn-danger{background:#dc2626}
 .btn-white{background:#fff;color:#2a0a45;border:1.5px solid #2a0a45}
 .btn-light{background:#fff;color:#111;border:1.5px solid #e5e5e5}
 .dup-warn{background:#fee2e2;border:1px solid #fecaca;padding:8px;border-radius:10px;font-size:13px;color:#991b1b;margin-top:8px}
 .loc-badge{font-size:12px;font-weight:700;color:#166534;background:#dcfce7;padding:4px 8px;border-radius:20px;display:inline-block;margin-top:6px}
+/* ADD ONLY - Clean Owner Layout */
+.owner-hero{background:#2a0a45;color:#fff;border-radius:18px;padding:20px;margin:12px 0}
+.owner-hero p{color:#ddd}
+.stats{display:flex;gap:10px;margin:12px 0}
+.stat{flex:1;background:#fff;border:1px solid #eee;border-radius:14px;padding:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.stat b{font-size:20px;color:#2a0a45;display:block}
+.stat span{font-size:12px;color:#777}
+.top-row{display:flex;justify-content:space-between;align-items:center}
 </style>
 </head>
 <body>
 <div class="box">
+<div class="top-row">
 <div class="logo">Book<span>My</span>Salon</div>
-<p style="margin:10px 0"><a href="index.html">← Back to home</a> <span id="logoutRow" style="display:none;float:right"><a href="#" onclick="logoutUser();return false;" style="font-size:13px;color:#666">🚪 Logout</a></span></p>
-<h1>Owner Dashboard 👤</h1>
-<p class="small">Manage your bookings, services & profile.</p>
+<a href="#" onclick="switchToCustomer();return false;" style="font-size:12px;color:#777">Switch: I'm a Customer ↺</a>
+</div>
+<p style="margin:10px 0"><a href="index.html">← Back to Welcome</a> <span id="logoutRow" style="display:none;float:right"><a href="#" onclick="logoutUser();return false;" style="font-size:13px;color:#666">🚪 Logout</a></span></p>
+
+<!-- ADD ONLY - Clean Owner Hero -->
+<div class="owner-hero">
+<h1 style="font-size:26px;line-height:1.2">Hello Owner! 👋<br>Owner Dashboard</h1>
+<p class="small" style="margin-top:8px">Manage your bookings, services & profile.</p>
+</div>
 
 <div class="card">
 <label style="font-weight:700;font-size:13px">Your Salon Phone / Owner Phone</label>
 <input id="ownerPhone" placeholder="e.g. 082 123 4567">
 <button class="btn btn-dark" onclick="loadDashboard()">Load My Salon →</button>
+<p class="small" style="margin-top:10px;text-align:center">No salon yet? <a href="register.html">➕ Register Salon</a></p>
+</div>
+
+<!-- ADD ONLY - Stats (filled by JS after load, hidden until then) -->
+<div class="stats" id="statsRow" style="display:none">
+<div class="stat"><b id="statTotal">0</b><span>Total Bookings</span></div>
+<div class="stat"><b id="statPending">0</b><span>Pending</span></div>
+<div class="stat"><b id="statConfirmed">0</b><span>Confirmed</span></div>
+<div class="stat"><b id="statRating">New</b><span>⭐ Rating</span></div>
 </div>
 
 <div id="dashboardContent"></div>
@@ -73,7 +96,6 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
     <input id="edit_salon_phone">
     <label style="font-weight:700;font-size:13px">Description</label>
     <input id="edit_salon_desc">
-    <!-- ADD ONLY - Category in Edit -->
     <label style="font-weight:700;font-size:13px">Category</label>
     <select id="edit_salon_category">
       <option value="">Select Category</option>
@@ -84,7 +106,6 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
       <option value="Beauty">✨ Beauty</option>
       <option value="Makeup">💄 Makeup</option>
     </select>
-    <!-- ADD ONLY - Live Location in Edit -->
     <label style="font-weight:700;font-size:13px">Live Location (GPS)</label>
     <p class="small" id="edit_loc_status" style="margin:4px 0 8px">No GPS pin saved yet. Tap below while at your salon.</p>
     <input id="edit_salon_lat" placeholder="Latitude e.g. -32.9836" inputmode="decimal">
@@ -98,7 +119,6 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let salon=null, bookings=[];
-// ADD ONLY - Phone validation helpers (same as index/salon)
 function normalizePhone(phone){ return (phone||'').replace(/[\s\-\(\)\+]/g,''); }
 function isValidSAPhone(phone){
   const cleaned = normalizePhone(phone);
@@ -109,18 +129,22 @@ function isValidSAPhone(phone){
   if(!p.startsWith('0')) return false;
   return true;
 }
+// ADD ONLY - Switch to Customer (back to Welcome, keep owner login for later)
+function switchToCustomer(){
+  try{ localStorage.setItem('bms_role','customer'); }catch(e){}
+  window.location.href = 'index.html';
+}
 async function loadDashboard(){
   const phone=document.getElementById('ownerPhone').value.trim();
   if(!phone){ alert('Enter your phone'); return; }
-  // ADD ONLY - Phone validation for owner
   if(!isValidSAPhone(phone)){ alert('Please enter a valid SA phone number - 10 digits starting with 0, e.g. 082 123 4567'); return; }
   const {data:salons} = await supabaseClient.from('salons').select('*').eq('phone',phone);
   if(!salons || !salons.length){
     document.getElementById('dashboardContent').innerHTML='<div class="card">No salon found for this phone. <a href="register.html">Register your salon</a></div>';
+    document.getElementById('statsRow').style.display='none';
     return;
   }
   salon=salons[0];
-  // ADD ONLY - remember owner login + expose salon for Edit/View
   try{
     localStorage.setItem('bms_role','owner');
     localStorage.setItem('bms_owner_phone', phone);
@@ -133,23 +157,27 @@ async function loadDashboard(){
   bookings=data||[];
   const {data:ratings} = await supabaseClient.from('ratings').select('*').eq('salon_id',salon.id).order('created_at',{ascending:false});
   const avg = ratings && ratings.length ? (ratings.reduce((a,b)=>a+b.rating,0)/ratings.length).toFixed(1) : 'New';
-  // ADD ONLY - Live location badge
   const hasLoc = (salon.latitude!=null && salon.longitude!=null) || (salon.lat!=null && salon.lng!=null);
   const locBadge = hasLoc ? `<span class="loc-badge">📍 Live Location Saved ✓</span>` : `<span class="small">📍 No GPS pin yet - tap Edit Salon to set it</span>`;
+  // ADD ONLY - Fill Stats
+  const pending = bookings.filter(b=>b.status==='pending').length;
+  const confirmed = bookings.filter(b=>b.status==='confirmed').length;
+  document.getElementById('statsRow').style.display='flex';
+  document.getElementById('statTotal').textContent = bookings.length;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statConfirmed').textContent = confirmed;
+  document.getElementById('statRating').textContent = avg;
   document.getElementById('dashboardContent').innerHTML=`
   <div class="card"><h2>${salon.name}</h2><p class="small">${salon.address||''}</p><p style="margin-top:8px">⭐ ${avg} (${ratings?ratings.length:0} reviews) • ${bookings.length} bookings</p><p style="margin-top:8px">${locBadge}</p></div>
-  <!-- ADD ONLY - Edit + View Salon buttons -->
   <div style="display:flex;gap:10px;margin:14px 0">
     <button class="btn" style="background:#fff;color:#111;border:2px solid #111" onclick="openEditSalon()">✏️ Edit Salon</button>
     <button class="btn" onclick="viewMySalon()">👁️ View Salon</button>
   </div>
-  <!-- ADD ONLY - Live Location quick button + Delete Salon -->
   <div style="display:flex;gap:10px;margin:0 0 14px">
     <button class="btn btn-light" onclick="quickSetLocation()">📍 Set Live Location</button>
   </div>
   <div class="tabs"><button class="active" id="tB" onclick="showD('b')">📅 Bookings</button><button id="tR" onclick="showD('r')">⭐ Reviews</button><button id="tS" onclick="showD('s')">✂️ Services</button></div>
   <div id="dB"></div><div id="dR" style="display:none"></div><div id="dS" style="display:none"></div>
-  <!-- ADD ONLY - Delete Salon + My Bookings link -->
   <div class="card" style="border-color:#fecaca">
     <h3 style="color:#991b1b">Danger Zone</h3>
     <p class="small" style="margin:8px 0">Deleting your salon will also delete all its bookings and ratings. This cannot be undone.</p>
@@ -157,14 +185,9 @@ async function loadDashboard(){
     <p style="margin-top:12px;text-align:center"><a href="my-bookings.html">📅 View My Bookings Page →</a></p>
   </div>`;
   renderBookings(); renderReviews(ratings||[]); renderServices();
-  // ADD ONLY - If came from salon.html?edit=1, auto-open Edit
   try{
     const params = new URLSearchParams(location.search);
-    if(params.get('edit')==='1'){
-      openEditSalon();
-      // Clean URL without reload
-      history.replaceState(null,'','dashboard.html');
-    }
+    if(params.get('edit')==='1'){ openEditSalon(); history.replaceState(null,'','dashboard.html'); }
   }catch(e){}
 }
 function showD(t){
@@ -175,15 +198,9 @@ function showD(t){
 }
 function renderBookings(){
   if(!bookings.length){ document.getElementById('dB').innerHTML='<div class="card">No bookings yet.</div>'; return; }
-  // ADD ONLY - Detect double bookings (same date+time, not cancelled)
   const seen = {};
   const dupKeys = new Set();
-  bookings.forEach(b=>{
-    if(b.status==='cancelled') return;
-    const key = b.booking_date + '|' + b.booking_time;
-    if(seen[key]) dupKeys.add(key);
-    seen[key]=true;
-  });
+  bookings.forEach(b=>{ if(b.status==='cancelled') return; const key = b.booking_date + '|' + b.booking_time; if(seen[key]) dupKeys.add(key); seen[key]=true; });
   document.getElementById('dB').innerHTML=bookings.map(b=>{
   const isDup = dupKeys.has(b.booking_date + '|' + b.booking_time);
   const dupHtml = isDup ? `<div class="dup-warn">⚠️ Possible double booking - same date & time as another booking. Please cancel one.</div>` : '';
@@ -220,14 +237,12 @@ async function removeService(i){
   await supabaseClient.from('salons').update({services}).eq('id',salon.id);
   loadDashboard();
 }
-// ADD ONLY - Edit Salon, View Salon, Stay Logged In, Logout
 function openEditSalon(){
   if(!salon){ alert('Load your salon first'); return; }
   document.getElementById('edit_salon_name').value = salon.name || '';
   document.getElementById('edit_salon_address').value = salon.address || '';
   document.getElementById('edit_salon_phone').value = salon.phone || '';
   document.getElementById('edit_salon_desc').value = salon.description || '';
-  // ADD ONLY - Fill category + location in Edit
   document.getElementById('edit_salon_category').value = salon.category || '';
   const lat = salon.latitude ?? salon.lat ?? '';
   const lng = salon.longitude ?? salon.lng ?? '';
@@ -246,39 +261,24 @@ async function saveEditSalon(){
     description: document.getElementById('edit_salon_desc').value.trim()
   };
   if(!updates.name){ alert('Salon name is required'); return; }
-  // ADD ONLY - Phone validation in Edit
   if(!isValidSAPhone(updates.phone)){ alert('Please enter a valid SA phone number - 10 digits starting with 0'); return; }
-  // ADD ONLY - Category + Live Location
   const cat = document.getElementById('edit_salon_category').value;
   if(cat) updates.category = cat;
   const latVal = document.getElementById('edit_salon_lat').value.trim();
   const lngVal = document.getElementById('edit_salon_lng').value.trim();
-  if(latVal!=='' && lngVal!==''){
-    updates.latitude = parseFloat(latVal);
-    updates.longitude = parseFloat(lngVal);
-    // Also save alt field names for compatibility
-    updates.lat = parseFloat(latVal);
-    updates.lng = parseFloat(lngVal);
-  }
+  if(latVal!=='' && lngVal!==''){ updates.latitude = parseFloat(latVal); updates.longitude = parseFloat(lngVal); updates.lat = parseFloat(latVal); updates.lng = parseFloat(lngVal); }
   const { error } = await supabaseClient.from('salons').update(updates).eq('id', salon.id);
   if(error){ alert(error.message); return; }
   alert('Salon updated!');
   document.getElementById('editSalonModal').style.display = 'none';
-  // If phone changed, keep owner logged in with new phone
   try{ localStorage.setItem('bms_owner_phone', updates.phone); }catch(e){}
   document.getElementById('ownerPhone').value = updates.phone;
   loadDashboard();
 }
 function viewMySalon(){
-  if(salon && salon.id){
-    window.location.href = 'salon.html?id=' + salon.id;
-  } else {
-    const savedId = localStorage.getItem('bms_salon_id');
-    if(savedId) window.location.href = 'salon.html?id=' + savedId;
-    else alert('Load your salon first');
-  }
+  if(salon && salon.id){ window.location.href = 'salon.html?id=' + salon.id; }
+  else { const savedId = localStorage.getItem('bms_salon_id'); if(savedId) window.location.href = 'salon.html?id=' + savedId; else alert('Load your salon first'); }
 }
-// ADD ONLY - Live Location - capture + quick set
 function captureSalonLocation(){
   if(!navigator.geolocation){ alert('Location is not supported on this device.'); return; }
   const st = document.getElementById('edit_loc_status');
@@ -288,27 +288,20 @@ function captureSalonLocation(){
     document.getElementById('edit_salon_lng').value = pos.coords.longitude.toFixed(6);
     if(st) st.textContent = `✅ Location captured: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} - Tap Save Changes to save it.`;
     try{ localStorage.setItem('bms_user_location', JSON.stringify({lat: pos.coords.latitude, lng: pos.coords.longitude})); }catch(e){}
-  }, ()=>{
-    if(st) st.textContent = 'Could not get location. Please allow Location permission.';
-    alert('Could not get location. Please allow Location permission and try again.');
-  }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
+  }, ()=>{ if(st) st.textContent = 'Could not get location. Please allow Location permission.'; alert('Could not get location. Please allow Location permission and try again.'); }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
 }
 async function quickSetLocation(){
   if(!salon){ alert('Load your salon first'); return; }
   if(!navigator.geolocation){ alert('Location is not supported.'); return; }
   if(!confirm('Set this salon location to your current GPS location? Make sure you are at your salon.')) return;
   navigator.geolocation.getCurrentPosition(async (pos)=>{
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
+    const lat = pos.coords.latitude; const lng = pos.coords.longitude;
     const { error } = await supabaseClient.from('salons').update({latitude: lat, longitude: lng, lat: lat, lng: lng}).eq('id', salon.id);
     if(error){ alert(error.message); return; }
     alert('✅ Live Location saved for your salon! Customers will now see how far you are.');
     loadDashboard();
-  }, ()=>{
-    alert('Could not get location. Please allow Location permission.');
-  }, {enableHighAccuracy:true, timeout:10000});
+  }, ()=>{ alert('Could not get location. Please allow Location permission.'); }, {enableHighAccuracy:true, timeout:10000});
 }
-// ADD ONLY - Delete Salon for Owner
 async function deleteSalon(){
   if(!salon){ alert('Load your salon first'); return; }
   if(!confirm('Are you SURE you want to delete this salon? This will delete the salon and all its bookings and ratings. This cannot be undone.')) return;
@@ -318,28 +311,15 @@ async function deleteSalon(){
   await supabaseClient.from('ratings').delete().eq('salon_id', salon.id);
   const { error } = await supabaseClient.from('salons').delete().eq('id', salon.id);
   if(error){ alert(error.message); return; }
-  try{
-    localStorage.removeItem('bms_role');
-    localStorage.removeItem('bms_owner_phone');
-    localStorage.removeItem('bms_salon_id');
-  }catch(e){}
+  try{ localStorage.removeItem('bms_role'); localStorage.removeItem('bms_owner_phone'); localStorage.removeItem('bms_salon_id'); }catch(e){}
   alert('Salon deleted.');
   window.location.href = 'index.html';
 }
 function updateLogoutVisibility(){
-  try{
-    const hasLogin = localStorage.getItem('bms_owner_phone');
-    document.getElementById('logoutRow').style.display = hasLogin ? 'inline' : 'none';
-  }catch(e){}
+  try{ const hasLogin = localStorage.getItem('bms_owner_phone'); document.getElementById('logoutRow').style.display = hasLogin ? 'inline' : 'none'; }catch(e){}
 }
 function logoutUser(){
-  try{
-    localStorage.removeItem('bms_role');
-    localStorage.removeItem('bms_owner_phone');
-    localStorage.removeItem('bms_salon_id');
-    localStorage.removeItem('bms_customer_phone');
-    localStorage.removeItem('bms_customer_name');
-  }catch(e){}
+  try{ localStorage.removeItem('bms_role'); localStorage.removeItem('bms_owner_phone'); localStorage.removeItem('bms_salon_id'); localStorage.removeItem('bms_customer_phone'); localStorage.removeItem('bms_customer_name'); }catch(e){}
   window.location.href = 'index.html';
 }
 function restoreOwnerSession(){
@@ -347,10 +327,7 @@ function restoreOwnerSession(){
     const savedPhone = localStorage.getItem('bms_owner_phone');
     const role = localStorage.getItem('bms_role');
     updateLogoutVisibility();
-    if(role === 'owner' && savedPhone){
-      document.getElementById('ownerPhone').value = savedPhone;
-      loadDashboard();
-    }
+    if(role === 'owner' && savedPhone){ document.getElementById('ownerPhone').value = savedPhone; loadDashboard(); }
   }catch(e){}
 }
 restoreOwnerSession();
