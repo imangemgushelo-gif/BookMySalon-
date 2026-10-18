@@ -71,6 +71,11 @@ input:focus,select:focus{border-color:#2a0a45}
 .btn-white{background:#fff;color:#2a0a45;border:1.5px solid #2a0a45;text-decoration:none;text-align:center}
 .card-actions .btn{flex:1}
 .card-actions a.btn{padding:11px 10px;font-size:14px}
+/* ADD ONLY - Live location + Cancel + Distance */
+.btn-light{background:#fff;color:#111;border:1.5px solid #e5e5e5}
+.btn-cancel{background:#fff;color:#991b1b;border:1.5px solid #fecaca}
+.dist-badge{font-size:12px;font-weight:700;color:#2a0a45;background:#f3e8ff;padding:4px 8px;border-radius:20px}
+.loc-status{font-size:13px;color:#166534;font-weight:700;margin:6px 0 10px;display:none}
 </style>
 </head>
 <body>
@@ -83,6 +88,11 @@ input:focus,select:focus{border-color:#2a0a45}
 <a href="register.html">➕ Register Salon</a>
 <a href="dashboard.html">👤 Owner Dashboard</a>
 </div>
+<!-- ADD ONLY - My Bookings Page link -->
+<div class="top-links">
+<a href="my-bookings.html">📅 My Bookings Page</a>
+<a href="salon.html">👁️ View Salon</a>
+</div>
 <!-- ADD ONLY - Logout for customer / owner, stays hidden until logged in -->
 <div class="top-links" id="logoutRow" style="display:none">
 <a href="#" onclick="logoutUser();return false;" style="background:#f1f1f1">🚪 Logout</a>
@@ -92,6 +102,9 @@ input:focus,select:focus{border-color:#2a0a45}
 <button id="tabMy" onclick="showTab('my')">📅 My Bookings</button>
 </div>
 <div id="homeTab">
+<!-- ADD ONLY - Live Location -->
+<button class="btn btn-light" id="locBtn" onclick="useMyLocation()">📍 Use My Location - Show Nearest First</button>
+<p class="loc-status" id="locStatus"></p>
 <input id="searchInput" placeholder="🔍 Search salon or service e.g. Braids" oninput="loadSalons()">
 <select id="areaFilter" onchange="loadSalons()">
 <option value="">📍 All Areas in East London</option>
@@ -140,7 +153,7 @@ input:focus,select:focus{border-color:#2a0a45}
 <input type="date" id="bookingDate">
 <label style="font-weight:700;font-size:13px">Time</label>
 <input type="time" id="bookingTime" value="10:00">
-<button class="btn" onclick="confirmBooking()">Confirm Booking →</button>
+<button class="btn" id="confirmBtn" onclick="confirmBooking()">Confirm Booking →</button>
 <div class="success" id="bookingSuccess">✅ Booking sent! The salon owner will confirm it. Check My Bookings for status.</div>
 </div>
 </div>
@@ -171,6 +184,13 @@ let ratingBooking = null;
 let ratingStars = 0;
 // ADD ONLY - selected category
 let selectedCategory = '';
+// ADD ONLY - Live Location state
+let userLocation = null;
+let sortByDistance = false;
+try{
+  const savedLoc = localStorage.getItem('bms_user_location');
+  if(savedLoc){ userLocation = JSON.parse(savedLoc); sortByDistance = true; }
+}catch(e){}
 function setCategory(cat, el){
 selectedCategory = cat;
 document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active'));
@@ -236,16 +256,80 @@ const total = dotsEl ? dotsEl.querySelectorAll('span').length : 0;
 countEl.textContent = (idx+1) + ' / ' + total;
 }
 }
+// ADD ONLY - Live Location helpers
+function getSalonLatLng(s){
+  const lat = s.latitude ?? s.lat ?? null;
+  const lng = s.longitude ?? s.lng ?? null;
+  if(lat!=null && lng!=null) return {lat: parseFloat(lat), lng: parseFloat(lng)};
+  return null;
+}
+function distanceKm(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function formatDistance(km){
+  if(km < 1) return Math.round(km*1000) + ' m away';
+  return km.toFixed(1) + ' km away';
+}
+function useMyLocation(){
+  const btn = document.getElementById('locBtn');
+  const status = document.getElementById('locStatus');
+  if(!navigator.geolocation){
+    alert('Location is not supported on this device. Please allow location in browser settings.');
+    return;
+  }
+  btn.textContent = '📍 Getting your location...';
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    userLocation = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+    sortByDistance = true;
+    try{ localStorage.setItem('bms_user_location', JSON.stringify(userLocation)); }catch(e){}
+    status.style.display='block';
+    status.textContent = '✅ Showing nearest salons first';
+    btn.textContent = '📍 Location On - Nearest First ✓ Tap to Refresh';
+    renderSalons();
+  }, (err)=>{
+    btn.textContent = '📍 Use My Location - Show Nearest First';
+    alert('Could not get location. Please allow Location permission and try again.');
+  }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
+}
+function updateLocUI(){
+  if(userLocation && sortByDistance){
+    const status = document.getElementById('locStatus');
+    if(status){ status.style.display='block'; status.textContent='✅ Showing nearest salons first'; }
+    const btn = document.getElementById('locBtn');
+    if(btn) btn.textContent='📍 Location On - Nearest First ✓ Tap to Refresh';
+  }
+}
 function renderSalons(){
 const q = document.getElementById('searchInput').value.toLowerCase();
 const area = document.getElementById('areaFilter').value;
-const filtered = allSalons.filter(s=>{
+let filtered = allSalons.filter(s=>{
 const matchQ = !q || s.name.toLowerCase().includes(q) || (s.services||[]).some(x=>x.name.toLowerCase().includes(q));
 const matchArea = !area || (s.address||'').toLowerCase().includes(area.toLowerCase());
 // ADD ONLY - category filter
 const matchCat = !selectedCategory || (s.category||'') === selectedCategory;
 return matchQ && matchArea && matchCat;
 });
+// ADD ONLY - attach distance + sort by nearest if location on
+filtered = filtered.map(s=>{
+  let dist = null;
+  if(userLocation){
+    const ll = getSalonLatLng(s);
+    if(ll) dist = distanceKm(userLocation.lat, userLocation.lng, ll.lat, ll.lng);
+  }
+  return {...s, _dist: dist};
+});
+if(sortByDistance && userLocation){
+  filtered.sort((a,b)=>{
+    if(a._dist==null && b._dist==null) return 0;
+    if(a._dist==null) return 1;
+    if(b._dist==null) return -1;
+    return a._dist - b._dist;
+  });
+}
 if(filtered.length===0){
 document.getElementById('salonList').innerHTML = `<div class="card">No salons found.<br><span class="small">Try another search or area. Are you a salon owner? <a href="register.html">Register here</a>.</span></div>`;
 return;
@@ -255,12 +339,14 @@ const r = getRating(s.id);
 const ratingText = r.count===0 ? '⭐ New • No ratings yet' : `⭐ <b>${r.avg.toFixed(1)}</b> (${r.count} ${r.count===1?'review':'reviews'})`;
 const servicesText = (s.services||[]).map(x=>x.name+' - R'+x.price).join(' • ');
 const minPrice = (s.services||[]).length ? Math.min(...s.services.map(x=>x.price)) : 0;
+// ADD ONLY - distance badge
+const distText = s._dist!=null ? `<span class="dist-badge">📍 ${formatDistance(s._dist)}</span>` : '';
 return `
 <div class="card" style="padding:0">
 ${galleryHTML(s)}
 <div style="padding:16px">
 <div class="row"><b style="font-size:18px">${s.name}</b><span class="badge live">LIVE</span></div>
-<p class="small" style="margin:6px 0">${s.address}</p>
+<p class="small" style="margin:6px 0">${s.address} ${distText}</p>
 <p style="margin:4px 0;font-size:14px">${ratingText}</p>
 <p class="small">${servicesText || 'Services coming soon'}</p>
 <div class="row" style="margin-top:12px">
@@ -300,6 +386,26 @@ const el = document.getElementById('svc-'+i);
 el.style.borderColor='#2a0a45'; el.style.background='#f3e8ff';
 }
 function closeModal(){ document.getElementById('bookingModal').classList.remove('open'); }
+// ADD ONLY - Phone validation + Past time + Double booking helpers
+function normalizePhone(phone){ return (phone||'').replace(/[\s\-\(\)\+]/g,''); }
+function isValidSAPhone(phone){
+  const cleaned = normalizePhone(phone);
+  let p = cleaned;
+  if(p.startsWith('27') && p.length===11) p = '0' + p.slice(2);
+  if(!/^\d+$/.test(p)) return false;
+  if(p.length!==10) return false;
+  if(!p.startsWith('0')) return false;
+  return true;
+}
+function isPastTime(dateStr, timeStr){
+  const today = new Date().toISOString().split('T')[0];
+  if(dateStr !== today) return false;
+  const now = new Date();
+  const [hh, mm] = timeStr.split(':').map(Number);
+  const bookingDateTime = new Date();
+  bookingDateTime.setHours(hh, mm, 0, 0);
+  return bookingDateTime <= now;
+}
 async function confirmBooking(){
 if(!selectedService){ alert('Please choose a service'); return; }
 const customer_name = document.getElementById('customerName').value.trim();
@@ -307,6 +413,41 @@ const customer_phone = document.getElementById('customerPhone').value.trim();
 const booking_date = document.getElementById('bookingDate').value;
 const booking_time = document.getElementById('bookingTime').value;
 if(!customer_name || !customer_phone || !booking_date || !booking_time){ alert('Please fill all fields'); return; }
+// ADD ONLY - Phone validation
+if(!isValidSAPhone(customer_phone)){
+  alert('Please enter a valid SA phone number - 10 digits starting with 0, e.g. 082 123 4567');
+  document.getElementById('customerPhone').focus();
+  return;
+}
+// ADD ONLY - Past time check
+if(isPastTime(booking_date, booking_time)){
+  alert('You cannot book a time that has already passed today. Please choose a later time or another date.');
+  return;
+}
+// ADD ONLY - Prevent double tap / double booking
+const btn = document.getElementById('confirmBtn');
+if(btn.disabled) return;
+btn.disabled = true;
+btn.textContent = 'Checking...';
+// ADD ONLY - Check for existing double booking in Supabase
+const cleanPhone = normalizePhone(customer_phone);
+const { data: existing } = await supabaseClient.from('bookings').select('id').eq('salon_id', selectedSalon.id).eq('booking_date', booking_date).eq('booking_time', booking_time).eq('customer_phone', customer_phone).neq('status','cancelled');
+if(existing && existing.length>0){
+  alert('You already have this booking - same salon, date and time. Please choose a different time.');
+  btn.disabled = false;
+  btn.textContent = 'Confirm Booking →';
+  return;
+}
+// Also check normalized phone variant if user typed spaces
+if(cleanPhone !== customer_phone){
+  const { data: existing2 } = await supabaseClient.from('bookings').select('id').eq('salon_id', selectedSalon.id).eq('booking_date', booking_date).eq('booking_time', booking_time).eq('customer_phone', cleanPhone).neq('status','cancelled');
+  if(existing2 && existing2.length>0){
+    alert('You already have this booking - same salon, date and time. Please choose a different time.');
+    btn.disabled = false;
+    btn.textContent = 'Confirm Booking →';
+    return;
+  }
+}
 // ADD ONLY - stay logged in as customer
 try{
 localStorage.setItem('bms_role','customer');
@@ -314,7 +455,10 @@ localStorage.setItem('bms_customer_name', customer_name);
 localStorage.setItem('bms_customer_phone', customer_phone);
 updateLogoutVisibility();
 }catch(e){}
+btn.textContent = 'Booking...';
 const { error } = await supabaseClient.from('bookings').insert([{ salon_id:selectedSalon.id, service:selectedService.name, price:selectedService.price, customer_name, customer_phone, booking_date, booking_time, status:'pending' }]);
+btn.disabled = false;
+btn.textContent = 'Confirm Booking →';
 if(error){ alert(error.message); return; }
 document.getElementById('bookingSuccess').style.display='block';
 setTimeout(()=>{ closeModal(); showTab('my'); document.getElementById('myPhone').value = customer_phone; loadMyBookings(); }, 1200);
@@ -322,6 +466,8 @@ setTimeout(()=>{ closeModal(); showTab('my'); document.getElementById('myPhone')
 async function loadMyBookings(){
 const phone = document.getElementById('myPhone').value.trim();
 if(!phone){ alert('Enter your phone number'); return; }
+// ADD ONLY - validate phone on My Bookings too
+if(!isValidSAPhone(phone)){ alert('Please enter a valid SA phone number - 10 digits starting with 0'); return; }
 // ADD ONLY - remember customer when they view bookings
 try{
 localStorage.setItem('bms_role','customer');
@@ -336,13 +482,25 @@ return;
 document.getElementById('myBookingsList').innerHTML = bookings.map(b=>{
 const badgeColor = b.status==='confirmed' ? '#dcfce7;color:#166534' : b.status==='cancelled' ? '#fee2e2;color:#991b1b' : '#fef9c3;color:#854d0e';
 const canRate = b.status==='confirmed';
+// ADD ONLY - Cancel button for pending/confirmed
+const canCancel = b.status==='pending' || b.status==='confirmed';
+const cancelBtn = canCancel ? `<button class="btn btn-cancel" style="margin-top:10px" onclick="cancelBooking('${b.id}')">❌ Cancel Booking</button>` : '';
 return `
 <div class="card">
 <div class="row"><b>${b.salons?.name || 'Salon'}</b><span class="badge" style="background:${badgeColor}">${b.status.toUpperCase()}</span></div>
 <p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}</p>
 ${canRate ? `<button class="btn btn-dark" onclick="openRating('${b.id}','${b.salon_id}','${(b.salons?.name||'Salon').replace(/'/g,"")}')">⭐ Rate This Salon</button>` : `<p class="small">You can rate once the salon confirms your booking.</p>`}
+${cancelBtn}
 </div>`;
 }).join('');
+}
+// ADD ONLY - Cancel Booking function
+async function cancelBooking(bookingId){
+  if(!confirm('Are you sure you want to cancel this booking?')) return;
+  const { error } = await supabaseClient.from('bookings').update({status:'cancelled'}).eq('id', bookingId);
+  if(error){ alert(error.message); return; }
+  alert('Booking cancelled.');
+  loadMyBookings();
 }
 function openRating(bookingId, salonId, salonName){
 ratingBooking = {bookingId, salonId};
@@ -381,6 +539,7 @@ localStorage.removeItem('bms_customer_phone');
 localStorage.removeItem('bms_customer_name');
 localStorage.removeItem('bms_owner_phone');
 localStorage.removeItem('bms_salon_id');
+localStorage.removeItem('bms_user_location');
 }catch(e){}
 window.location.reload();
 }
@@ -397,6 +556,7 @@ showTab('my');
 loadMyBookings();
 }
 updateLogoutVisibility();
+updateLocUI();
 }catch(e){}
 }
 document.getElementById('bookingDate').min = new Date().toISOString().split('T')[0];
