@@ -1,4 +1,4 @@
-  setTimeout(()=>{ const dB=document.getElementById('dB');<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -135,11 +135,11 @@ body{background:#f7f7f7}
 <div id="page5" class="page"><h2 style="margin:12px 0">💬 More</h2><div class="card"><h3>Reviews</h3><div id="dR"></div></div><div class="card" style="border-color:#fecaca"><h3 style="color:#991b1b">Danger Zone</h3><p class="small" style="margin:8px 0">Deleting your salon will also delete all its bookings and ratings. This cannot be undone.</p><button class="btn btn-danger" onclick="deleteSalon()">🗑️ Delete Salon</button><p style="margin-top:12px;text-align:center"><a href="my-bookings.html">📅 View My Bookings Page →</a></p><p style="margin-top:8px;text-align:center"><a href="chats.html">💬 View All Chats →</a></p></div></div>
 </div>
 
-<div class="bottom-nav">
+<div class="bottom-nav" style="justify-content:space-around">
 <button id="nav1" class="active" onclick="showPage(1)"><span>👤</span>Profile</button>
 <button id="nav2" onclick="showPage(2)"><span>📊</span>Dashboard</button>
 <button id="nav3" onclick="showPage(3)"><span>📅</span>Bookings</button>
-<button id="nav4" onclick="showPage(4)"><span>✂️</span>Services</button>
+<button id="navChat" onclick="window.location.href='chats.html'"><span>💬</span>Chats</button>
 <button id="nav5" onclick="showPage(5)"><span>•••</span>More</button>
 </div>
 
