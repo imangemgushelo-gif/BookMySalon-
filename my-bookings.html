@@ -214,7 +214,7 @@ async function check(){
     // ADD ONLY - Chat Button + Unread Badge - KEPT as chat.html, NOT deleted
     const unread = unreadCounts[b.id] || 0;
     const unreadBadge = unread > 0 ? `<span class="unread-badge">${unread > 9 ? '9+' : unread}</span>` : '';
-    const chatBtn = `<a href="chat.html?booking_id=${b.id}&salon_id=${b.salon_id}&salon_name=${encodeURIComponent(b.salons?.name||'Salon')}" onclick="markChatRead('${b.id}')" class="btn chat-btn" style="padding:12px;display:block;text-align:center;font-size:14px;margin-top:10px;text-decoration:none">💬 Chat with Salon ${unreadBadge}</a>`;
+    const chatBtn = `<a href="chats.html?booking_id=${b.id}&salon_id=${b.salon_id}&salon_name=${encodeURIComponent(b.salons?.name||'Salon')}" onclick="markChatRead('${b.id}')" class="btn chat-btn" style="padding:12px;display:block;text-align:center;font-size:14px;margin-top:10px;text-decoration:none">💬 Chat with Salon ${unreadBadge}</a>`;
     let rateBox = '';
     if(b.status==='confirmed'){
       rateBox = `<div style="margin-top:12px;border-top:1px solid #eee;padding-top:12px">
