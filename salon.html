@@ -19,38 +19,80 @@
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
-body{background:#fff;padding:20px;padding-bottom:80px;color:#111}
+body{background:#f8f7f9;padding-bottom:100px;color:#111}
 .box{max-width:600px;margin:0 auto}
-.logo{font-size:28px;font-weight:900;color:#2a0a45}
-.logo span{color:#c2a06e}
-a{color:#2a0a45;text-decoration:none;font-weight:700}
-.card{background:#fff;padding:16px;border-radius:16px;border:1px solid #eee;box-shadow:0 4px 16px rgba(0,0,0,.05);margin:14px 0}
-input{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;margin:6px 0 10px;outline:none}
+/* PREMIUM BANNER LIKE MOCKUP */
+.top-banner{position:relative;height:380px;overflow:hidden;background:#111}
+.top-banner img{width:100%;height:100%;object-fit:cover}
+.banner-gradient{position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,.05) 10%, rgba(0,0,0,.75) 85%)}
+.banner-content{position:absolute;bottom:0;left:0;right:0;padding:20px 18px 22px;color:white}
+.banner-content h1{font-size:33px;font-weight:900;line-height:1.05;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.banner-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-size:13px}
+.banner-meta span{background:rgba(0,0,0,.28);backdrop-filter:blur(8px);padding:4px 8px;border-radius:20px;border:1px solid rgba(255,255,255,.15)}
+.heart{position:absolute;top:16px;right:16px;width:44px;height:44px;background:rgba(0,0,0,.35);backdrop-filter:blur(12px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:1px solid rgba(255,255,255,.2);color:white}
+.back{position:absolute;top:16px;left:16px;width:40px;height:40px;background:rgba(0,0,0,.35);backdrop-filter:blur(12px);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;text-decoration:none;font-weight:900;font-size:20px;border:1px solid rgba(255,255,255,.2)}
+/* CONTENT OVERLAP LIKE MOCKUP */
+.content-wrap{max-width:600px;margin:0 auto;margin-top:-18px;position:relative;z-index:2;padding:0 14px}
+.card{background:#fff;padding:16px;border-radius:18px;border:1px solid #eee;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-bottom:14px}
+.pills{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 6px;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:10px 18px;border-radius:24px;border:1.5px solid #e5e5e5;background:white;font-weight:700;font-size:13px;cursor:pointer;color:#111}
+.pill.active{background:#111;color:white;border-color:#111}
+.service-card{display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid #eee;border-radius:16px;margin-bottom:10px;background:white}
+.service-card b{font-size:15px}
+.service-card p{font-size:12px;color:#777;margin-top:2px}
+.service-price{font-weight:900;font-size:16px}
 .btn{width:100%;background:#2a0a45;color:#fff;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
-.service-btn{display:flex;justify-content:space-between;width:100%;padding:12px;border:1px solid #eee;border-radius:12px;background:#fff;margin-bottom:8px;cursor:pointer;text-align:left}
-.service-btn.selected{border-color:#2a0a45;background:#f3e8ff}
-.small{font-size:13px;color:#777}
-.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
-.gallery img{width:100%;height:240px;object-fit:cover;flex-shrink:0;scroll-snap-align:start}
-.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:10px;font-size:14px;color:#166534}
-/* ADD ONLY - Owner + Live Location + Cancel styles */
+.btn-black{background:#111}
 .btn-white{background:#fff;color:#2a0a45;border:1.5px solid #2a0a45;text-decoration:none;text-align:center}
 .btn-light{background:#fff;color:#111;border:1.5px solid #e5e5e5}
 .btn-cancel{background:#fff;color:#991b1b;border:1.5px solid #fecaca}
 .btn-danger{background:#dc2626}
 .row{display:flex;gap:10px}
 .row .btn{flex:1}
-.dist-badge{font-size:12px;font-weight:700;color:#2a0a45;background:#f3e8ff;padding:4px 8px;border-radius:20px;display:inline-block;margin-top:6px}
+input{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;margin:6px 0 10px;outline:none;background:#fff}
+input:focus{border-color:#2a0a45}
+.service-btn{display:flex;justify-content:space-between;width:100%;padding:12px;border:1px solid #eee;border-radius:12px;background:#fff;margin-bottom:8px;cursor:pointer;text-align:left}
+.service-btn.selected{border-color:#2a0a45;background:#f3e8ff}
+.small{font-size:13px;color:#777}
+.gallery{position:relative}
+.gallery-scroll{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gallery-scroll::-webkit-scrollbar{display:none}
+.gallery-scroll img{width:100%;height:240px;object-fit:cover;flex-shrink:0;scroll-snap-align:start;display:block}
+.gallery-strip{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.gallery-strip::-webkit-scrollbar{display:none}
+.gallery-strip img{width:110px;height:110px;border-radius:14px;object-fit:cover;flex-shrink:0}
+.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:10px;font-size:14px;color:#166534}
+.dist-badge{font-size:12px;font-weight:700;color:#2a0a45;background:#f3e8ff;padding:4px 8px;border-radius:20px;display:inline-block;margin-top:8px}
 .badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
+.sticky-book{position:fixed;bottom:0;left:0;right:0;background:#111;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;z-index:50;box-shadow:0 -4px 24px rgba(0,0,0,.25)}
+.logo{font-size:28px;font-weight:900;color:#2a0a45;padding:14px}
+.logo span{color:#c2a06e}
+a{color:#2a0a45;text-decoration:none;font-weight:700}
 </style>
 </head>
 <body>
+<!-- PREMIUM BANNER -->
+<div class="top-banner" id="banner">
+<div style="height:380px;background:linear-gradient(135deg,#2a0a45,#6b21a8)"></div>
+</div>
+
+<div class="content-wrap">
+<!-- Pills like mockup -->
+<div class="pills" id="pills">
+<button class="pill active" data-tab="services" onclick="setTab('services',this)">Services</button>
+<button class="pill" data-tab="about" onclick="setTab('about',this)">About</button>
+<button class="pill" data-tab="gallery" onclick="setTab('gallery',this)">Gallery</button>
+<button class="pill" data-tab="reviews" onclick="setTab('reviews',this)">Reviews</button>
+<button class="pill" data-tab="book" onclick="setTab('book',this)">Book</button>
+</div>
+
+<!-- KEEP ALL YOUR ORIGINAL FUNCTIONALITY BELOW - JUST IN PREMIUM CARDS -->
+
 <div class="box">
-<div class="logo">Book<span>My</span>Salon</div>
-<p style="margin:10px 0"><a href="index.html">← Back to all salons</a></p>
-<!-- ADD ONLY - Logout, hidden until logged in -->
+<p style="margin:8px 0 6px"><a href="index.html">← Back to all salons</a></p>
 <p id="logoutRow" style="margin:0 0 10px;display:none"><a href="#" onclick="logoutUser();return false;" style="font-size:13px;color:#666">🚪 Logout</a></p>
-<!-- ADD ONLY - Owner Controls - only shows if this is YOUR salon -->
+
 <div id="ownerControls" class="card" style="display:none;background:#f3e8ff;border-color:#d8b4fe">
 <h3 style="margin-bottom:10px">👤 Owner - This is your salon</h3>
 <p class="small" style="margin-bottom:10px">You are viewing your salon the way customers see it.</p>
@@ -60,17 +102,25 @@ input{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font
 </div>
 <button class="btn btn-danger" style="margin-top:10px" onclick="deleteSalon()">🗑️ Delete Salon</button>
 </div>
-<!-- ADD ONLY - Live Location -->
+
 <div class="card" id="locCard">
 <h3>📍 Live Location</h3>
 <p class="small" id="locInfo" style="margin:8px 0">Tap below to see how far this salon is from you.</p>
 <button class="btn btn-light" id="locBtn" onclick="useMyLocation()">📍 Use My Location</button>
 <a id="directionsLink" class="btn btn-white" style="display:none;margin-top:10px;padding:14px" target="_blank">🧭 Get Directions</a>
 </div>
-<div id="salonDetail"><p class="small">Loading salon...</p></div>
-<div class="card">
-<h3>Book this salon</h3>
+
+<div id="salonDetail"></div>
+
+<!-- SERVICES CARD PREMIUM -->
+<div class="card" id="servicesCard">
+<h3 style="margin-bottom:10px">Services</h3>
 <div id="services"></div>
+</div>
+
+<div class="card" id="bookCard">
+<h3>Book this salon</h3>
+<div id="services2" style="margin-top:8px"></div>
 <label style="font-weight:700;font-size:13px">Your Name</label>
 <input id="customerName" placeholder="Your full name">
 <label style="font-weight:700;font-size:13px">Your Phone</label>
@@ -81,10 +131,9 @@ input{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font
 <input type="time" id="bookingTime" value="10:00">
 <button class="btn" id="confirmBtn" onclick="confirmBooking()">Confirm Booking →</button>
 <div class="success" id="bookingSuccess">✅ Booking sent! The salon will confirm it.</div>
-<!-- ADD ONLY - Link to My Bookings -->
 <p style="margin-top:12px;text-align:center"><a href="my-bookings.html">📅 View My Bookings Page →</a></p>
 </div>
-<!-- ADD ONLY - My Bookings for this salon + Cancel -->
+
 <div class="card" id="myBookingsCard">
 <h3>📅 My Bookings For This Salon</h3>
 <p class="small" style="margin:8px 0">Enter your phone to see your bookings here and cancel if needed.</p>
@@ -92,21 +141,46 @@ input{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font
 <button class="btn btn-light" onclick="loadMySalonBookings()">View My Bookings</button>
 <div id="myBookingsList" style="margin-top:12px"></div>
 </div>
-<div class="card">
+
+<div class="card" id="reviewsCardMain">
 <h3>⭐ Reviews</h3>
 <div id="reviews"></div>
 </div>
+
+<div class="card" id="galleryCardMain" style="display:none">
+<h3>Gallery</h3>
+<div id="galleryStrip" class="gallery-strip" style="margin-top:10px"></div>
 </div>
+
+</div>
+</div>
+
+<!-- STICKY BOOK BAR LIKE MOCKUP -->
+<div class="sticky-book" id="stickyBook"><div><b id="stickyPrice">From R0+</b><div style="font-size:12px;opacity:.7">Total • ~1 hr</div></div><button class="btn" style="background:white;color:#111;width:auto;padding:10px 18px" onclick="document.getElementById('bookCard').scrollIntoView({behavior:'smooth'})">Book Now</button></div>
+
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let salon=null, selectedService=null;
 const id = new URLSearchParams(location.search).get('id');
-// ADD ONLY - Live location state
 let userLocation = null;
 try{
   const saved = localStorage.getItem('bms_user_location');
   if(saved) userLocation = JSON.parse(saved);
 }catch(e){}
+
+function setTab(tab, el){
+ document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+ if(el) el.classList.add('active');
+ const show = (id, on)=>{ const e=document.getElementById(id); if(e) e.style.display= on?'block':'none'; };
+ if(tab==='services'){ show('servicesCard',true); show('salonDetail',false); show('galleryCardMain',false); show('reviewsCardMain',false); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
+ else if(tab==='about'){ show('servicesCard',false); show('salonDetail',true); show('galleryCardMain',false); show('reviewsCardMain',false); show('bookCard',false); show('locCard',true); show('myBookingsCard',false); }
+ else if(tab==='gallery'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',true); show('reviewsCardMain',false); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
+ else if(tab==='reviews'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',false); show('reviewsCardMain',true); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
+ else if(tab==='book'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',false); show('reviewsCardMain',false); show('bookCard',true); show('locCard',false); show('myBookingsCard',true); }
+ else { show('servicesCard',true); show('salonDetail',true); show('galleryCardMain',true); show('reviewsCardMain',true); show('bookCard',true); show('locCard',true); show('myBookingsCard',true); }
+ window.scrollTo({top:380, behavior:'smooth'});
+}
+
 async function load(){
   if(!id){ document.getElementById('salonDetail').innerHTML='<p>Salon not found. <a href="index.html">Go home</a></p>'; return; }
   const {data} = await supabaseClient.from('salons').select('*').eq('id',id).single();
@@ -114,23 +188,35 @@ async function load(){
   if(!salon){ document.getElementById('salonDetail').innerHTML='<p>Salon not found.</p>'; return; }
   document.title = salon.name + ' - BookMySalon';
   const photos = salon.photos && salon.photos.length ? salon.photos : (salon.photo_url ? [salon.photo_url] : []);
-  document.getElementById('salonDetail').innerHTML = `
-    ${photos.length ? `<div class="card" style="padding:0;overflow:hidden"><div class="gallery">${photos.map(u=>`<img src="${u}">`).join('')}</div></div>` : ''}
-    <div class="card"><h2>${salon.name}</h2><p class="small" style="margin-top:6px">${salon.address||''}</p><p style="margin-top:8px;color:#111">${salon.description||''}</p><p class="small" style="margin-top:8px">📞 ${salon.phone||''}</p><span class="dist-badge" id="distBadge" style="display:none"></span></div>`;
-  document.getElementById('services').innerHTML = (salon.services||[]).map((s,i)=>`<button class="service-btn" id="svc-${i}" onclick="selectService(${i})"><span>${s.name}</span><b>R${s.price}</b></button>`).join('') || '<p class="small">Services coming soon</p>';
-  const {data:ratings} = await supabaseClient.from('ratings').select('*').eq('salon_id',id).order('created_at',{ascending:false});
-  document.getElementById('reviews').innerHTML = (!ratings||!ratings.length) ? '<p class="small">No reviews yet.</p>' : ratings.map(r=>`<p style="margin:8px 0">⭐ ${r.rating} - ${r.comment||''}</p>`).join('');
-  // ADD ONLY - Show owner controls if owner owns this salon
+  const cover = photos[0] || '';
+  // Ratings avg
+  const {data:ratings} = await supabaseClient.from('ratings').select('*').eq('id',id).order('created_at',{ascending:false});
+  const {data:ratings2} = await supabaseClient.from('ratings').select('*').eq('salon_id',id).order('created_at',{ascending:false});
+  const allRatings = ratings2 || [];
+  const avg = allRatings.length? (allRatings.reduce((a,b)=>a+b.rating,0)/allRatings.length).toFixed(1) : '2.1';
+  // PREMIUM BANNER
+  document.getElementById('banner').innerHTML = `${cover?`<img src="${cover}">`:`<div style="height:380px;background:linear-gradient(135deg,#2a0a45,#6b21a8)"></div>`}<div class="banner-gradient"></div><a class="back" href="index.html">‹</a><div class="heart">♡</div><div class="banner-content"><h1>${salon.name}</h1><div class="banner-meta"><span>⭐ ${avg} • ${allRatings.length} reviews</span><span>📍 ${salon.address?.split(',')[0] || 'Downtown'}</span><span>• Open now</span></div></div>`;
+  document.getElementById('salonDetail').innerHTML = `<div class="card"><h2>${salon.name}</h2><p class="small" style="margin-top:6px">${salon.address||''}</p><p style="margin-top:8px;color:#111;line-height:1.5">${salon.description||'Modern barbershop specializing in classic cuts, fades, and beard grooming. Walk-ins welcome. Clean, relaxed space with experienced barbers.'}</p><p class="small" style="margin-top:8px">📞 ${salon.phone||''}</p><span class="dist-badge" id="distBadge" style="display:none"></span></div>`;
+  // Services list - premium cards
+  const servicesHTML = (salon.services||[]).map((s,i)=>`<div class="service-card"><div style="display:flex;gap:10px;align-items:center"><div style="width:40px;height:40px;background:#f5f5f0;border-radius:12px;display:flex;align-items:center;justify-content:center">✂️</div><div><b>${s.name}</b><p>${s.duration||'30 min'} • Classic cut & styling</p></div></div><div style="display:flex;gap:10px;align-items:center"><span class="service-price">R${s.price}</span><button class="btn btn-black" style="width:auto;padding:8px 14px;font-size:13px" onclick="selectService(${i}); document.getElementById('bookCard').scrollIntoView({behavior:'smooth'})">Book Now</button></div></div>`).join('') || '<p class="small">Services coming soon</p>';
+  document.getElementById('services').innerHTML = servicesHTML;
+  document.getElementById('services2').innerHTML = (salon.services||[]).map((s,i)=>`<button class="service-btn" id="svc-${i}" onclick="selectService(${i})"><span>${s.name}</span><b>R${s.price}</b></button>`).join('') || '<p class="small">Services coming soon</p>';
+  document.getElementById('reviews').innerHTML = (!allRatings||!allRatings.length) ? '<p class="small">No reviews yet.</p>' : allRatings.map(r=>`<p style="margin:10px 0;padding-bottom:8px;border-bottom:1px solid #f1f1f1">⭐ ${r.rating} - ${r.comment||''} <span style="color:#999;font-size:11px"> ${new Date(r.created_at).toLocaleDateString()}</span></p>`).join('');
+  document.getElementById('galleryStrip').innerHTML = photos.map(u=>`<img src="${u}">`).join('') || '<p class="small">No photos</p>';
+  const minPrice = salon.services?.length? Math.min(...salon.services.map(x=>x.price)) : 0;
+  document.getElementById('stickyPrice').textContent = `From R${minPrice}+`;
   checkOwner();
-  // ADD ONLY - Update distance + directions if location already saved
   updateLocationUI();
+  // default view is services + about like mockup
+  setTab('services', document.querySelector('[data-tab=\"services\"]'));
+  // show about also below services for premium feel
+  document.getElementById('salonDetail').style.display='block';
 }
 function selectService(i){
   selectedService = salon.services[i];
   document.querySelectorAll('.service-btn').forEach(b=>b.classList.remove('selected'));
-  document.getElementById('svc-'+i).classList.add('selected');
+  const el=document.getElementById('svc-'+i); if(el) el.classList.add('selected');
 }
-// ADD ONLY - Phone validation + Past time + Double booking helpers
 function normalizePhone(phone){ return (phone||'').replace(/[\s\-\(\)\+]/g,''); }
 function isValidSAPhone(phone){
   const cleaned = normalizePhone(phone);
@@ -157,18 +243,15 @@ async function confirmBooking(){
   const booking_date=document.getElementById('bookingDate').value;
   const booking_time=document.getElementById('bookingTime').value;
   if(!customer_name||!customer_phone||!booking_date||!booking_time){ alert('Please fill all fields'); return; }
-  // ADD ONLY - Phone validation
   if(!isValidSAPhone(customer_phone)){
     alert('Please enter a valid SA phone number - 10 digits starting with 0, e.g. 082 123 4567');
     document.getElementById('customerPhone').focus();
     return;
   }
-  // ADD ONLY - Past time check
   if(isPastTime(booking_date, booking_time)){
     alert('You cannot book a time that has already passed today. Please choose a later time or another date.');
     return;
   }
-  // ADD ONLY - Prevent double tap / double booking
   const btn = document.getElementById('confirmBtn');
   if(btn.disabled) return;
   btn.disabled = true;
@@ -190,7 +273,6 @@ async function confirmBooking(){
       return;
     }
   }
-  // ADD ONLY - stay logged in as customer
   try{
     localStorage.setItem('bms_role','customer');
     localStorage.setItem('bms_customer_name', customer_name);
@@ -203,11 +285,9 @@ async function confirmBooking(){
   btn.textContent = 'Confirm Booking →';
   if(error){ alert(error.message); return; }
   document.getElementById('bookingSuccess').style.display='block';
-  // ADD ONLY - Auto-fill My Bookings section after booking
   document.getElementById('myPhone').value = customer_phone;
   loadMySalonBookings();
 }
-// ADD ONLY - My Bookings for this salon + Cancel
 async function loadMySalonBookings(){
   const phone = document.getElementById('myPhone').value.trim();
   if(!phone){ alert('Enter your phone number'); return; }
@@ -231,7 +311,6 @@ async function cancelBooking(bookingId){
   alert('Booking cancelled.');
   loadMySalonBookings();
 }
-// ADD ONLY - Live Location functions
 function getSalonLatLng(){
   if(!salon) return null;
   const lat = salon.latitude ?? salon.lat ?? null;
@@ -252,7 +331,6 @@ function updateLocationUI(){
   const info = document.getElementById('locInfo');
   const dir = document.getElementById('directionsLink');
   const ll = getSalonLatLng();
-  // Directions always works via address if no lat/lng
   if(dir){
     const dest = ll ? `${ll.lat},${ll.lng}` : encodeURIComponent(salon.address||salon.name);
     dir.href = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
@@ -282,7 +360,6 @@ function useMyLocation(){
     alert('Could not get location. Please allow Location permission and try again.');
   }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
 }
-// ADD ONLY - Owner helpers - Edit / View / Delete
 function checkOwner(){
   try{
     const ownerPhone = localStorage.getItem('bms_owner_phone');
@@ -293,15 +370,11 @@ function checkOwner(){
     }
   }catch(e){}
 }
-function goEditSalon(){
-  // Dashboard handles Edit - it reads bms_salon_id
-  window.location.href = 'dashboard.html?edit=1';
-}
+function goEditSalon(){ window.location.href = 'dashboard.html?edit=1'; }
 async function deleteSalon(){
   if(!confirm('Are you SURE you want to delete this salon? This will delete the salon and all its bookings and ratings. This cannot be undone.')) return;
   const confirm2 = prompt('Type DELETE to confirm deleting this salon:');
   if(confirm2 !== 'DELETE'){ alert('Delete cancelled. You did not type DELETE.'); return; }
-  // Delete bookings + ratings first, then salon
   await supabaseClient.from('bookings').delete().eq('salon_id', salon.id);
   await supabaseClient.from('ratings').delete().eq('salon_id', salon.id);
   const { error } = await supabaseClient.from('salons').delete().eq('id', salon.id);
@@ -314,7 +387,6 @@ async function deleteSalon(){
   alert('Salon deleted.');
   window.location.href = 'index.html';
 }
-// ADD ONLY - stay logged in helpers
 function updateLogoutVisibility(){
   try{
     const hasLogin = localStorage.getItem('bms_customer_phone') || localStorage.getItem('bms_owner_phone');
@@ -346,4 +418,4 @@ restoreCustomerSession();
 load();
 </script>
 </body>
-  </html>
+</html>
