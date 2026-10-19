@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  setTimeout(()=>{ const dB=document.getElementById('dB');<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -42,7 +42,6 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 .btn-light{background:#fff;color:#111;border:1.5px solid #e5e5e5}
 .dup-warn{background:#fee2e2;border:1px solid #fecaca;padding:8px;border-radius:10px;font-size:13px;color:#991b1b;margin-top:8px}
 .loc-badge{font-size:12px;font-weight:700;color:#166534;background:#dcfce7;padding:4px 8px;border-radius:20px;display:inline-block;margin-top:6px}
-/* ADD ONLY - Clean Owner Layout */
 .owner-hero{background:#2a0a45;color:#fff;border-radius:18px;padding:20px;margin:12px 0}
 .owner-hero p{color:#ddd}
 .stats{display:flex;gap:10px;margin:12px 0}
@@ -50,9 +49,7 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 .stat b{font-size:20px;color:#2a0a45;display:block}
 .stat span{font-size:12px;color:#777}
 .top-row{display:flex;justify-content:space-between;align-items:center}
-/* ADD ONLY - Unread Badge */
 .unread-badge{background:#ff0000;color:white;font-size:11px;font-weight:800;min-width:20px;height:20px;line-height:20px;text-align:center;padding:0 6px;border-radius:20px;display:inline-block;margin-left:6px;vertical-align:middle}
-/* ADD ONLY - 5 Pages + Bottom Nav + 2x3 Grid - NO DELETION */
 .page{display:none}.page.active{display:block}
 .btn-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0}
 .btn-grid button{padding:14px 6px;border-radius:14px;border:1px solid #e5e5e5;background:#f8f8f8;font-weight:700;font-size:13px;cursor:pointer;line-height:1.3}
@@ -64,6 +61,23 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 .profile-banner{border-radius:18px;overflow:hidden;background:#2a0a45;color:#fff;padding:18px;margin:12px 0}
 .gallery{display:flex;gap:8px;overflow-x:auto}
 .gallery img{width:110px;height:80px;object-fit:cover;border-radius:10px}
+/* ADD ONLY - MOCKUP LOOK - NO DELETION */
+body{background:#f7f7f7}
+.box{max-width:520px}
+.card{background:#fff;border-radius:20px;border:0;box-shadow:0 4px 20px rgba(0,0,0,.06);padding:18px}
+.profile-banner{padding:0;background:#000;overflow:hidden;position:relative;border-radius:20px}
+.profile-banner .cover-wrap{position:relative;height:240px;overflow:hidden}
+.profile-banner .cover-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-banner .cover-wrap::after{content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.15) 55%, rgba(0,0,0,0))}
+.profile-banner .cover-info{position:absolute;left:16px;right:16px;bottom:14px;z-index:2;color:#fff}
+.profile-banner .cover-info h2{font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.5px}
+.profile-banner .cover-info p{font-size:13px;color:#eee;margin-top:6px}
+.profile-banner .cover-info .loc-badge{background:rgba(255,255,255,.25);color:#fff;border:0}
+.btn-grid{gap:12px;margin:16px 0}
+.btn-grid button{background:#f6f6f6;border:1.5px solid #e9e9e9;border-radius:14px;padding:16px 6px;font-size:14px;font-weight:700;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.btn-grid button:active{transform:scale(.97)}
+.btn-grid button.delete-btn{background:#ffecec;color:#b91c1c;border-color:#fecaca}
+.bottom-nav{border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.06)}
 </style>
 </head>
 <body>
@@ -74,18 +88,17 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 </div>
 <p style="margin:10px 0"><a href="index.html">← Back to Welcome</a> <span id="logoutRow" style="display:none;float:right"><a href="#" onclick="logoutUser();return false;" style="font-size:13px;color:#666">🚪 Logout</a></span></p>
 
-<div class="card">
+<!-- FIX 1 - Added id="loginCard" -->
+<div class="card" id="loginCard">
 <label style="font-weight:700;font-size:13px">Your Salon Phone / Owner Phone</label>
 <input id="ownerPhone" placeholder="e.g. 082 123 4567">
 <button class="btn btn-dark" onclick="loadDashboard()">Load My Salon →</button>
 <p class="small" style="margin-top:10px;text-align:center">No salon yet? <a href="register.html">➕ Register Salon</a></p>
 </div>
 
-<!-- PAGE 1 = PROFILE (ADD ONLY) -->
 <div id="page1" class="page active">
 <div class="owner-hero"><h1 style="font-size:26px;line-height:1.2">Profile</h1><p class="small" style="margin-top:8px">Your salon profile — as customers see it.</p></div>
 <div id="profileSalonCard"></div>
-<!-- 2 ROWS, 3 ON EACH ROW -->
 <div class="btn-grid">
 <button onclick="openEditSalon()">✏️<br>Edit</button>
 <button onclick="viewMySalon()">👁️<br>View</button>
@@ -103,7 +116,6 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 <div id="dashboardContent"></div>
 </div>
 
-<!-- PAGE 2 = DASHBOARD (ADD ONLY) -->
 <div id="page2" class="page">
 <div class="owner-hero"><h1 style="font-size:26px;line-height:1.2">Hello Owner! 👋<br>Owner Dashboard</h1><p class="small" style="margin-top:8px">Manage your bookings, services & profile.</p></div>
 <div class="stats" id="statsRow" style="display:none">
@@ -118,15 +130,11 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 <div class="card" id="dashReviews"><h3>Reviews & Comments</h3><div id="dashReviewsList"><p class="small">No reviews yet.</p></div></div>
 </div>
 
-<!-- PAGE 3 = BOOKINGS (ADD ONLY - reuses existing render) -->
 <div id="page3" class="page"><h2 style="margin:12px 0">📅 Bookings</h2><div id="page3Bookings"></div><div id="dB" style="display:none"></div></div>
-<!-- PAGE 4 = SERVICES (ADD ONLY - reuses existing render) -->
 <div id="page4" class="page"><h2 style="margin:12px 0">✂️ Services</h2><div id="dS"></div></div>
-<!-- PAGE 5 = MORE (ADD ONLY) -->
 <div id="page5" class="page"><h2 style="margin:12px 0">💬 More</h2><div class="card"><h3>Reviews</h3><div id="dR"></div></div><div class="card" style="border-color:#fecaca"><h3 style="color:#991b1b">Danger Zone</h3><p class="small" style="margin:8px 0">Deleting your salon will also delete all its bookings and ratings. This cannot be undone.</p><button class="btn btn-danger" onclick="deleteSalon()">🗑️ Delete Salon</button><p style="margin-top:12px;text-align:center"><a href="my-bookings.html">📅 View My Bookings Page →</a></p><p style="margin-top:8px;text-align:center"><a href="chats.html">💬 View All Chats →</a></p></div></div>
 </div>
 
-<!-- BOTTOM NAV (ADD ONLY) -->
 <div class="bottom-nav">
 <button id="nav1" class="active" onclick="showPage(1)"><span>👤</span>Profile</button>
 <button id="nav2" onclick="showPage(2)"><span>📊</span>Dashboard</button>
@@ -135,7 +143,6 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 <button id="nav5" onclick="showPage(5)"><span>•••</span>More</button>
 </div>
 
-<!-- ADD ONLY - Edit Salon Modal (KEPT EXACTLY) -->
 <div id="editSalonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;padding:20px">
   <div style="background:#fff;border-radius:16px;padding:20px;max-width:500px;margin:40px auto;max-height:90vh;overflow-y:auto">
     <h2 style="margin-top:0">Edit Salon</h2>
@@ -158,10 +165,9 @@ const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supab
 let salon=null, bookings=[];
 function normalizePhone(phone){ return (phone||'').replace(/[\s\-\(\)\+]/g,''); }
 function isValidSAPhone(phone){ const cleaned = normalizePhone(phone); let p = cleaned; if(p.startsWith('27') && p.length===11) p = '0' + p.slice(2); if(!/^\d+$/.test(p)) return false; if(p.length!==10) return false; if(!p.startsWith('0')) return false; return true; }
-// ADD ONLY - Page switcher
 function showPage(n){ [1,2,3,4,5].forEach(i=>{ const p=document.getElementById('page'+i); if(p) p.classList.toggle('active', i===n); const nav=document.getElementById('nav'+i); if(nav) nav.classList.toggle('active', i===n); }); window.scrollTo({top:0,behavior:'smooth'}); }
 function switchToCustomer(){ try{ localStorage.setItem('bms_role','customer'); }catch(e){} window.location.href='index.html'; }
-async function addPhotos(input){ if(!salon){ alert('Load your salon first'); return; } if(!input.files||!input.files.length) return; alert('Photos selected: '+input.files.length+' — photos will be saved with your salon. (Your existing Add Photos flow is preserved — connect to your storage here if you already have one)'); try{ const urls=[]; for(const f of input.files){ urls.push(URL.createObjectURL(f)); } const g=document.getElementById('profileGallery'); if(g) g.innerHTML=urls.map(u=>`<img src="${u}">`).join(''); }catch(e){} }
+async function addPhotos(input){ if(!salon){ alert('Load your salon first'); return; } if(!input.files||!input.files.length) return; alert('Photos selected: '+input.files.length+' — photos will be saved with your salon. (Your existing Add Photos flow is preserved — connect to your storage here if you already have one)'); try{ const urls=[]; for(const f of input.files){ urls.push(URL.createObjectURL(f)); } const g=document.getElementById('profileGallery'); if(g) g.innerHTML=urls.map(u=>`<img src="${u}">`).join(''); /* ADD ONLY - Update cover banner instantly */ try{ const firstFile = input.files[0]; if(firstFile){ const url = URL.createObjectURL(firstFile); const img = document.querySelector('#profileSalonCard .cover-wrap img'); if(img) img.src = url; } }catch(e){} }catch(e){} }
 function getLastRead(bookingId){ try{ return localStorage.getItem('bms_chat_read_' + bookingId) || ''; }catch(e){ return ''; } }
 function markChatRead(bookingId){ try{ localStorage.setItem('bms_chat_read_' + bookingId, new Date().toISOString()); }catch(e){} }
 async function getUnreadCounts(bookingIds){ const counts = {}; if(!bookingIds || bookingIds.length===0) return counts; try{ const { data, error } = await supabaseClient.from('messages').select('booking_id,sender_role,created_at').in('booking_id', bookingIds).eq('sender_role','customer').order('created_at',{ascending:false}); if(error || !data) return counts; data.forEach(m=>{ const lastRead = getLastRead(m.booking_id); if(!lastRead || new Date(m.created_at) > new Date(lastRead)){ counts[m.booking_id] = (counts[m.booking_id] || 0) + 1; } }); }catch(e){} return counts; }
@@ -170,8 +176,16 @@ async function loadDashboard(){
   if(!phone){ alert('Enter your phone'); return; }
   if(!isValidSAPhone(phone)){ alert('Please enter a valid SA phone number - 10 digits starting with 0, e.g. 082 123 4567'); return; }
   const {data:salons} = await supabaseClient.from('salons').select('*').eq('phone',phone);
-  if(!salons || !salons.length){ document.getElementById('dashboardContent').innerHTML='<div class="card">No salon found for this phone. <a href="register.html">Register your salon</a></div>'; document.getElementById('statsRow').style.display='none'; return; }
+  if(!salons || !salons.length){ 
+    document.getElementById('dashboardContent').innerHTML='<div class="card">No salon found for this phone. <a href="register.html">Register your salon</a></div>'; 
+    document.getElementById('statsRow').style.display='none'; 
+    /* FIX - Show login again if not found */
+    const lc=document.getElementById('loginCard'); if(lc) lc.style.display='block';
+    return; 
+  }
   salon=salons[0];
+  /* FIX - Hide login block after load - ADD ONLY */
+  const lc=document.getElementById('loginCard'); if(lc) lc.style.display='none';
   try{ localStorage.setItem('bms_role','owner'); localStorage.setItem('bms_owner_phone', phone); localStorage.setItem('bms_salon_id', salon.id); window.currentSalon = salon; window.salon = salon; updateLogoutVisibility(); }catch(e){}
   const {data} = await supabaseClient.from('bookings').select('*').eq('salon_id',salon.id).order('booking_date',{ascending:false});
   bookings=data||[];
@@ -186,11 +200,11 @@ async function loadDashboard(){
   document.getElementById('statPending').textContent = pending;
   document.getElementById('statConfirmed').textContent = confirmed;
   document.getElementById('statRating').textContent = avg;
-  // ADD ONLY - Fill Page 1 Profile card from same salon data
-  document.getElementById('profileSalonCard').innerHTML=`<div class="profile-banner"><h2>${salon.name}</h2><p class="small" style="color:#ddd">${salon.address||''}</p><p style="margin-top:8px">⭐ ${avg} (${ratings?ratings.length:0} reviews) • ${bookings.length} bookings</p><p style="margin-top:8px">${locBadge}</p></div>`;
+  // ADD ONLY - Mockup Cover Banner with real photo
+  const coverImg = (salon.cover_photo || salon.image_url || (salon.photos && salon.photos[0]) || 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=900&q=80');
+  document.getElementById('profileSalonCard').innerHTML=`<div class="profile-banner"><div class="cover-wrap"><img src="${coverImg}" onerror="this.src='https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=900&q=80'"><div class="cover-info"><h2>${salon.name}</h2><p>⭐ ${avg} • ${ratings?ratings.length:0} reviews • ${bookings.length} bookings • ${salon.address||'Downtown'} • Open now</p><p style="margin-top:8px">${locBadge}</p></div></div></div>`;
   document.getElementById('profileAbout').innerHTML=`<div class="card"><h3>About</h3><p class="small" style="margin-top:6px">${salon.description||'No description yet — tap Edit to add one.'}</p><p class="small" style="margin-top:6px">📍 ${salon.address||''}<br>📞 ${salon.phone||''} • ${salon.category||''}</p></div>`;
   document.getElementById('profileServicesPreview').innerHTML=(salon.services||[]).slice(0,3).map(s=>`<p style="margin:6px 0">${s.name} - R${s.price}</p>`).join('')||'<p class="small">No services yet.</p>';
-  // ADD ONLY - Fill Page 2 Dashboard extras from same bookings/ratings
   const today = new Date().toISOString().slice(0,10);
   const todays = bookings.filter(b=>b.booking_date===today);
   document.getElementById('todayAgenda').innerHTML = todays.length ? todays.map(b=>`<p style="margin:6px 0"><b>${b.booking_time||''}</b> — ${b.service} — ${b.customer_name} [${b.status}]</p>`).join('') : '<p class="small">No bookings today. Showing all recent bookings below.</p>';
@@ -198,13 +212,11 @@ async function loadDashboard(){
   document.getElementById('earningsText').textContent = 'Total from '+bookings.length+' bookings: R'+totalEarnings+' • See full list on Bookings page.';
   document.getElementById('dashRecent').innerHTML = bookings.slice(0,3).map(b=>`<p style="margin:6px 0">${b.customer_name} — ${b.service} — R${b.price} • ${b.booking_date} [${b.status}]</p>`).join('')||'<p class="small">No bookings yet.</p>';
   document.getElementById('dashReviewsList').innerHTML = (ratings||[]).slice(0,5).map(r=>`<p style="margin:8px 0">⭐ ${r.rating} — ${r.comment||''}</p>`).join('')||'<p class="small">No reviews yet.</p>';
-  // KEPT - Original dashboardContent (now inside Page 1, hidden tabs preserved below via showD)
   document.getElementById('dashboardContent').innerHTML=`
   <div class="card"><h2>${salon.name}</h2><p class="small">${salon.address||''}</p><p style="margin-top:8px">⭐ ${avg} (${ratings?ratings.length:0} reviews) • ${bookings.length} bookings</p><p style="margin-top:8px">${locBadge}</p></div>
   <div class="tabs"><button class="active" id="tB" onclick="showD('b')">📅 Bookings</button><button id="tR" onclick="showD('r')">⭐ Reviews</button><button id="tS" onclick="showD('s')">✂️ Services</button></div>
   <div id="dB2"></div>`;
   renderBookings(); renderReviews(ratings||[]); renderServices();
-  // Sync Page 3 bookings container with rendered bookings
   setTimeout(()=>{ const dB=document.getElementById('dB'); const p3=document.getElementById('page3Bookings'); if(dB && p3) p3.innerHTML=dB.innerHTML; },300);
   try{ const params = new URLSearchParams(location.search); if(params.get('edit')==='1'){ openEditSalon(); history.replaceState(null,'','dashboard.html'); } }catch(e){}
 }
@@ -248,9 +260,8 @@ async function deleteSalon(){
   }catch(e){ alert('Delete failed: ' + e.message); }
 }
 function updateLogoutVisibility(){ try{ const hasLogin = localStorage.getItem('bms_owner_phone'); document.getElementById('logoutRow').style.display = hasLogin ? 'inline' : 'none'; }catch(e){} }
-function logoutUser(){ try{ localStorage.removeItem('bms_role'); localStorage.removeItem('bms_owner_phone'); localStorage.removeItem('bms_salon_id'); localStorage.removeItem('bms_customer_phone'); localStorage.removeItem('bms_customer_name'); }catch(e){} window.location.href = 'index.html'; }
+function logoutUser(){ try{ localStorage.removeItem('bms_role'); localStorage.removeItem('bms_owner_phone'); localStorage.removeItem('bms_salon_id'); localStorage.removeItem('bms_customer_phone'); localStorage.removeItem('bms_customer_name'); }catch(e){} const lc=document.getElementById('loginCard'); if(lc) lc.style.display='block'; window.location.href = 'index.html'; }
 function restoreOwnerSession(){ try{ const savedPhone = localStorage.getItem('bms_owner_phone'); const role = localStorage.getItem('bms_role'); updateLogoutVisibility(); if(role === 'owner' && savedPhone){ document.getElementById('ownerPhone').value = savedPhone; loadDashboard(); } }catch(e){} }
-// ADD ONLY - Clickable Stats Filter (KEPT from your 2nd script)
 let bookingFilter = 'all';
 function filterBookings(f){ bookingFilter = f; showPage(3); renderBookings(); document.getElementById('page3Bookings').scrollIntoView({behavior:'smooth'}); }
 const _origRenderBookings = renderBookings;
