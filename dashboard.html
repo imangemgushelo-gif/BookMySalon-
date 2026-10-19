@@ -77,10 +77,10 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 
 <!-- ADD ONLY - Stats (filled by JS after load, hidden until then) -->
 <div class="stats" id="statsRow" style="display:none">
-<div class="stat"><b id="statTotal">0</b><span>Total Bookings</span></div>
-<div class="stat"><b id="statPending">0</b><span>Pending</span></div>
-<div class="stat"><b id="statConfirmed">0</b><span>Confirmed</span></div>
-<div class="stat"><b id="statRating">New</b><span>⭐ Rating</span></div>
+<div class="stat" onclick="filterBookings('all')" style="cursor:pointer"><b id="statTotal">0</b><span>Total Bookings</span></div>
+<div class="stat" onclick="filterBookings('pending')" style="cursor:pointer"><b id="statPending">0</b><span>Pending</span></div>
+<div class="stat" onclick="filterBookings('confirmed')" style="cursor:pointer"><b id="statConfirmed">0</b><span>Confirmed</span></div>
+<div class="stat" onclick="showD('r');document.getElementById('dR').scrollIntoView({behavior:'smooth'})" style="cursor:pointer"><b id="statRating">New</b><span>⭐ Rating</span></div>
 </div>
 
 <div id="dashboardContent"></div>
