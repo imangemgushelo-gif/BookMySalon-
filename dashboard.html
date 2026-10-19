@@ -235,7 +235,7 @@ async function renderBookings(){
   // ADD ONLY - Chat Button + Unread Badge (owner sees customer messages)
   const unread = unreadCounts[b.id] || 0;
   const unreadBadge = unread > 0 ? `<span class="unread-badge">${unread > 9 ? '9+' : unread}</span>` : '';
-  const chatBtn = `<a href="chat.html?booking_id=${b.id}&salon_id=${salon ? salon.id : b.salon_id}&salon_name=${encodeURIComponent(b.customer_name || 'Customer')}" onclick="markChatRead('${b.id}')" class="btn btn-small" style="display:inline-block;text-decoration:none;margin-top:6px;background:#111">💬 Chat with Customer ${unreadBadge}</a>`;
+  const chatBtn = `<a href="chats.html?booking_id=${b.id}&salon_id=${salon ? salon.id : b.salon_id}&salon_name=${encodeURIComponent(b.customer_name || 'Customer')}" onclick="markChatRead('${b.id}')" class="btn btn-small" style="display:inline-block;text-decoration:none;margin-top:6px;background:#111">💬 Chat with Customer ${unreadBadge}</a>`;
   return `
   <div class="card"><div style="display:flex;justify-content:space-between"><b>${b.customer_name}</b><span class="badge" style="background:#fef9c3">${b.status}</span></div>
   <p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}<br>📞 ${b.customer_phone}</p>
