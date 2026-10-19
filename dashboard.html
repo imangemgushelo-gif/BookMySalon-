@@ -207,9 +207,9 @@ async function loadDashboard(){
     <p class="small" style="margin:8px 0">Deleting your salon will also delete all its bookings and ratings. This cannot be undone.</p>
     <button class="btn btn-danger" onclick="deleteSalon()">🗑️ Delete Salon</button>
     <p style="margin-top:12px;text-align:center"><a href="my-bookings.html">📅 View My Bookings Page →</a></p>
-<!-- ADD ONLY - Chats link for owner -->
-<p style="margin-top:8px;text-align:center"><a href="chats.html">💬 View All Chats →</a></p>
-  </div>`;
+    <!-- ADD ONLY - Chats link for owner -->
+    <p style="margin-top:8px;text-align:center"><a href="chats.html">💬 View All Chats →</a></p>
+    </div>`;
   renderBookings(); renderReviews(ratings||[]); renderServices();
   try{
     const params = new URLSearchParams(location.search);
