@@ -44,9 +44,27 @@ const bookingId = params.get('booking_id');
 const salonId = params.get('salon_id');
 const salonName = params.get('salon_name') || 'Salon';
 
+// FIX - Pick phone/name by ROLE, not first available.
+// Before: owner also got customer_phone because customer_phone was checked first.
+// Now: owner -> owner_phone/owner_name, customer -> customer_phone/customer_name
 let myRole = localStorage.getItem('bms_role') || 'customer'; // customer or owner
-let myPhone = localStorage.getItem('bms_customer_phone') || localStorage.getItem('bms_owner_phone') || '';
-let myName = localStorage.getItem('bms_customer_name') || localStorage.getItem('bms_owner_name') || myPhone || 'Me';
+let myPhone = '';
+let myName = '';
+if(myRole === 'owner'){
+  myPhone = localStorage.getItem('bms_owner_phone') || '';
+  myName = localStorage.getItem('bms_owner_name') || myPhone || 'Owner';
+} else {
+  myPhone = localStorage.getItem('bms_customer_phone') || '';
+  myName = localStorage.getItem('bms_customer_name') || myPhone || 'Customer';
+}
+
+// ADD ONLY - Mark as read helper (clears unread badge in My Bookings / Dashboard)
+function markChatRead(){
+  if(!bookingId) return;
+  try{ localStorage.setItem('bms_chat_read_' + bookingId, new Date().toISOString()); }catch(e){}
+}
+// ADD ONLY - Mark as read as soon as chat is opened
+markChatRead();
 
 document.getElementById('chatTitle').textContent = '💬 ' + decodeURIComponent(salonName);
 document.getElementById('chatSub').textContent = myRole === 'owner' ? 'You are chatting as Owner' : 'You are chatting as Customer';
@@ -62,6 +80,8 @@ async function loadMsgs(){
     return `<div class="bubble ${isMine?'mine':'theirs'}">${m.message.replace(/</g,'&lt;')}<div class="time">${m.sender_name||''} • ${time}</div></div>`;
   }).join('');
   box.scrollTop = box.scrollHeight;
+  // ADD ONLY - If new messages arrived while chat is open, mark them read too
+  markChatRead();
 }
 
 async function sendMsg(){
@@ -91,4 +111,4 @@ if(bookingId){
 loadMsgs();
 </script>
 </body>
-    </html>
+</html>
