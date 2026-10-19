@@ -167,8 +167,7 @@ input:focus,select:focus{border-color:#2a0a45}
 </div>
 
 <div class="bottom-nav" id="bottomNav" style="display:none">
-<button id="navHome" class="active" onclick="showTab('home');document.getElementById('navHome').classList.add('active');document.getElementById('navBookings').classList.remove('active')">🏠<br>Home</button>
-<button id="navBookings" onclick="showTab('my');document.getElementById('navBookings').classList.add('active');document.getElementById('navHome').classList.remove('active')">📅<br>Bookings</button>
+<button id="navHome" class="active" onclick="showTab('home');document.getElementById('navHome').classList.add('active');document.getElementById('navBookings')?.classList.remove('active')">🏠<br>Home</button>
 <!-- ADD ONLY - Chats button, goes to chats.html list page -->
 <button onclick="window.location.href='chats.html'">💬<br>Chats</button>
 <button onclick="window.location.href='my-bookings.html'">⭐<br>My Bookings</button>
