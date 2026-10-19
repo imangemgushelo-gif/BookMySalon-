@@ -364,6 +364,53 @@ function restoreOwnerSession(){
   }catch(e){}
 }
 restoreOwnerSession();
+<script>
+<script>
+// ADD ONLY - Clickable Stats Filter + Working Delete Salon
+let bookingFilter = 'all';
+function filterBookings(f){
+  bookingFilter = f;
+  showD('b');
+  renderBookings();
+  document.getElementById('dB').scrollIntoView({behavior:'smooth'});
+}
+const _origRenderBookings = renderBookings;
+renderBookings = async function(){
+  if(bookingFilter !== 'all'){
+    const orig = bookings;
+    const filtered = orig.filter(b => b.status === bookingFilter);
+    if(!filtered.length){
+      document.getElementById('dB').innerHTML = '<div class="card">No '+bookingFilter+' bookings. <a href="#" onclick="filterBookings(\'all\');return false;">Show all →</a></div>';
+      return;
+    }
+    bookings = filtered;
+    await _origRenderBookings();
+    bookings = orig;
+    document.getElementById('dB').innerHTML = '<p style="margin:6px 0"><a href="#" onclick="filterBookings(\'all\');return false;">← Show All Bookings</a> • Showing: '+bookingFilter+'</p>' + document.getElementById('dB').innerHTML;
+    return;
+  }
+  return _origRenderBookings();
+};
+async function deleteSalon(){
+  if(!salon){ alert('Load your salon first'); return; }
+  const typed = prompt('Type DELETE to confirm deleting "'+salon.name+'":');
+  if(typed !== 'DELETE'){ alert('Delete cancelled. You must type DELETE in CAPS.'); return; }
+  if(!confirm('Are you SURE? This will delete the salon, all bookings and all reviews. This cannot be undone.')) return;
+  try{
+    const { data: bks } = await supabaseClient.from('bookings').select('id').eq('salon_id', salon.id);
+    if(bks && bks.length){
+      const ids = bks.map(b=>b.id);
+      await supabaseClient.from('messages').delete().in('booking_id', ids);
+      await supabaseClient.from('bookings').delete().in('id', ids);
+    }
+    await supabaseClient.from('ratings').delete().eq('salon_id', salon.id);
+    const { error } = await supabaseClient.from('salons').delete().eq('id', salon.id);
+    if(error){ alert('Delete failed: ' + error.message); return; }
+    try{ localStorage.removeItem('bms_salon_id'); localStorage.removeItem('bms_owner_phone'); }catch(e){}
+    alert('Salon deleted successfully.');
+    window.location.href = 'index.html';
+  }catch(e){ alert('Delete failed: ' + e.message); }
+}
 </script>
 </body>
 </html>
