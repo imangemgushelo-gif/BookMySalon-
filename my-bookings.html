@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
-body{background:#fff5f7;padding:20px}
+body{background:#fff5f7;padding:20px;padding-bottom:90px}
 .box{max-width:600px;margin:0 auto}
 h1{font-size:26px} h1 span{color:#ff4d6d}
 p{color:#666;margin:8px 0 16px;font-size:14px}
@@ -34,11 +34,17 @@ a{color:#ff4d6d}
 /* ADD ONLY - Unread Badge */
 .unread-badge{background:#ff0000;color:white;font-size:11px;font-weight:800;min-width:20px;height:20px;line-height:20px;text-align:center;padding:0 6px;border-radius:20px;display:inline-block;margin-left:6px;vertical-align:middle}
 .chat-btn{position:relative}
+/* ADD ONLY - Bottom Nav for Chats fix */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;padding:8px 0 12px;z-index:20}
+.bottom-nav a{flex:1;text-align:center;text-decoration:none;color:#888;font-size:11px;display:flex;flex-direction:column;gap:3px;align-items:center}
+.bottom-nav a.active{color:#ff4d6d;font-weight:700}
 </style>
 </head>
 <body>
 <div class="box">
 <h1>My <span>Bookings</span></h1>
+<!-- ADD ONLY - Clarify this is CUSTOMER bookings -->
+<p style="margin-top:-10px">Your bookings as a customer.</p>
 <p>Enter your phone number to see status and rate your salon.</p>
 <!-- ADD ONLY - Logout, hidden until logged in -->
 <p id="logoutRow" style="text-align:right;display:none;margin:0 0 8px"><a href="#" onclick="logoutUser();return false;" style="font-size:13px">🚪 Logout</a></p>
@@ -53,8 +59,15 @@ a{color:#ff4d6d}
 <button class="btn" onclick="check()">Check My Bookings →</button>
 </div>
 <div id="results"></div>
-<p style="text-align:center;margin-top:16px"><a href="index.html">← Back to Home</a> • <a href="salon.html">👁️ View Salon</a> • <a href="dashboard.html">👤 Owner Dashboard</a></p>
+<p style="text-align:center;margin-top:16px"><a href="index.html">← Back to Home</a> • <a href="chats.html">💬 Chats</a> • <a href="salon.html">👁️ View Salon</a> • <a href="dashboard.html">👤 Owner Dashboard</a></p>
 </div>
+<!-- ADD ONLY - Bottom Nav -->
+<nav class="bottom-nav">
+  <a href="index.html"><span>🏠</span>Home</a>
+  <a href="chats.html"><span>💬</span>Chats</a>
+  <a href="my-bookings.html" class="active"><span>📅</span>My Bookings</a>
+  <a href="owner.html"><span>👤</span>Owner</a>
+</nav>
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let selectedRating = 0;
@@ -198,7 +211,7 @@ async function check(){
     const canCancel = b.status==='pending' || b.status==='confirmed';
     const cancelBtn = canCancel ? `<button class="btn btn-cancel" style="margin-top:10px" onclick="cancelBooking('${b.id}')">❌ Cancel Booking</button>` : '';
     const viewBtn = `<a class="btn btn-white" style="padding:10px;display:block;text-align:center;font-size:13px;margin-top:10px" href="salon.html?id=${b.salon_id}">👁️ View Salon</a>`;
-    // ADD ONLY - Chat Button + Unread Badge
+    // ADD ONLY - Chat Button + Unread Badge - KEPT as chat.html, NOT deleted
     const unread = unreadCounts[b.id] || 0;
     const unreadBadge = unread > 0 ? `<span class="unread-badge">${unread > 9 ? '9+' : unread}</span>` : '';
     const chatBtn = `<a href="chat.html?booking_id=${b.id}&salon_id=${b.salon_id}&salon_name=${encodeURIComponent(b.salons?.name||'Salon')}" onclick="markChatRead('${b.id}')" class="btn chat-btn" style="padding:12px;display:block;text-align:center;font-size:14px;margin-top:10px;text-decoration:none">💬 Chat with Salon ${unreadBadge}</a>`;
@@ -271,4 +284,4 @@ function restoreCustomerSession(){
 restoreCustomerSession();
 </script>
 </body>
-</html>
+    </html>
