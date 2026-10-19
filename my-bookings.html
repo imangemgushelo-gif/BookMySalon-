@@ -31,6 +31,9 @@ a{color:#ff4d6d}
 .warn{background:#fee2e2;border:1px solid #fecaca;padding:8px;border-radius:10px;font-size:13px;color:#991b1b;margin-top:8px}
 .row{display:flex;gap:10px;margin-top:10px}
 .row .btn{flex:1}
+/* ADD ONLY - Unread Badge */
+.unread-badge{background:#ff0000;color:white;font-size:11px;font-weight:800;min-width:20px;height:20px;line-height:20px;text-align:center;padding:0 6px;border-radius:20px;display:inline-block;margin-left:6px;vertical-align:middle}
+.chat-btn{position:relative}
 </style>
 </head>
 <body>
@@ -115,6 +118,30 @@ function setStars(n, bookingId){
   }
   document.getElementById('rate-btn-'+bookingId).style.display='block';
 }
+// ADD ONLY - Unread Badge helpers
+function getLastRead(bookingId){
+  try{
+    return localStorage.getItem('bms_chat_read_' + bookingId) || '';
+  }catch(e){ return ''; }
+}
+function markChatRead(bookingId){
+  try{ localStorage.setItem('bms_chat_read_' + bookingId, new Date().toISOString()); }catch(e){}
+}
+async function getUnreadCounts(bookingIds){
+  const counts = {};
+  if(!bookingIds || bookingIds.length===0) return counts;
+  try{
+    const { data, error } = await supabaseClient.from('messages').select('booking_id,sender_role,created_at').in('booking_id', bookingIds).eq('sender_role','owner').order('created_at',{ascending:false});
+    if(error || !data) return counts;
+    data.forEach(m=>{
+      const lastRead = getLastRead(m.booking_id);
+      if(!lastRead || new Date(m.created_at) > new Date(lastRead)){
+        counts[m.booking_id] = (counts[m.booking_id] || 0) + 1;
+      }
+    });
+  }catch(e){}
+  return counts;
+}
 async function check(){
   const phone = document.getElementById('custPhone').value.trim();
   if(!phone){ alert('Enter your phone number'); return; }
@@ -130,6 +157,8 @@ async function check(){
   const { data, error } = await supabaseClient.from('bookings').select('*, salons(name, address, latitude, longitude, lat, lng)').or(`customer_phone.eq.${phone},customer_phone.eq.${clean}`).order('booking_date',{ascending:false});
   if(error){ alert(error.message); return; }
   if(!data || data.length===0){ document.getElementById('results').innerHTML = `<div class="card">No bookings found for ${phone}.</div>`; return; }
+  // ADD ONLY - Unread counts for chat badges
+  const unreadCounts = await getUnreadCounts(data.map(b=>b.id));
   // ADD ONLY - Detect double bookings + past time
   const seen = {};
   const dupKeys = new Set();
@@ -169,6 +198,10 @@ async function check(){
     const canCancel = b.status==='pending' || b.status==='confirmed';
     const cancelBtn = canCancel ? `<button class="btn btn-cancel" style="margin-top:10px" onclick="cancelBooking('${b.id}')">❌ Cancel Booking</button>` : '';
     const viewBtn = `<a class="btn btn-white" style="padding:10px;display:block;text-align:center;font-size:13px;margin-top:10px" href="salon.html?id=${b.salon_id}">👁️ View Salon</a>`;
+    // ADD ONLY - Chat Button + Unread Badge
+    const unread = unreadCounts[b.id] || 0;
+    const unreadBadge = unread > 0 ? `<span class="unread-badge">${unread > 9 ? '9+' : unread}</span>` : '';
+    const chatBtn = `<a href="chat.html?booking_id=${b.id}&salon_id=${b.salon_id}&salon_name=${encodeURIComponent(b.salons?.name||'Salon')}" onclick="markChatRead('${b.id}')" class="btn chat-btn" style="padding:12px;display:block;text-align:center;font-size:14px;margin-top:10px;text-decoration:none">💬 Chat with Salon ${unreadBadge}</a>`;
     let rateBox = '';
     if(b.status==='confirmed'){
       rateBox = `<div style="margin-top:12px;border-top:1px solid #eee;padding-top:12px">
@@ -185,7 +218,7 @@ async function check(){
         <p class="small">Tap a star to rate. Your rating shows on the salon's page.</p>
       </div>`;
     }
-    return `<div class="card"><b>${b.salons?.name||'Salon'}</b> <span class="badge ${cls}">${b.status.toUpperCase()}</span><p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}</p><p class="small">${b.salons?.address||''} ${distHtml}</p><p style="font-weight:700;margin-top:8px">${msg}</p>${warnHtml}${viewBtn}${dirHtml ? `<div style="margin-top:10px">${dirHtml}</div>` : ''}${cancelBtn}${rateBox}</div>`;
+    return `<div class="card"><b>${b.salons?.name||'Salon'}</b> <span class="badge ${cls}">${b.status.toUpperCase()}</span><p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}</p><p class="small">${b.salons?.address||''} ${distHtml}</p><p style="font-weight:700;margin-top:8px">${msg}</p>${warnHtml}${viewBtn}${dirHtml ? `<div style="margin-top:10px">${dirHtml}</div>` : ''}${chatBtn}${cancelBtn}${rateBox}</div>`;
   }).join('');
 }
 // ADD ONLY - Cancel Booking function
@@ -238,4 +271,4 @@ function restoreCustomerSession(){
 restoreCustomerSession();
 </script>
 </body>
-  </html>
+</html>
