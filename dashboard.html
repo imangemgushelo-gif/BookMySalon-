@@ -50,6 +50,8 @@ input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12
 .stat b{font-size:20px;color:#2a0a45;display:block}
 .stat span{font-size:12px;color:#777}
 .top-row{display:flex;justify-content:space-between;align-items:center}
+/* ADD ONLY - Unread Badge */
+.unread-badge{background:#ff0000;color:white;font-size:11px;font-weight:800;min-width:20px;height:20px;line-height:20px;text-align:center;padding:0 6px;border-radius:20px;display:inline-block;margin-left:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -134,6 +136,28 @@ function switchToCustomer(){
   try{ localStorage.setItem('bms_role','customer'); }catch(e){}
   window.location.href = 'index.html';
 }
+// ADD ONLY - Unread Badge helpers (owner sees customer messages)
+function getLastRead(bookingId){
+  try{ return localStorage.getItem('bms_chat_read_' + bookingId) || ''; }catch(e){ return ''; }
+}
+function markChatRead(bookingId){
+  try{ localStorage.setItem('bms_chat_read_' + bookingId, new Date().toISOString()); }catch(e){}
+}
+async function getUnreadCounts(bookingIds){
+  const counts = {};
+  if(!bookingIds || bookingIds.length===0) return counts;
+  try{
+    const { data, error } = await supabaseClient.from('messages').select('booking_id,sender_role,created_at').in('booking_id', bookingIds).eq('sender_role','customer').order('created_at',{ascending:false});
+    if(error || !data) return counts;
+    data.forEach(m=>{
+      const lastRead = getLastRead(m.booking_id);
+      if(!lastRead || new Date(m.created_at) > new Date(lastRead)){
+        counts[m.booking_id] = (counts[m.booking_id] || 0) + 1;
+      }
+    });
+  }catch(e){}
+  return counts;
+}
 async function loadDashboard(){
   const phone=document.getElementById('ownerPhone').value.trim();
   if(!phone){ alert('Enter your phone'); return; }
@@ -196,18 +220,25 @@ function showD(t){
   document.getElementById('dR').style.display=t==='r'?'block':'none';
   document.getElementById('dS').style.display=t==='s'?'block':'none';
 }
-function renderBookings(){
+async function renderBookings(){
   if(!bookings.length){ document.getElementById('dB').innerHTML='<div class="card">No bookings yet.</div>'; return; }
+  // ADD ONLY - Unread counts for chat badges
+  const unreadCounts = await getUnreadCounts(bookings.map(b=>b.id));
   const seen = {};
   const dupKeys = new Set();
   bookings.forEach(b=>{ if(b.status==='cancelled') return; const key = b.booking_date + '|' + b.booking_time; if(seen[key]) dupKeys.add(key); seen[key]=true; });
   document.getElementById('dB').innerHTML=bookings.map(b=>{
   const isDup = dupKeys.has(b.booking_date + '|' + b.booking_time);
   const dupHtml = isDup ? `<div class="dup-warn">⚠️ Possible double booking - same date & time as another booking. Please cancel one.</div>` : '';
+  // ADD ONLY - Chat Button + Unread Badge (owner sees customer messages)
+  const unread = unreadCounts[b.id] || 0;
+  const unreadBadge = unread > 0 ? `<span class="unread-badge">${unread > 9 ? '9+' : unread}</span>` : '';
+  const chatBtn = `<a href="chat.html?booking_id=${b.id}&salon_id=${salon ? salon.id : b.salon_id}&salon_name=${encodeURIComponent(b.customer_name || 'Customer')}" onclick="markChatRead('${b.id}')" class="btn btn-small" style="display:inline-block;text-decoration:none;margin-top:6px;background:#111">💬 Chat with Customer ${unreadBadge}</a>`;
   return `
   <div class="card"><div style="display:flex;justify-content:space-between"><b>${b.customer_name}</b><span class="badge" style="background:#fef9c3">${b.status}</span></div>
   <p class="small" style="margin-top:6px">${b.service} - R${b.price} • ${b.booking_date} at ${b.booking_time}<br>📞 ${b.customer_phone}</p>
   ${dupHtml}
+  ${chatBtn}<br>
   ${b.status==='pending'?`<button class="btn btn-small btn-green" onclick="updateBooking('${b.id}','confirmed')">✅ Confirm</button><button class="btn btn-small btn-red" onclick="updateBooking('${b.id}','cancelled')">❌ Cancel</button>`:''}
   ${b.status==='confirmed'?`<button class="btn btn-small btn-red" onclick="updateBooking('${b.id}','cancelled')">❌ Cancel Booking</button>`:''}
   </div>`}).join('');
