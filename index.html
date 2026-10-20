@@ -23,17 +23,17 @@
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
-body{background:#ffffff;padding:20px;padding-bottom:80px;color:#111}
+body{background:#ffffff;padding:20px;padding-bottom:90px;color:#111}
 .box{max-width:600px;margin:0 auto}
-.logo{font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1;margin:4px 0 2px;color:#2a0a45}
-.logo span{color:#c2a06e}
+.logo{font-size:26px;font-weight:900;letter-spacing:-0.8px;line-height:1;margin:4px 0 2px;color:#111}
+.logo span{color:#2a0a45}
 .tagline{color:#666;margin:0 0 16px;font-size:14px}
 h1{font-size:28px;color:#111} h1 span{color:#2a0a45}
 p{color:#666;margin:8px 0 16px;font-size:14px}
-.card{background:#ffffff;padding:16px;border-radius:16px;border:1px solid #eee;box-shadow:0 4px 16px rgba(0,0,0,.05);margin-bottom:14px;overflow:hidden}
+.card{background:#ffffff;padding:16px;border-radius:18px;border:1px solid #eee;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-bottom:14px;overflow:hidden}
 input,select{width:100%;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;margin:6px 0 10px;background:#ffffff;color:#111;outline:none}
-input:focus,select:focus{border-color:#2a0a45}
-.btn{width:100%;background:#2a0a45;color:white;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
+input:focus,select:focus{border-color:#111}
+.btn{width:100%;background:#111;color:white;padding:14px;border:0;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
 .btn-dark{background:#111}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
@@ -41,7 +41,7 @@ input:focus,select:focus{border-color:#2a0a45}
 .small{font-size:13px;color:#777}
 .tabs{display:flex;gap:8px;margin:16px 0 12px}
 .tabs button{flex:1;padding:11px;border-radius:12px;border:1px solid #e5e5e5;background:white;color:#111;font-weight:700;cursor:pointer}
-.tabs button.active{background:#2a0a45;color:white;border-color:#2a0a45}
+.tabs button.active{background:#111;color:white;border-color:#111}
 .service-btn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px;border:1px solid #eee;border-radius:12px;background:#ffffff;margin-bottom:8px;cursor:pointer;text-align:left;font-size:14px;color:#111}
 .service-btn b{color:#111}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:99}
@@ -58,40 +58,59 @@ input:focus,select:focus{border-color:#2a0a45}
 .gallery img{width:100%;height:220px;object-fit:cover;flex-shrink:0;scroll-snap-align:start;display:block}
 .gallery-dots{display:flex;gap:5px;justify-content:center;padding:8px 0 0}
 .gallery-dots span{width:6px;height:6px;border-radius:50%;background:#ddd;display:block}
-.gallery-dots span.active{background:#2a0a45;width:14px;border-radius:10px}
+.gallery-dots span.active{background:#111;width:14px;border-radius:10px}
 .gallery-count{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);color:white;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
 .gallery-hint{font-size:12px;color:#999;text-align:center;padding:4px 0 0}
 .cats{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
 .cats::-webkit-scrollbar{display:none}
 .cat{flex-shrink:0;padding:9px 14px;border-radius:20px;border:1.5px solid #e5e5e5;background:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;color:#111}
-.cat.active{background:#2a0a45;color:#fff;border-color:#2a0a45}
+.cat.active{background:#111;color:#fff;border-color:#111}
 .card-actions{display:flex;gap:10px;margin-top:12px}
-.btn-white{background:#fff;color:#2a0a45;border:1.5px solid #2a0a45;text-decoration:none;text-align:center}
+.btn-white{background:#fff;color:#111;border:1.5px solid #111;text-decoration:none;text-align:center}
 .card-actions .btn{flex:1}
 .card-actions a.btn{padding:11px 10px;font-size:14px}
 .btn-light{background:#fff;color:#111;border:1.5px solid #e5e5e5}
 .btn-cancel{background:#fff;color:#991b1b;border:1.5px solid #fecaca}
-.dist-badge{font-size:12px;font-weight:700;color:#2a0a45;background:#f3e8ff;padding:4px 8px;border-radius:20px}
+.dist-badge{font-size:12px;font-weight:700;color:#111;background:#f3f3f3;padding:4px 8px;border-radius:20px}
 .loc-status{font-size:13px;color:#166534;font-weight:700;margin:6px 0 10px;display:none}
-/* ADD ONLY - Welcome + Clean Layout 5 */
 .welcome-card{border-radius:18px;padding:20px;margin-bottom:12px;cursor:pointer}
-.welcome-customer{background:#2a0a45;color:#fff}
-.welcome-owner{background:#fff;border:1.5px solid #e9dfff}
+.welcome-customer{background:#111;color:#fff}
+.welcome-owner{background:#fff;border:1.5px solid #eee}
 .sticky-search{position:sticky;top:0;background:#fff;padding:10px 0 8px;z-index:10}
 .loc-row{display:flex;gap:10px;align-items:center;margin:6px 0 10px}
 .loc-row .btn{flex:1}
 .loc-row select{flex:1;margin:0}
-.compact-gallery img{height:180px !important}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;z-index:50}
-.bottom-nav button{flex:1;background:none;border:0;padding:10px 0 12px;font-size:12px;font-weight:700;color:#888;cursor:pointer}
-.bottom-nav button.active{color:#2a0a45}
+.compact-gallery img{height:200px !important;border-radius:16px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav button{flex:1;background:none;border:0;padding:10px 0 12px;font-size:11px;font-weight:700;color:#888;cursor:pointer;line-height:1.1}
+.bottom-nav button.active{color:#111}
+.bottom-nav button span.icon{font-size:20px;display:block;margin-bottom:2px}
+
+/* PREMIUM FIXES - smaller logo + filters underline style */
+.logo-small{font-size:26px !important;font-weight:900;letter-spacing:-0.8px;color:#111}
+.filters-row{display:flex;align-items:center;gap:16px;overflow-x:auto;padding:8px 0 6px;border-bottom:1px solid #f0f0f0;margin-bottom:10px;scrollbar-width:none}
+.filters-row::-webkit-scrollbar{display:none}
+.filters-label{font-size:14px;color:#888;font-weight:600;flex-shrink:0}
+.filter-pill{flex-shrink:0;background:none;border:0;font-size:14px;font-weight:500;color:#888;cursor:pointer;padding:6px 2px 10px;position:relative;white-space:nowrap}
+.filter-pill.active{color:#111;font-weight:700}
+.filter-pill.active::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2.5px;background:#111;border-radius:2px}
+.near-row{display:flex;align-items:center;gap:8px;margin:12px 0 14px}
+.near-btn{color:#c0392b;font-weight:700;font-size:14px;background:none;border:0;cursor:pointer}
+.allareas-btn{color:#666;font-size:14px;background:none;border:0;cursor:pointer;display:flex;align-items:center;gap:4px}
+
+/* FAVORITES HEART - Option A on image corner */
+.fav-wrap{position:relative}
+.fav-btn{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.92);border:0;box-shadow:0 2px 10px rgba(0,0,0,.15);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;transition:all .15s}
+.fav-btn.active{background:#fff;color:#e11d48}
+.fav-btn:active{transform:scale(0.92)}
+.search-premium{width:100%;padding:14px 14px 14px 42px;border:1.5px solid #e5e5e5;border-radius:14px;font-size:15px;background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="%23888" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>') no-repeat 14px center;outline:none}
+.search-premium:focus{border-color:#111}
 </style>
 </head>
 <body>
-<!-- ADD ONLY - WELCOME SCREEN (Layout 6) - Shows first -->
 <div class="box" id="welcomeScreen">
-  <div class="logo">Book<span>My</span>Salon</div>
-  <p class="tagline">Find. Book. Glow. ✨</p>
+  <div class="logo logo-small">Book<span>My</span>Salon</div>
+  <p class="tagline" style="display:none">Find. Book. Glow.</p>
   <h1 style="font-size:32px;line-height:1.15;margin:20px 0 8px">Hello! 👋<br>How can we help<br>you today?</h1>
   <p>Choose one to continue. You can switch anytime.</p>
   <div class="welcome-card welcome-customer" onclick="chooseRole('customer')">
@@ -102,39 +121,40 @@ input:focus,select:focus{border-color:#2a0a45}
   </div>
   <div class="welcome-card welcome-owner" onclick="chooseRole('owner')">
     <div style="font-size:28px">💈</div>
-    <b style="font-size:19px;color:#2a0a45">Owner Dashboard</b>
+    <b style="font-size:19px;color:#111">Owner Dashboard</b>
     <p style="color:#777;font-size:14px;margin:4px 0 0">I own a salon — manage bookings & my salon page</p>
-    <div style="margin-top:12px;font-weight:800;color:#2a0a45">Go to Dashboard →</div>
+    <div style="margin-top:12px;font-weight:800;color:#111">Go to Dashboard →</div>
   </div>
   <p style="text-align:center;font-size:12px;color:#999">New: Register your salon from Owner Dashboard → Register Salon</p>
 </div>
 
-<!-- ADD ONLY - CUSTOMER HOME (Layout 5) - Hidden until Customer chosen -->
 <div class="box" id="customerHome" style="display:none">
 <div style="display:flex;justify-content:space-between;align-items:center">
-  <div class="logo" style="font-size:28px">Book<span>My</span>Salon</div>
-  <a href="#" onclick="switchRole();return false;" style="font-size:12px;color:#777;text-decoration:none">Switch: I'm an Owner ↺</a>
+  <div class="logo logo-small">Book<span>My</span>Salon</div>
+  <a href="#" onclick="switchRole();return false;" style="font-size:12px;color:#777;text-decoration:none">Switch: Owner ↺</a>
 </div>
-<p class="tagline">Find. Book. Glow. ✨</p>
-<div class="tabs">
+<div class="tabs" style="display:none">
 <button id="tabHome" class="active" onclick="showTab('home')">🏠 Find Salon</button>
 <button id="tabMy" onclick="showTab('my')">📅 My Bookings</button>
 </div>
 <div id="homeTab">
 <div class="sticky-search">
-<input id="searchInput" placeholder="🔍 Search salon or service e.g. Braids" oninput="loadSalons()">
-<div class="cats" id="categoryFilter">
-<button class="cat active" data-cat="" onclick="setCategory('',this)">All</button>
-<button class="cat" data-cat="Barbershop" onclick="setCategory('Barbershop',this)">💈 Barbershop</button>
-<button class="cat" data-cat="Salon" onclick="setCategory('Salon',this)">💇‍♀️ Salon</button>
-<button class="cat" data-cat="Braids" onclick="setCategory('Braids',this)">🧶 Braids</button>
-<button class="cat" data-cat="Nails" onclick="setCategory('Nails',this)">💅 Nails</button>
-<button class="cat" data-cat="Beauty" onclick="setCategory('Beauty',this)">✨ Beauty</button>
-<button class="cat" data-cat="Makeup" onclick="setCategory('Makeup',this)">💄 Makeup</button>
+<input id="searchInput" class="search-premium" placeholder="Search" oninput="loadSalons()">
+<div class="filters-row" id="categoryFilter">
+<span class="filters-label">Filters</span>
+<button class="filter-pill active" data-cat="" onclick="setCategory('',this)">All</button>
+<button class="filter-pill" data-cat="Barbershop" onclick="setCategory('Barbershop',this)">Barbershop</button>
+<button class="filter-pill" data-cat="Salon" onclick="setCategory('Salon',this)">Salon</button>
+<button class="filter-pill" data-cat="Braids" onclick="setCategory('Braids',this)">Braids</button>
+<button class="filter-pill" data-cat="Nails" onclick="setCategory('Nails',this)">Nails</button>
+<button class="filter-pill" data-cat="Beauty" onclick="setCategory('Beauty',this)">Beauty</button>
+<button class="filter-pill" data-cat="Makeup" onclick="setCategory('Makeup',this)">Makeup</button>
 </div>
-<div class="loc-row">
-<button class="btn btn-light" id="locBtn" onclick="useMyLocation()" style="padding:11px;font-size:13px">📍 Near Me</button>
-<select id="areaFilter" onchange="loadSalons()">
+<div class="near-row">
+<button class="near-btn" id="locBtn" onclick="useMyLocation()">Near Me</button>
+<span style="color:#888">·</span>
+<button class="allareas-btn" onclick="document.getElementById('areaFilter').focus()">All Areas <span style="font-size:12px">▼</span></button>
+<select id="areaFilter" onchange="loadSalons()" style="position:absolute;opacity:0;pointer-events:none;width:1px">
 <option value="">📍 All Areas in East London</option>
 <option value="Southernwood">Southernwood</option>
 <option value="Quigney">Quigney</option>
@@ -157,7 +177,7 @@ input:focus,select:focus{border-color:#2a0a45}
 <label style="font-weight:700;font-size:13px">Enter your phone number to see your bookings</label>
 <input id="myPhone" placeholder="e.g. 082 123 4567">
 <button class="btn btn-dark" onclick="loadMyBookings()">View My Bookings →</button>
-<p class="small" style="margin-top:8px"><a href="my-bookings.html" style="color:#2a0a45">Open full My Bookings Page →</a> • <a href="salon.html" style="color:#2a0a45">View Salon</a> • <a href="register.html" style="color:#2a0a45">Register Salon</a></p>
+<p class="small" style="margin-top:8px"><a href="my-bookings.html" style="color:#111">Open full My Bookings Page →</a> • <a href="salon.html" style="color:#111">View Salon</a> • <a href="register.html" style="color:#111">Register Salon</a></p>
 </div>
 <div id="myBookingsList"></div>
 </div>
@@ -167,11 +187,10 @@ input:focus,select:focus{border-color:#2a0a45}
 </div>
 
 <div class="bottom-nav" id="bottomNav" style="display:none">
-<button id="navHome" class="active" onclick="showTab('home');document.getElementById('navHome').classList.add('active');document.getElementById('navBookings')?.classList.remove('active')">🏠<br>Home</button>
-<!-- ADD ONLY - Chats button, goes to chats.html list page -->
-<button onclick="window.location.href='chats.html'">💬<br>Chats</button>
-<button onclick="window.location.href='my-bookings.html'">⭐<br>My Bookings</button>
-<button onclick="switchRole()">👤<br>Owner</button>
+<button id="navHome" class="active" onclick="handleNav('home')"><span class="icon">⌂</span>Home</button>
+<button id="navChats" onclick="handleNav('chats')"><span class="icon">💬</span>Chats</button>
+<button id="navFavs" onclick="handleNav('favs')"><span class="icon">♡</span>Favorites</button>
+<button id="navBookings" onclick="handleNav('bookings')"><span class="icon">👤</span>My Bookings</button>
 </div>
 
 <div class="modal" id="bookingModal">
@@ -219,8 +238,45 @@ let ratingStars = 0;
 let selectedCategory = '';
 let userLocation = null;
 let sortByDistance = false;
+let favFilterActive = false;
 try{ const savedLoc = localStorage.getItem('bms_user_location'); if(savedLoc){ userLocation = JSON.parse(savedLoc); sortByDistance = true; } }catch(e){}
-// ADD ONLY - Welcome Role Picker
+
+function getFavorites(){ try{ return JSON.parse(localStorage.getItem('bms_favorites')||'[]'); }catch(e){ return []; } }
+function isFav(id){ return getFavorites().includes(id); }
+function toggleFav(id, e){
+  if(e){ e.stopPropagation(); e.preventDefault(); }
+  let favs = getFavorites();
+  if(favs.includes(id)){ favs = favs.filter(x=>x!==id); } else { favs.push(id); }
+  localStorage.setItem('bms_favorites', JSON.stringify(favs));
+  renderSalons();
+  if(favFilterActive){ renderSalons(); }
+}
+
+function handleNav(type){
+  document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+  if(type==='home'){
+    favFilterActive=false;
+    document.getElementById('navHome').classList.add('active');
+    document.getElementById('customerHome').style.display='block';
+    showTab('home');
+    renderSalons();
+    window.scrollTo({top:0});
+  } else if(type==='chats'){
+    window.location.href='chats.html';
+  } else if(type==='favs'){
+    favFilterActive=true;
+    document.getElementById('navFavs').classList.add('active');
+    document.getElementById('customerHome').style.display='block';
+    showTab('home');
+    renderSalons();
+    window.scrollTo({top:0});
+  } else if(type==='bookings'){
+    document.getElementById('navBookings').classList.add('active');
+    document.getElementById('customerHome').style.display='block';
+    showTab('my');
+  }
+}
+
 function chooseRole(role){
   try{ localStorage.setItem('bms_role', role); }catch(e){}
   if(role === 'owner'){ window.location.href = 'dashboard.html'; return; }
@@ -238,13 +294,13 @@ function switchRole(){
 }
 function setCategory(cat, el){
 selectedCategory = cat;
-document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active'));
+document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
 if(el) el.classList.add('active');
 renderSalons();
 }
 function showTab(tab){
-document.getElementById('tabHome').classList.toggle('active', tab==='home');
-document.getElementById('tabMy').classList.toggle('active', tab==='my');
+document.getElementById('tabHome')?.classList.toggle('active', tab==='home');
+document.getElementById('tabMy')?.classList.toggle('active', tab==='my');
 document.getElementById('homeTab').style.display = tab==='home' ? 'block' : 'none';
 document.getElementById('myTab').style.display = tab==='my' ? 'block' : 'none';
 }
@@ -267,12 +323,19 @@ if(s.photos && Array.isArray(s.photos) && s.photos.length>0) return s.photos.sli
 if(s.photo_url) return [s.photo_url];
 return [];
 }
+function getGallery(s){
+if(s.photos && Array.isArray(s.photos) && s.photos.length>0) return s.photos.slice(0,10);
+if(s.photo_url) return [s.photo_url];
+return [];
+}
 function galleryHTML(s){
 const gallery = getGallery(s);
-if(gallery.length===0){ return `<div style="height:180px;background:linear-gradient(135deg,#2a0a45,#6b21a8);display:flex;align-items:center;justify-content:center;font-size:50px">💇‍♀️</div>`; }
-if(gallery.length===1){ return `<div class="compact-gallery"><img src="${gallery[0]}" style="width:100%;height:180px;object-fit:cover;display:block"></div>`; }
+const heart = isFav(s.id);
+const favBtn = `<button class="fav-btn ${heart?'active':''}" onclick="toggleFav('${s.id}', event)">${heart?'♥':'♡'}</button>`;
+if(gallery.length===0){ return `<div class="fav-wrap"><div style="height:200px;background:linear-gradient(135deg,#111,#444);display:flex;align-items:center;justify-content:center;font-size:50px;border-radius:16px">💇‍♀️</div>${favBtn}</div>`; }
+if(gallery.length===1){ return `<div class="fav-wrap compact-gallery"><img src="${gallery[0]}" style="width:100%;height:200px;object-fit:cover;display:block;border-radius:16px"><span class="gallery-count" style="right:54px">1 / 1</span>${favBtn}</div>`; }
 const dots = gallery.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('');
-return `<div class="gallery-wrap compact-gallery"><div class="gallery" id="gal-${s.id}" onscroll="updateDots('${s.id}', this)">${gallery.map(u=>`<img src="${u}" loading="lazy">`).join('')}</div><span class="gallery-count" id="gal-count-${s.id}">1 / ${gallery.length}</span></div><div class="gallery-dots" id="gal-dots-${s.id}">${dots}</div>`;
+return `<div class="fav-wrap gallery-wrap compact-gallery"><div class="gallery" id="gal-${s.id}" onscroll="updateDots('${s.id}', this)" style="border-radius:16px">${gallery.map(u=>`<img src="${u}" loading="lazy">`).join('')}</div><span class="gallery-count" id="gal-count-${s.id}">1 / ${gallery.length}</span>${favBtn}</div><div class="gallery-dots" id="gal-dots-${s.id}">${dots}</div>`;
 }
 function updateDots(salonId, el){
 const idx = Math.round(el.scrollLeft / el.clientWidth);
@@ -287,24 +350,29 @@ function formatDistance(km){ if(km < 1) return Math.round(km*1000) + ' m away'; 
 function useMyLocation(){
   const btn = document.getElementById('locBtn'); const status = document.getElementById('locStatus');
   if(!navigator.geolocation){ alert('Location is not supported on this device. Please allow location in browser settings.'); return; }
-  btn.textContent = '📍 Getting your location...';
-  navigator.geolocation.getCurrentPosition((pos)=>{ userLocation = {lat: pos.coords.latitude, lng: pos.coords.longitude}; sortByDistance = true; try{ localStorage.setItem('bms_user_location', JSON.stringify(userLocation)); }catch(e){} status.style.display='block'; status.textContent = '✅ Showing nearest salons first'; btn.textContent = '📍 Near Me ✓ Tap to Refresh'; renderSalons(); }, ()=>{ btn.textContent = '📍 Near Me'; alert('Could not get location. Please allow Location permission and try again.'); }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
+  btn.textContent = 'Getting...';
+  navigator.geolocation.getCurrentPosition((pos)=>{ userLocation = {lat: pos.coords.latitude, lng: pos.coords.longitude}; sortByDistance = true; try{ localStorage.setItem('bms_user_location', JSON.stringify(userLocation)); }catch(e){} status.style.display='block'; status.textContent = '✅ Showing nearest salons first'; btn.textContent = 'Near Me ✓'; renderSalons(); }, ()=>{ btn.textContent = 'Near Me'; alert('Could not get location. Please allow Location permission and try again.'); }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
 }
-function updateLocUI(){ if(userLocation && sortByDistance){ const status = document.getElementById('locStatus'); if(status){ status.style.display='block'; status.textContent='✅ Showing nearest salons first'; } const btn = document.getElementById('locBtn'); if(btn) btn.textContent='📍 Near Me ✓ Tap to Refresh'; } }
+function updateLocUI(){ if(userLocation && sortByDistance){ const status = document.getElementById('locStatus'); if(status){ status.style.display='block'; status.textContent='✅ Showing nearest salons first'; } const btn = document.getElementById('locBtn'); if(btn) btn.textContent='Near Me ✓'; } }
 function renderSalons(){
 const q = document.getElementById('searchInput').value.toLowerCase();
 const area = document.getElementById('areaFilter').value;
 let filtered = allSalons.filter(s=>{ const matchQ = !q || s.name.toLowerCase().includes(q) || (s.services||[]).some(x=>x.name.toLowerCase().includes(q)); const matchArea = !area || (s.address||'').toLowerCase().includes(area.toLowerCase()); const matchCat = !selectedCategory || (s.category||'') === selectedCategory; return matchQ && matchArea && matchCat; });
+if(favFilterActive){ const favs = getFavorites(); filtered = filtered.filter(s=>favs.includes(s.id)); }
 filtered = filtered.map(s=>{ let dist = null; if(userLocation){ const ll = getSalonLatLng(s); if(ll) dist = distanceKm(userLocation.lat, userLocation.lng, ll.lat, ll.lng); } return {...s, _dist: dist}; });
 if(sortByDistance && userLocation){ filtered.sort((a,b)=>{ if(a._dist==null && b._dist==null) return 0; if(a._dist==null) return 1; if(b._dist==null) return -1; return a._dist - b._dist; }); }
-if(filtered.length===0){ document.getElementById('salonList').innerHTML = `<div class="card">No salons found.<br><span class="small">Try another search or area. Are you a salon owner? <a href="register.html">Register here</a>.</span></div>`; return; }
+if(filtered.length===0){ 
+  if(favFilterActive){ document.getElementById('salonList').innerHTML = `<div class="card" style="text-align:center;padding:30px"><div style="font-size:40px">♡</div><b>No favorites yet</b><p class="small">Tap the heart on any salon image to save it here.</p><button class="btn" style="margin-top:10px" onclick="handleNav('home')">Browse Salons</button></div>`; return; }
+  document.getElementById('salonList').innerHTML = `<div class="card">No salons found.<br><span class="small">Try another search or area. Are you a salon owner? <a href="register.html">Register here</a>.</span></div>`; return; 
+}
 document.getElementById('salonList').innerHTML = filtered.map(s=>{
 const r = getRating(s.id);
-const ratingText = r.count===0 ? '⭐ New • No ratings yet' : `⭐ <b>${r.avg.toFixed(1)}</b> (${r.count} ${r.count===1?'review':'reviews'})`;
-const servicesText = (s.services||[]).map(x=>x.name+' - R'+x.price).join(' • ');
+const ratingText = r.count===0 ? 'New • No ratings yet' : `${r.avg.toFixed(1)} · ${(s.services||[]).slice(0,3).map(x=>x.name).join(' · ') || 'Cut'}`;
+const ratingStar = r.count===0 ? '' : '★';
 const minPrice = (s.services||[]).length ? Math.min(...s.services.map(x=>x.price)) : 0;
-const distText = s._dist!=null ? `<span class="dist-badge">📍 ${formatDistance(s._dist)}</span>` : '';
-return `<div class="card" style="padding:0">${galleryHTML(s)}<div style="padding:16px"><div class="row"><b style="font-size:18px">${s.name}</b><span class="badge live">LIVE</span></div><p class="small" style="margin:6px 0">${s.address} ${distText}</p><p style="margin:4px 0;font-size:14px">${ratingText}</p><p class="small">${servicesText || 'Services coming soon'}</p><div class="row" style="margin-top:12px"><span style="font-weight:800">From R${minPrice}</span></div><div class="card-actions"><a class="btn btn-white" href="salon.html?id=${s.id}">👁️ View Salon</a><button class="btn" onclick="openBooking('${s.id}')">Book Now →</button></div></div></div>`;
+const distText = s._dist!=null ? ` · ${formatDistance(s._dist)}` : '';
+const addressShort = (s.address||'').split(',')[0] + distText;
+return `<div class="card" style="padding:12px"><div style="border-radius:16px;overflow:hidden">${galleryHTML(s)}</div><div style="padding:14px 4px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:19px;font-weight:800">${s.name}</b></div><p class="small" style="margin:6px 0;color:#666">📍 ${addressShort || s.address}</p><p style="margin:4px 0;font-size:14px;color:#111"><span style="color:#c9a86a">${ratingStar}</span> ${ratingText}</p><div class="row" style="margin-top:10px"><span style="font-weight:800;font-size:15px">From R${minPrice}</span></div><div class="card-actions"><a class="btn btn-white" href="salon.html?id=${s.id}">View Salon</a><button class="btn" onclick="openBooking('${s.id}')">Book Now</button></div></div></div>`;
 }).join('');
 }
 function openBooking(salonId){
@@ -316,7 +384,7 @@ document.getElementById('modalServices').innerHTML = `<label style="font-weight:
 try{ const n = localStorage.getItem('bms_customer_name'); const p = localStorage.getItem('bms_customer_phone'); if(n) document.getElementById('customerName').value = n; if(p) document.getElementById('customerPhone').value = p; }catch(e){}
 document.getElementById('bookingModal').classList.add('open');
 }
-function selectService(i){ selectedService = selectedSalon.services[i]; document.querySelectorAll('.service-btn').forEach(b=>{ b.style.borderColor='#eee'; b.style.background='#ffffff'; }); const el = document.getElementById('svc-'+i); el.style.borderColor='#2a0a45'; el.style.background='#f3e8ff'; }
+function selectService(i){ selectedService = selectedSalon.services[i]; document.querySelectorAll('.service-btn').forEach(b=>{ b.style.borderColor='#eee'; b.style.background='#ffffff'; }); const el = document.getElementById('svc-'+i); el.style.borderColor='#111'; el.style.background='#f3f3f3'; }
 function closeModal(){ document.getElementById('bookingModal').classList.remove('open'); }
 function normalizePhone(phone){ return (phone||'').replace(/[\s\-\(\)\+]/g,''); }
 function isValidSAPhone(phone){ const cleaned = normalizePhone(phone); let p = cleaned; if(p.startsWith('27') && p.length===11) p = '0' + p.slice(2); if(!/^\d+$/.test(p)) return false; if(p.length!==10) return false; if(!p.startsWith('0')) return false; return true; }
