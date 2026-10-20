@@ -153,8 +153,8 @@ input:focus,select:focus{border-color:#111}
 <div class="near-row">
 <button class="near-btn" id="locBtn" onclick="useMyLocation()">Near Me</button>
 <span style="color:#888">·</span>
-<button class="allareas-btn" onclick="document.getElementById('areaFilter').focus()">All Areas <span style="font-size:12px">▼</span></button>
-<select id="areaFilter" onchange="loadSalons()" style="position:absolute;opacity:0;pointer-events:none;width:1px">
+<button class="allareas-btn" id="areaBtn" onclick="openAreaPicker()">All Areas <span style="font-size:12px">▼</span></button>
+<select id="areaFilter" onchange="loadSalons()" style="display:none">
 <option value="">📍 All Areas in East London</option>
 <option value="Southernwood">Southernwood</option>
 <option value="Quigney">Quigney</option>
@@ -166,6 +166,11 @@ input:focus,select:focus{border-color:#111}
 <option value="Nahoon">Nahoon</option>
 <option value="Cambridge">Cambridge</option>
 <option value="Amalinda">Amalinda</option>
+<option value="Buffalo Flats">Buffalo Flats</option>
+<option value="Berea">Berea</option>
+<option value="Stirling">Stirling</option>
+<option value="Selborne">Selborne</option>
+<option value="Parkside">Parkside</option>
 </select>
 </div>
 <p class="loc-status" id="locStatus"></p>
