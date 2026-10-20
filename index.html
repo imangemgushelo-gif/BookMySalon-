@@ -265,8 +265,35 @@ function chooseRole(role){ try{ localStorage.setItem('bms_role', role); }catch(e
 function switchRole(){ try{ localStorage.removeItem('bms_role'); }catch(e){} document.getElementById('customerHome').style.display='none'; document.getElementById('bottomNav').style.display='none'; document.getElementById('welcomeScreen').style.display='block'; }
 function setCategory(cat,el){ selectedCategory=cat; document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active')); if(el) el.classList.add('active'); renderSalons(); }
 function showTab(tab){ document.getElementById('tabHome')?.classList.toggle('active',tab==='home'); document.getElementById('tabMy')?.classList.toggle('active',tab==='my'); document.getElementById('homeTab').style.display=tab==='home'?'block':'none'; document.getElementById('myTab').style.display=tab==='my'?'block':'none'; }
-async function loadSalons(){ const {data:salons}=await supabaseClient.from('salons').select('*').order('created_at',{ascending:false}); const {data:ratings}=await supabaseClient.from('ratings').select('*'); allSalons=salons||[]; allRatings={}; (ratings||[]).forEach(r=>{ if(!allRatings[r.salon_id]) allRatings[r.salon_id]=[]; allRatings[r.salon_id].push(r); }); renderSalons(); }
-function getRating(salonId){ const list=allRatings[salonId]||[]; if(list.length===0) return {avg:0,count:0}; const avg=list.reduce((a,b)=>a+b.rating,0)/list.length; return {avg,count:list.length}; }
+async function loadSalon() {
+  const input = document.querySelector('input[type="tel"], input[placeholder*="Phone"]').value.trim();
+  const phone = input.replace(/\s+/g,''); // remove spaces
+  
+  if(!phone){ alert('Enter your phone'); return; }
+  
+  console.log('Trying to load:', phone);
+  
+  const { data, error } = await supabase
+    .from('salons')
+    .select('*')
+    .eq('phone', phone)
+    .maybeSingle();
+
+  if(error){ 
+    alert('Error: '+error.message); 
+    console.log(error); 
+    return; 
+  }
+  if(!data){ 
+    alert('No salon found with phone: '+phone+'\nCheck Supabase > salons table'); 
+    return; 
+  }
+  
+  localStorage.setItem('my_salon_phone', phone);
+  localStorage.setItem('my_salon_id', data.id);
+  alert('Loaded: '+data.name);
+  location.reload();
+}function getRating(salonId){ const list=allRatings[salonId]||[]; if(list.length===0) return {avg:0,count:0}; const avg=list.reduce((a,b)=>a+b.rating,0)/list.length; return {avg,count:list.length}; }
 function getGallery(s){ if(s.photos&&Array.isArray(s.photos)&&s.photos.length>0) return s.photos.slice(0,10); if(s.photo_url) return [s.photo_url]; return []; }
 function galleryHTML(s){
 const gallery=getGallery(s);
