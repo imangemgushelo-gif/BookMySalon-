@@ -258,7 +258,36 @@ async function saveEditSalon(){ if(!salon) return; const updates = { name: docum
 function viewMySalon(){ if(salon && salon.id){ window.location.href = 'salon.html?id=' + salon.id; } else { const savedId = localStorage.getItem('bms_salon_id'); if(savedId) window.location.href = 'salon.html?id=' + savedId; else alert('Load your salon first'); } }
 function captureSalonLocation(){ if(!navigator.geolocation){ alert('Location is not supported on this device.'); return; } const st = document.getElementById('edit_loc_status'); if(st) st.textContent = '📍 Getting your location...'; navigator.geolocation.getCurrentPosition((pos)=>{ document.getElementById('edit_salon_lat').value = pos.coords.latitude.toFixed(6); document.getElementById('edit_salon_lng').value = pos.coords.longitude.toFixed(6); if(st) st.textContent = `✅ Location captured: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} - Tap Save Changes to save it.`; try{ localStorage.setItem('bms_user_location', JSON.stringify({lat: pos.coords.latitude, lng: pos.coords.longitude})); }catch(e){} }, ()=>{ if(st) st.textContent = 'Could not get location. Please allow Location permission.'; alert('Could not get location. Please allow Location permission and try again.'); }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000}); }
 async function quickSetLocation(){ if(!salon){ alert('Load your salon first'); return; } if(!navigator.geolocation){ alert('Location is not supported.'); return; } if(!confirm('Set this salon location to your current GPS location? Make sure you are at your salon.')) return; navigator.geolocation.getCurrentPosition(async (pos)=>{ const lat = pos.coords.latitude; const lng = pos.coords.longitude; const { error } = await supabaseClient.from('salons').update({latitude: lat, longitude: lng, lat: lat, lng: lng}).eq('id', salon.id); if(error){ alert(error.message); return; } alert('✅ Live Location saved for your salon! Customers will now see how far you are.'); loadDashboard(); }, ()=>{ alert('Could not get location. Please allow Location permission.'); }, {enableHighAccuracy:true, timeout:10000}); }
-function deleteSalon(){
+async function loadSalon() {
+  const input = document.querySelector('input[type="tel"], input[placeholder*="Phone"]').value.trim();
+  const phone = input.replace(/\s+/g,''); // remove spaces
+  
+  if(!phone){ alert('Enter your phone'); return; }
+  
+  console.log('Trying to load:', phone);
+  
+  const { data, error } = await supabase
+    .from('salons')
+    .select('*')
+    .eq('phone', phone)
+    .maybeSingle();
+
+  if(error){ 
+    alert('Error: '+error.message); 
+    console.log(error); 
+    return; 
+  }
+  if(!data){ 
+    alert('No salon found with phone: '+phone+'\nCheck Supabase > salons table'); 
+    return; 
+  }
+  
+  localStorage.setItem('my_salon_phone', phone);
+  localStorage.setItem('my_salon_id', data.id);
+  alert('Loaded: '+data.name);
+  location.reload();
+}
+  function deleteSalon(){
   if(!salon){ alert('Load your salon first'); return; }
   document.getElementById('deleteSalonName').textContent = salon.name;
   document.getElementById('deleteInput').value = '';
