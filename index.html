@@ -315,6 +315,28 @@ function useMyLocation(){
   navigator.geolocation.getCurrentPosition((pos)=>{ userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude}; sortByDistance=true; try{ localStorage.setItem('bms_user_location',JSON.stringify(userLocation)); }catch(e){} status.style.display='block'; status.textContent='✅ Showing nearest salons first'; btn.textContent='Near Me ✓'; renderSalons(); },()=>{ btn.textContent='Near Me'; alert('Could not get location.'); },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
 }
 function updateLocUI(){ if(userLocation&&sortByDistance){ const status=document.getElementById('locStatus'); if(status){ status.style.display='block'; status.textContent='✅ Showing nearest salons first'; } const btn=document.getElementById('locBtn'); if(btn) btn.textContent='Near Me ✓'; } }
+}
+// ADD ONLY - this was missing, needed for salon list + chats
+async function loadSalons(){
+  try{
+    const { data: salons, error } = await supabaseClient.from('salons').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    allSalons = salons || [];
+    // load ratings
+    const { data: ratings } = await supabaseClient.from('ratings').select('*');
+    allRatings = {};
+    (ratings||[]).forEach(r=>{
+      if(!allRatings[r.salon_id]) allRatings[r.salon_id]=[];
+      allRatings[r.salon_id].push(r);
+    });
+    renderSalons();
+  }catch(e){
+    console.log(e);
+    document.getElementById('salonList').innerHTML=`<div class="card">Error loading: ${e.message}</div>`;
+  }
+}
+
+async function loadRatings(){ /* kept for compatibility */ }
 function renderSalons(){
 const q=document.getElementById('searchInput').value.toLowerCase();
 const area=document.getElementById('areaFilter').value;
