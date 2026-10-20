@@ -244,20 +244,48 @@ async function saveEditSalon(){ if(!salon) return; const updates = { name: docum
 function viewMySalon(){ if(salon && salon.id){ window.location.href = 'salon.html?id=' + salon.id; } else { const savedId = localStorage.getItem('bms_salon_id'); if(savedId) window.location.href = 'salon.html?id=' + savedId; else alert('Load your salon first'); } }
 function captureSalonLocation(){ if(!navigator.geolocation){ alert('Location is not supported on this device.'); return; } const st = document.getElementById('edit_loc_status'); if(st) st.textContent = '📍 Getting your location...'; navigator.geolocation.getCurrentPosition((pos)=>{ document.getElementById('edit_salon_lat').value = pos.coords.latitude.toFixed(6); document.getElementById('edit_salon_lng').value = pos.coords.longitude.toFixed(6); if(st) st.textContent = `✅ Location captured: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} - Tap Save Changes to save it.`; try{ localStorage.setItem('bms_user_location', JSON.stringify({lat: pos.coords.latitude, lng: pos.coords.longitude})); }catch(e){} }, ()=>{ if(st) st.textContent = 'Could not get location. Please allow Location permission.'; alert('Could not get location. Please allow Location permission and try again.'); }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000}); }
 async function quickSetLocation(){ if(!salon){ alert('Load your salon first'); return; } if(!navigator.geolocation){ alert('Location is not supported.'); return; } if(!confirm('Set this salon location to your current GPS location? Make sure you are at your salon.')) return; navigator.geolocation.getCurrentPosition(async (pos)=>{ const lat = pos.coords.latitude; const lng = pos.coords.longitude; const { error } = await supabaseClient.from('salons').update({latitude: lat, longitude: lng, lat: lat, lng: lng}).eq('id', salon.id); if(error){ alert(error.message); return; } alert('✅ Live Location saved for your salon! Customers will now see how far you are.'); loadDashboard(); }, ()=>{ alert('Could not get location. Please allow Location permission.'); }, {enableHighAccuracy:true, timeout:10000}); }
-async function deleteSalon(){
+function deleteSalon(){
   if(!salon){ alert('Load your salon first'); return; }
-  const typed = prompt('Type DELETE to confirm deleting "'+salon.name+'":');
-  if(typed !== 'DELETE'){ alert('Delete cancelled. You must type DELETE in CAPS.'); return; }
+  document.getElementById('deleteSalonName').textContent = salon.name;
+  document.getElementById('deleteInput').value = '';
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+function closeDeleteModal(){
+  document.getElementById('deleteModal').classList.remove('open');
+}
+
+async function confirmDeleteSalon(){
+  const raw = document.getElementById('deleteInput').value;
+  const typed = (raw || '').trim().toUpperCase();
+
+  if(typed !== 'DELETE'){
+    alert('Please type DELETE in CAPS. You typed: "' + raw + '"');
+    return;
+  }
+
   if(!confirm('Are you SURE? This will delete the salon, all bookings and all reviews. This cannot be undone.')) return;
+
+  const btn = document.getElementById('confirmDeleteBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Deleting...'; }
+
   try{
     const { data: bks } = await supabaseClient.from('bookings').select('id').eq('salon_id', salon.id);
-    if(bks && bks.length){ const ids = bks.map(b=>b.id); await supabaseClient.from('messages').delete().in('booking_id', ids); await supabaseClient.from('bookings').delete().in('id', ids); }
+    if(bks && bks.length){
+      const ids = bks.map(b=>b.id);
+      await supabaseClient.from('messages').delete().in('booking_id', ids);
+      await supabaseClient.from('bookings').delete().in('id', ids);
+    }
     await supabaseClient.from('ratings').delete().eq('salon_id', salon.id);
     const { error } = await supabaseClient.from('salons').delete().eq('id', salon.id);
-    if(error){ alert('Delete failed: ' + error.message); return; }
+    if(error){ alert('Delete failed: ' + error.message); if(btn){ btn.disabled=false; btn.textContent='Yes, Delete Forever'; } return; }
+
     try{ localStorage.removeItem('bms_salon_id'); localStorage.removeItem('bms_owner_phone'); }catch(e){}
-    alert('Salon deleted successfully.'); window.location.href = 'index.html';
-  }catch(e){ alert('Delete failed: ' + e.message); }
+    alert('Salon deleted successfully.');
+    window.location.href = 'index.html';
+  }catch(e){
+    alert('Delete failed: ' + e.message);
+    if(btn){ btn.disabled=false; btn.textContent='Yes, Delete Forever'; }
 }
 function updateLogoutVisibility(){ try{ const hasLogin = localStorage.getItem('bms_owner_phone'); document.getElementById('logoutRow').style.display = hasLogin ? 'inline' : 'none'; }catch(e){} }
 function logoutUser(){ try{ localStorage.removeItem('bms_role'); localStorage.removeItem('bms_owner_phone'); localStorage.removeItem('bms_salon_id'); localStorage.removeItem('bms_customer_phone'); localStorage.removeItem('bms_customer_name'); }catch(e){} const lc=document.getElementById('loginCard'); if(lc) lc.style.display='block'; window.location.href = 'index.html'; }
