@@ -160,6 +160,20 @@ body{background:#f7f7f7}
   </div>
 </div>
 
+<!-- DELETE MODAL - FIXED, NO GITHUB POPUP -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:20px;max-width:400px;margin:80px auto">
+    <h2 style="color:#991b1b;margin-top:0">Delete Salon? 🗑️</h2>
+    <p class="small" style="margin:10px 0">This will permanently delete <b id="deleteSalonName">this salon</b> and all its bookings, chats and reviews. Cannot be undone.</p>
+    <label style="font-weight:700;font-size:13px">Type DELETE in caps to confirm</label>
+    <input id="deleteInput" placeholder="DELETE" style="border-color:#fecaca">
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn btn-light" style="flex:1" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn" id="confirmDeleteBtn" style="flex:1;background:#dc2626" onclick="confirmDeleteSalon()">Yes, Delete Forever</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let salon=null, bookings=[];
