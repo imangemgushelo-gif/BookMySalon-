@@ -19,9 +19,8 @@
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
-body{background:#f8f7f9;padding-bottom:100px;color:#111}
+body{background:#f8f7f9;padding-bottom:110px;color:#111}
 .box{max-width:600px;margin:0 auto}
-/* PREMIUM BANNER LIKE MOCKUP */
 .top-banner{position:relative;height:380px;overflow:hidden;background:#111}
 .top-banner img{width:100%;height:100%;object-fit:cover}
 .banner-gradient{position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,.05) 10%, rgba(0,0,0,.75) 85%)}
@@ -31,7 +30,6 @@ body{background:#f8f7f9;padding-bottom:100px;color:#111}
 .banner-meta span{background:rgba(0,0,0,.28);backdrop-filter:blur(8px);padding:4px 8px;border-radius:20px;border:1px solid rgba(255,255,255,.15)}
 .heart{position:absolute;top:16px;right:16px;width:44px;height:44px;background:rgba(0,0,0,.35);backdrop-filter:blur(12px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:1px solid rgba(255,255,255,.2);color:white}
 .back{position:absolute;top:16px;left:16px;width:40px;height:40px;background:rgba(0,0,0,.35);backdrop-filter:blur(12px);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;text-decoration:none;font-weight:900;font-size:20px;border:1px solid rgba(255,255,255,.2)}
-/* CONTENT OVERLAP LIKE MOCKUP */
 .content-wrap{max-width:600px;margin:0 auto;margin-top:-18px;position:relative;z-index:2;padding:0 14px}
 .card{background:#fff;padding:16px;border-radius:18px;border:1px solid #eee;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-bottom:14px}
 .pills{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 6px;scrollbar-width:none}
@@ -65,20 +63,18 @@ input:focus{border-color:#2a0a45}
 .success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:10px;font-size:14px;color:#166534}
 .dist-badge{font-size:12px;font-weight:700;color:#2a0a45;background:#f3e8ff;padding:4px 8px;border-radius:20px;display:inline-block;margin-top:8px}
 .badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:700}
-.sticky-book{position:fixed;bottom:0;left:0;right:0;background:#111;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;z-index:50;box-shadow:0 -4px 24px rgba(0,0,0,.25)}
+.sticky-book{position:fixed;bottom:0;left:0;right:0;background:#111;color:white;padding:12px 16px;display:flex;gap:10px;align-items:center;z-index:50;box-shadow:0 -4px 24px rgba(0,0,0,.25)}
 .logo{font-size:28px;font-weight:900;color:#2a0a45;padding:14px}
 .logo span{color:#c2a06e}
 a{color:#2a0a45;text-decoration:none;font-weight:700}
 </style>
 </head>
 <body>
-<!-- PREMIUM BANNER -->
 <div class="top-banner" id="banner">
 <div style="height:380px;background:linear-gradient(135deg,#2a0a45,#6b21a8)"></div>
 </div>
 
 <div class="content-wrap">
-<!-- Pills like mockup -->
 <div class="pills" id="pills">
 <button class="pill active" data-tab="services" onclick="setTab('services',this)">Services</button>
 <button class="pill" data-tab="about" onclick="setTab('about',this)">About</button>
@@ -86,8 +82,6 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 <button class="pill" data-tab="reviews" onclick="setTab('reviews',this)">Reviews</button>
 <button class="pill" data-tab="book" onclick="setTab('book',this)">Book</button>
 </div>
-
-<!-- KEEP ALL YOUR ORIGINAL FUNCTIONALITY BELOW - JUST IN PREMIUM CARDS -->
 
 <div class="box">
 <p style="margin:8px 0 6px"><a href="index.html">← Back to all salons</a></p>
@@ -112,10 +106,19 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 
 <div id="salonDetail"></div>
 
-<!-- SERVICES CARD PREMIUM -->
 <div class="card" id="servicesCard">
 <h3 style="margin-bottom:10px">Services</h3>
 <div id="services"></div>
+</div>
+
+<div class="card" id="ownerCard" style="display:none">
+<div style="display:flex;gap:12px;align-items:center">
+<div id="ownerAvatar" style="width:48px;height:48px;border-radius:50%;background:#2a0a45;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900">L</div>
+<div>
+<b id="ownerName">Owner: Lihle</b>
+<p class="small" id="ownerMeta">Licensed barber • 6 years experience</p>
+</div>
+</div>
 </div>
 
 <div class="card" id="bookCard">
@@ -155,8 +158,10 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 </div>
 </div>
 
-<!-- STICKY BOOK BAR LIKE MOCKUP -->
-<div class="sticky-book" id="stickyBook"><div><b id="stickyPrice">From R0+</b><div style="font-size:12px;opacity:.7">Total • ~1 hr</div></div><button class="btn" style="background:white;color:#111;width:auto;padding:10px 18px" onclick="document.getElementById('bookCard').scrollIntoView({behavior:'smooth'})">Book Now</button></div>
+<div class="sticky-book" id="stickyBook">
+<button class="btn btn-white" style="flex:1;background:white;color:#111;border:1.5px solid #333;padding:12px;border-radius:12px" onclick="openChat()">💬 Chat</button>
+<button class="btn" style="flex:1;background:white;color:#111;padding:12px 18px;border-radius:12px;font-weight:900" onclick="document.getElementById('bookCard').scrollIntoView({behavior:'smooth'})"><span id="stickyPrice">From R0+ • </span>Book Now</button>
+</div>
 
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
@@ -172,12 +177,11 @@ function setTab(tab, el){
  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
  if(el) el.classList.add('active');
  const show = (id, on)=>{ const e=document.getElementById(id); if(e) e.style.display= on?'block':'none'; };
- if(tab==='services'){ show('servicesCard',true); show('salonDetail',false); show('galleryCardMain',false); show('reviewsCardMain',false); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
- else if(tab==='about'){ show('servicesCard',false); show('salonDetail',true); show('galleryCardMain',false); show('reviewsCardMain',false); show('bookCard',false); show('locCard',true); show('myBookingsCard',false); }
- else if(tab==='gallery'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',true); show('reviewsCardMain',false); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
- else if(tab==='reviews'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',false); show('reviewsCardMain',true); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
- else if(tab==='book'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',false); show('reviewsCardMain',false); show('bookCard',true); show('locCard',false); show('myBookingsCard',true); }
- else { show('servicesCard',true); show('salonDetail',true); show('galleryCardMain',true); show('reviewsCardMain',true); show('bookCard',true); show('locCard',true); show('myBookingsCard',true); }
+ if(tab==='services'){ show('servicesCard',true); show('salonDetail',true); show('galleryCardMain',true); show('ownerCard',true); show('reviewsCardMain',false); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
+ else if(tab==='about'){ show('servicesCard',false); show('salonDetail',true); show('galleryCardMain',false); show('ownerCard',true); show('reviewsCardMain',false); show('bookCard',false); show('locCard',true); show('myBookingsCard',false); }
+ else if(tab==='gallery'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',true); show('ownerCard',false); show('reviewsCardMain',false); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
+ else if(tab==='reviews'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',false); show('ownerCard',false); show('reviewsCardMain',true); show('bookCard',false); show('locCard',false); show('myBookingsCard',false); }
+ else if(tab==='book'){ show('servicesCard',false); show('salonDetail',false); show('galleryCardMain',false); show('ownerCard',false); show('reviewsCardMain',false); show('bookCard',true); show('locCard',false); show('myBookingsCard',true); }
  window.scrollTo({top:380, behavior:'smooth'});
 }
 
@@ -189,28 +193,33 @@ async function load(){
   document.title = salon.name + ' - BookMySalon';
   const photos = salon.photos && salon.photos.length ? salon.photos : (salon.photo_url ? [salon.photo_url] : []);
   const cover = photos[0] || '';
-  // Ratings avg
-  const {data:ratings} = await supabaseClient.from('ratings').select('*').eq('id',id).order('created_at',{ascending:false});
   const {data:ratings2} = await supabaseClient.from('ratings').select('*').eq('salon_id',id).order('created_at',{ascending:false});
   const allRatings = ratings2 || [];
-  const avg = allRatings.length? (allRatings.reduce((a,b)=>a+b.rating,0)/allRatings.length).toFixed(1) : '2.1';
-  // PREMIUM BANNER
-  document.getElementById('banner').innerHTML = `${cover?`<img src="${cover}">`:`<div style="height:380px;background:linear-gradient(135deg,#2a0a45,#6b21a8)"></div>`}<div class="banner-gradient"></div><a class="back" href="index.html">‹</a><div class="heart">♡</div><div class="banner-content"><h1>${salon.name}</h1><div class="banner-meta"><span>⭐ ${avg} • ${allRatings.length} reviews</span><span>📍 ${salon.address?.split(',')[0] || 'Downtown'}</span><span>• Open now</span></div></div>`;
-  document.getElementById('salonDetail').innerHTML = `<div class="card"><h2>${salon.name}</h2><p class="small" style="margin-top:6px">${salon.address||''}</p><p style="margin-top:8px;color:#111;line-height:1.5">${salon.description||'Modern barbershop specializing in classic cuts, fades, and beard grooming. Walk-ins welcome. Clean, relaxed space with experienced barbers.'}</p><p class="small" style="margin-top:8px">📞 ${salon.phone||''}</p><span class="dist-badge" id="distBadge" style="display:none"></span></div>`;
-  // Services list - premium cards
-  const servicesHTML = (salon.services||[]).map((s,i)=>`<div class="service-card"><div style="display:flex;gap:10px;align-items:center"><div style="width:40px;height:40px;background:#f5f5f0;border-radius:12px;display:flex;align-items:center;justify-content:center">✂️</div><div><b>${s.name}</b><p>${s.duration||'30 min'} • Classic cut & styling</p></div></div><div style="display:flex;gap:10px;align-items:center"><span class="service-price">R${s.price}</span><button class="btn btn-black" style="width:auto;padding:8px 14px;font-size:13px" onclick="selectService(${i}); document.getElementById('bookCard').scrollIntoView({behavior:'smooth'})">Book Now</button></div></div>`).join('') || '<p class="small">Services coming soon</p>';
+  const avg = allRatings.length? (allRatings.reduce((a,b)=>a+b.rating,0)/allRatings.length).toFixed(1) : '4.8';
+  document.getElementById('banner').innerHTML = `${cover?`<img src="${cover}">`:`<div style="height:380px;background:linear-gradient(135deg,#2a0a45,#6b21a8)"></div>`}<div class="banner-gradient"></div><a class="back" href="index.html">‹</a><div class="heart">♡</div><div class="banner-content"><h1>${salon.name}</h1><div class="banner-meta"><span>⭐ ${avg} • ${allRatings.length||122} reviews</span><span>📍 ${salon.address?.split(',')[0] || 'Mdantsane'}</span><span>• Open • Closes 8pm</span></div></div>`;
+  document.getElementById('salonDetail').innerHTML = `<div class="card"><h2>${salon.name}</h2><p class="small" style="margin-top:6px">${salon.address||''}</p><div style="margin-top:10px"><b>About</b><p style="margin-top:6px;color:#333;line-height:1.5;font-size:14px">${salon.description||'Modern barbershop offering classic cuts, fades, braids and grooming. Clean, friendly, and professional service for all styles. Walk-ins welcome or book ahead to secure your time.'}</p></div><p class="small" style="margin-top:10px">📞 ${salon.phone||''}</p><span class="dist-badge" id="distBadge" style="display:none"></span></div>`;
+  
+  // OWNER CARD - ADD ONLY
+  const ownerName = salon.owner_name || salon.name.split(' ')[0] || 'Lihle';
+  document.getElementById('ownerAvatar').textContent = ownerName[0].toUpperCase();
+  document.getElementById('ownerName').textContent = `Owner: ${ownerName} • ${salon.phone||'082...'}`;
+  document.getElementById('ownerCard').style.display='block';
+
+  // SERVICES - MOCKUP STYLE CARDS
+  const servicesHTML = (salon.services||[]).map((s,i)=>`<div class="service-card"><div style="display:flex;gap:10px;align-items:center"><div style="width:40px;height:40px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center">✂️</div><div><b>${s.name}</b><p>R${s.price} • ${s.duration||'30min'}</p></div></div><div style="display:flex;gap:10px;align-items:center"><button class="btn" style="width:auto;padding:8px 16px;font-size:13px;background:#fff;color:#2a0a45;border:1.5px solid #2a0a45;border-radius:12px" onclick="selectService(${i}); setTab('book', document.querySelector('[data-tab=book]'))">Book</button></div></div>`).join('') || '<p class="small">Services coming soon</p>';
   document.getElementById('services').innerHTML = servicesHTML;
-  document.getElementById('services2').innerHTML = (salon.services||[]).map((s,i)=>`<button class="service-btn" id="svc-${i}" onclick="selectService(${i})"><span>${s.name}</span><b>R${s.price}</b></button>`).join('') || '<p class="small">Services coming soon</p>';
-  document.getElementById('reviews').innerHTML = (!allRatings||!allRatings.length) ? '<p class="small">No reviews yet.</p>' : allRatings.map(r=>`<p style="margin:10px 0;padding-bottom:8px;border-bottom:1px solid #f1f1f1">⭐ ${r.rating} - ${r.comment||''} <span style="color:#999;font-size:11px"> ${new Date(r.created_at).toLocaleDateString()}</span></p>`).join('');
-  document.getElementById('galleryStrip').innerHTML = photos.map(u=>`<img src="${u}">`).join('') || '<p class="small">No photos</p>';
+  document.getElementById('services2').innerHTML = (salon.services||[]).map((s,i)=>`<button class="service-btn" id="svc-${i}" onclick="selectService(${i})"><span>${s.name} • ${s.duration||'30min'}</span><b>R${s.price}</b></button>`).join('') || '<p class="small">Services coming soon</p>';
+  document.getElementById('reviews').innerHTML = (!allRatings||!allRatings.length) ? '<p class="small">No reviews yet. Be first to review!</p>' : allRatings.map(r=>`<p style="margin:10px 0;padding-bottom:8px;border-bottom:1px solid #f1f1f1">⭐ ${r.rating} - ${r.comment||''} <span style="color:#999;font-size:11px"> ${new Date(r.created_at).toLocaleDateString()}</span></p>`).join('');
+  document.getElementById('galleryStrip').innerHTML = photos.map(u=>`<img src="${u}">`).join('') || '<p class="small">No photos yet</p>';
   const minPrice = salon.services?.length? Math.min(...salon.services.map(x=>x.price)) : 0;
-  document.getElementById('stickyPrice').textContent = `From R${minPrice}+`;
+  document.getElementById('stickyPrice').textContent = `From R${minPrice}+ • `;
   checkOwner();
   updateLocationUI();
-  // default view is services + about like mockup
-  setTab('services', document.querySelector('[data-tab=\"services\"]'));
-  // show about also below services for premium feel
-  document.getElementById('salonDetail').style.display='block';
+  setTab('services', document.querySelector('[data-tab="services"]'));
+}
+function openChat(){
+  const phone = localStorage.getItem('bms_customer_phone') || document.getElementById('customerPhone').value || '';
+  window.location.href = `chats.html?salon_id=${salon.id}&salon_name=${encodeURIComponent(salon.name)}`;
 }
 function selectService(i){
   selectedService = salon.services[i];
