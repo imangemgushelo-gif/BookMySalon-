@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Login - BookMySalon</title>
+<meta name="theme-color" content="#2a0a45">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#fff;color:#111;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.box{max-width:400px;width:100%}
+.card{background:#fff;padding:24px;border-radius:20px;border:1px solid #eee;box-shadow:0 8px 32px rgba(0,0,0,.08)}
+.logo{font-size:28px;font-weight:900;color:#2a0a45;text-align:center;margin-bottom:6px}
+.logo span{color:#c2a06e}
+.small{font-size:13px;color:#777;text-align:center;margin-bottom:18px}
+input{width:100%;padding:14px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;margin:8px 0;outline:none}
+input:focus{border-color:#2a0a45}
+.btn{width:100%;background:#2a0a45;color:#fff;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;margin-top:10px}
+.btn-light{background:#fff;color:#111;border:1.5px solid #e5e5e5}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.success{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;display:none;margin-top:12px;color:#166534;font-size:14px}
+a{color:#2a0a45;text-decoration:none;font-weight:700}
+.top-back{margin-bottom:12px;display:block}
+</style>
+</head>
+<body>
+<div class="box">
+<a href="index.html" class="top-back">← Back to salons</a>
+<div class="card">
+<div class="logo">BookMy<span>Salon</span></div>
+<p class="small">Login with your phone to book & chat</p>
+
+<div id="loggedBox" style="display:none">
+<p style="font-weight:800;margin-bottom:8px">You are logged in as:</p>
+<p id="loggedPhone" style="font-size:16px;font-weight:700;color:#2a0a45"></p>
+<p id="loggedName" class="small" style="text-align:left;margin-top:4px"></p>
+<button class="btn" onclick="goToSalons()">Continue to Salons →</button>
+<button class="btn btn-light" style="margin-top:10px" onclick="logout()">🚪 Logout & Switch Number</button>
+</div>
+
+<div id="loginBox">
+<label style="font-weight:700;font-size:13px">Your Full Name</label>
+<input id="customerName" placeholder="e.g. Lihle Dlamini">
+<label style="font-weight:700;font-size:13px">Your Phone Number</label>
+<input id="customerPhone" placeholder="e.g. 082 123 4567" inputmode="numeric">
+<p class="small" style="text-align:left;margin:6px 0">We use your phone to show your bookings & chats. 10 digits, starts with 0.</p>
+<button class="btn" id="loginBtn" onclick="doLogin()">Login →</button>
+<div class="success" id="successBox">✅ Logged in! Redirecting...</div>
+<p class="small" style="margin-top:14px">Are you a salon owner? <a href="dashboard.html">Owner Login →</a></p>
+</div>
+</div>
+</div>
+
+<script>
+function normalizePhone(p){ return (p||'').replace(/[\s\-\(\)\+]/g,''); }
+function isValidSAPhone(phone){
+  const cleaned = normalizePhone(phone);
+  let p = cleaned;
+  if(p.startsWith('27') && p.length===11) p = '0' + p.slice(2);
+  if(!/^\d+$/.test(p)) return false;
+  if(p.length!==10) return false;
+  if(!p.startsWith('0')) return false;
+  return true;
+}
+function getRedirect(){
+  const params = new URLSearchParams(location.search);
+  return params.get('redirect') || params.get('next') || 'index.html';
+}
+function checkLogged(){
+  try{
+    const phone = localStorage.getItem('bms_customer_phone');
+    const name = localStorage.getItem('bms_customer_name');
+    if(phone){
+      document.getElementById('loginBox').style.display='none';
+      document.getElementById('loggedBox').style.display='block';
+      document.getElementById('loggedPhone').textContent = phone;
+      document.getElementById('loggedName').textContent = name ? name : '';
+    }
+  }catch(e){}
+}
+function goToSalons(){
+  window.location.href = getRedirect();
+}
+function logout(){
+  try{
+    localStorage.removeItem('bms_customer_phone');
+    localStorage.removeItem('bms_customer_name');
+    localStorage.removeItem('bms_role');
+  }catch(e){}
+  location.reload();
+}
+function doLogin(){
+  const name = document.getElementById('customerName').value.trim();
+  const phone = document.getElementById('customerPhone').value.trim();
+  if(!name){ alert('Please enter your name'); return; }
+  if(!phone){ alert('Please enter your phone'); return; }
+  if(!isValidSAPhone(phone)){
+    alert('Enter valid SA phone - 10 digits starting with 0, e.g. 082 123 4567');
+    return;
+  }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = 'Logging in...';
+  try{
+    localStorage.setItem('bms_customer_phone', phone);
+    localStorage.setItem('bms_customer_name', name);
+    localStorage.setItem('bms_role', 'customer');
+    // Keep owner data separate, don't delete owner
+  }catch(e){}
+  document.getElementById('successBox').style.display='block';
+  setTimeout(()=>{ window.location.href = getRedirect(); }, 800);
+}
+try{
+  const savedPhone = localStorage.getItem('bms_customer_phone');
+  const savedName = localStorage.getItem('bms_customer_name');
+  if(savedPhone) document.getElementById('customerPhone').value = savedPhone;
+  if(savedName) document.getElementById('customerName').value = savedName;
+}catch(e){}
+checkLogged();
+</script>
+</body>
+  </html>
