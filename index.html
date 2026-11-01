@@ -115,6 +115,17 @@ input:focus,select:focus{border-color:#111}
   <div class="logo logo-small">Book<span>My</span>Salon</div>
   <a href="#" onclick="switchRole();return false;" style="font-size:12px;color:#777;text-decoration:none">Switch: Owner ↺</a>
 </div>
+
+<!-- LOGIN HEADER - VERSION 1 - ADDED -->
+<div id="loginHeader" style="margin:10px 0 12px;padding:0;display:flex;align-items:center;justify-content:space-between;gap:8px">
+  <span id="loginStatus" style="font-size:14px;color:#111;font-weight:700">👋 Hi, Guest</span>
+  <div style="display:flex;gap:8px;align-items:center">
+    <a id="myBookingsLink" href="#" onclick="handleNav('bookings');return false;" style="display:none;font-size:12px;background:#fff;color:#111;border:1.5px solid #e5e5e5;padding:7px 12px;border-radius:20px;text-decoration:none;font-weight:700">📅 My Bookings</a>
+    <a id="loginBtn" href="customer-login.html" style="font-size:12px;background:#2a0a45;color:white;padding:8px 14px;border-radius:20px;text-decoration:none;font-weight:800">Login</a>
+    <a id="logoutBtn" href="#" onclick="logoutUser();return false;" style="display:none;font-size:12px;background:#fff;border:1.5px solid #e5e5e5;padding:7px 12px;border-radius:20px;text-decoration:none;font-weight:700;color:#111">↪ Logout</a>
+  </div>
+</div>
+
 <div class="tabs" style="display:none">
 <button id="tabHome" class="active" onclick="showTab('home')">Find Salon</button>
 <button id="tabMy" onclick="showTab('my')">My Bookings</button>
@@ -272,6 +283,7 @@ function chooseRole(role){
   document.getElementById('customerHome').style.display='block'; 
   document.getElementById('bottomNav').style.display='flex'; 
   updateLogoutVisibility(); 
+  updateLoginHeader();
   loadSalons(); 
   updateLocUI(); 
 }
@@ -285,44 +297,6 @@ function switchRole(){
 
 function setCategory(cat,el){ selectedCategory=cat; document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active')); if(el) el.classList.add('active'); renderSalons(); }
 function showTab(tab){ document.getElementById('tabHome')?.classList.toggle('active',tab==='home'); document.getElementById('tabMy')?.classList.toggle('active',tab==='my'); document.getElementById('homeTab').style.display=tab==='home'?'block':'none'; document.getElementById('myTab').style.display=tab==='my'?'block':'none'; }
-
-async function loadSalons(){
-  try{
-    let salons = null;
-    let error = null;
-    
-    // Try 'salons' first, then 'salon' if it fails (your old table might be singular)
-    let res = await supabaseClient.from('salons').select('*').order('created_at',{ascending:false});
-    if(res.error && res.error.message.includes('schema cache')){
-      console.log('salons not found, trying salon...');
-      res = await supabaseClient.from('salon').select('*').order('created_at',{ascending:false});
-    }
-    if(res.error) throw res.error;
-    allSalons = res.data || [];
-    
-    // ratings - try both too
-    let rRes = await supabaseClient.from('ratings').select('*');
-    if(rRes.error && rRes.error.message.includes('schema cache')){
-      rRes = await supabaseClient.from('rating').select('*');
-    }
-    allRatings = {};
-    (rRes.data||[]).forEach(r=>{
-      if(!allRatings[r.salon_id]) allRatings[r.salon_id]=[];
-      allRatings[r.salon_id].push(r);
-    });
-    renderSalons();
-  }catch(e){
-    console.log(e);
-    document.getElementById('salonList').innerHTML=`
-      <div class="card">
-        <b>Error loading: ${e.message}</b><br><br>
-        <span class="small">Fix: Go to Supabase Dashboard > Table Editor > Check if table is called <b>salon</b> or <b>salons</b>.<br><br>
-        Then go to Supabase > API Docs > Reload schema (or run in SQL Editor: <code>NOTIFY pgrst, 'reload schema';</code>)</span>
-        <br><br>
-        <button class="btn" onclick="loadSalons()">Retry ↺</button>
-      </div>`;
-  }
-}
 
 function getRating(salonId){ const list=allRatings[salonId]||[]; if(list.length===0) return {avg:0,count:0}; const avg=list.reduce((a,b)=>a+b.rating,0)/list.length; return {avg,count:list.length}; }
 function getGallery(s){ if(s.photos&&Array.isArray(s.photos)&&s.photos.length>0) return s.photos.slice(0,10); if(s.photo_url) return [s.photo_url]; return []; }
@@ -397,19 +371,37 @@ function normalizePhone(phone){ return (phone||'').replace(/[\s\-\(\)\+]/g,''); 
 function isValidSAPhone(phone){ const cleaned=normalizePhone(phone); let p=cleaned; if(p.startsWith('27')&&p.length===11) p='0'+p.slice(2); if(!/^\d+$/.test(p)) return false; if(p.length!==10) return false; if(!p.startsWith('0')) return false; return true; }
 function isPastTime(dateStr,timeStr){ const today=new Date().toISOString().split('T')[0]; if(dateStr!==today) return false; const now=new Date(); const [hh,mm]=timeStr.split(':').map(Number); const bookingDateTime=new Date(); bookingDateTime.setHours(hh,mm,0,0); return bookingDateTime<=now; }
 async function confirmBooking(){
+// CUSTOMER LOGIN GATE - ADDED
+try{
+  const loggedPhone = localStorage.getItem('bms_customer_phone');
+  if(!loggedPhone){
+    alert('Please login first');
+    window.location.href = 'customer-login.html?redirect=index.html';
+    return;
+  }
+}catch(e){}
 if(!selectedService){ alert('Please choose a service'); return; }
-const customer_name=document.getElementById('customerName').value.trim();
-const customer_phone=document.getElementById('customerPhone').value.trim();
+let customer_name=document.getElementById('customerName').value.trim();
+let customer_phone=document.getElementById('customerPhone').value.trim();
 const booking_date=document.getElementById('bookingDate').value;
 const booking_time=document.getElementById('bookingTime').value;
 if(!customer_name||!customer_phone||!booking_date||!booking_time){ alert('Please fill all fields'); return; }
 if(!isValidSAPhone(customer_phone)){ alert('Please enter valid SA phone'); return; }
+// ENFORCE LOGGED PHONE - ADDED
+try{
+  const loggedPhone = localStorage.getItem('bms_customer_phone');
+  if(loggedPhone && normalizePhone(loggedPhone) !== normalizePhone(customer_phone)){
+    alert(`You are logged in as ${loggedPhone}. Please use your logged phone.`);
+    document.getElementById('customerPhone').value = loggedPhone;
+    return;
+  }
+}catch(e){}
 if(isPastTime(booking_date,booking_time)){ alert('Time already passed'); return; }
 const btn=document.getElementById('confirmBtn'); if(btn.disabled) return; btn.disabled=true; btn.textContent='Checking...';
 const cleanPhone=normalizePhone(customer_phone);
 const {data:existing}=await supabaseClient.from('bookings').select('id').eq('salon_id',selectedSalon.id).eq('booking_date',booking_date).eq('booking_time',booking_time).eq('customer_phone',customer_phone).neq('status','cancelled');
 if(existing&&existing.length>0){ alert('You already have this booking'); btn.disabled=false; btn.textContent='Confirm Booking →'; return; }
-try{ localStorage.setItem('bms_role','customer'); localStorage.setItem('bms_customer_name',customer_name); localStorage.setItem('bms_customer_phone',customer_phone); updateLogoutVisibility(); }catch(e){}
+try{ localStorage.setItem('bms_role','customer'); localStorage.setItem('bms_customer_name',customer_name); localStorage.setItem('bms_customer_phone',customer_phone); updateLogoutVisibility(); updateLoginHeader(); }catch(e){}
 btn.textContent='Booking...';
 const {error}=await supabaseClient.from('bookings').insert([{salon_id:selectedSalon.id,service:selectedService.name,price:selectedService.price,customer_name,customer_phone,booking_date,booking_time,status:'pending'}]);
 btn.disabled=false; btn.textContent='Confirm Booking →';
@@ -443,7 +435,39 @@ if(error){ alert(error.message); return; }
 document.getElementById('ratingSuccess').style.display='block';
 setTimeout(()=>{ closeRatingModal(); loadMyBookings(); loadSalons(); }, 1000);
 }
-function updateLogoutVisibility(){ try{ const hasLogin = localStorage.getItem('bms_customer_phone') || localStorage.getItem('bms_owner_phone'); document.getElementById('logoutRow').style.display = hasLogin ? 'flex' : 'none'; }catch(e){} }
+
+// VERSION 1 HEADER LOGIC - ADDED
+function updateLoginHeader(){
+  try{
+    const phone = localStorage.getItem('bms_customer_phone');
+    const name = localStorage.getItem('bms_customer_name');
+    const ownerPhone = localStorage.getItem('bms_owner_phone');
+    const statusEl = document.getElementById('loginStatus');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const bookingsLink = document.getElementById('myBookingsLink');
+    if(!statusEl) return;
+    if(phone){
+      // VERSION 1 - LOGGED IN - SHOWS REAL NAME - DYNAMIC
+      statusEl.textContent = `👋 Hi, ${name || phone}`;
+      if(loginBtn) loginBtn.style.display='none';
+      if(logoutBtn) logoutBtn.style.display='block';
+      if(bookingsLink) bookingsLink.style.display='block';
+    } else if(ownerPhone){
+      statusEl.textContent = `👤 Owner: ${ownerPhone}`;
+      if(loginBtn) loginBtn.style.display='none';
+      if(logoutBtn) logoutBtn.style.display='block';
+      if(bookingsLink) bookingsLink.style.display='none';
+    } else {
+      // VERSION 1 - NOT LOGGED IN
+      statusEl.textContent = '👋 Hi, Guest';
+      if(loginBtn) loginBtn.style.display='block';
+      if(logoutBtn) logoutBtn.style.display='none';
+      if(bookingsLink) bookingsLink.style.display='none';
+    }
+  }catch(e){}
+}
+function updateLogoutVisibility(){ try{ const hasLogin = localStorage.getItem('bms_customer_phone') || localStorage.getItem('bms_owner_phone'); document.getElementById('logoutRow').style.display = hasLogin ? 'flex' : 'none'; updateLoginHeader(); }catch(e){} }
 function logoutUser(){ try{ localStorage.removeItem('bms_role'); localStorage.removeItem('bms_customer_phone'); localStorage.removeItem('bms_customer_name'); localStorage.removeItem('bms_owner_phone'); localStorage.removeItem('bms_salon_id'); localStorage.removeItem('bms_user_location'); }catch(e){} window.location.reload(); }
 function restoreCustomerSession(){
 try{
@@ -456,7 +480,7 @@ if(role === 'customer'){
   document.getElementById('bottomNav').style.display = 'flex';
 }
 if(phone){ document.getElementById('myPhone').value = phone; const cp=document.getElementById('customerPhone'); if(cp) cp.value = phone; if(name){ const cn=document.getElementById('customerName'); if(cn) cn.value = name; } }
-updateLogoutVisibility(); updateLocUI();
+updateLogoutVisibility(); updateLocUI(); updateLoginHeader();
 }catch(e){}
 }
 document.getElementById('bookingDate').min = new Date().toISOString().split('T')[0];
