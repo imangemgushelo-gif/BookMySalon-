@@ -64,7 +64,7 @@ input:focus,select:focus{border-color:#111}
 .btn-cancel{background:#fff;color:#991b1b;border:1.5px solid #fecaca}
 .dist-badge{font-size:12px;font-weight:700;color:#111;background:#f3f3f3;padding:4px 8px;border-radius:20px}
 .loc-status{font-size:13px;color:#166534;font-weight:700;margin:6px 0 10px;display:none}
-.welcome-card{border-radius:18px;padding:20px;margin-bottom:12px;cursor:pointer}
+.welcome-card{border-radius:18px;padding:20px;margin-bottom:12px;cursor:pointer;user-select:none;-webkit-tap-highlight-color: transparent}
 .welcome-customer{background:#111;color:#fff}
 .welcome-owner{background:#fff;border:1.5px solid #eee}
 .sticky-search{position:sticky;top:0;background:#fff;padding:10px 0 8px;z-index:10}
@@ -88,7 +88,6 @@ input:focus,select:focus{border-color:#111}
 .fav-btn.active{background:#fff;color:#e11d48}
 .search-premium{width:100%;padding:14px 14px 14px 42px;border:1.5px solid #e5e5e5;border-radius:14px;font-size:15px;background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="%23888" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>') no-repeat 14px center;outline:none}
 .search-premium:focus{border-color:#111}
-/* NEW - All Areas picker */
 .area-opt{width:100%;text-align:left;padding:16px 20px;background:#fff;border:0;border-bottom:1px solid #f5f5f5;font-size:15px;font-weight:500;color:#111;cursor:pointer}
 .area-opt:hover{background:#f9f9f9}
 </style>
@@ -179,7 +178,6 @@ input:focus,select:focus{border-color:#111}
 <button id="navBookings" onclick="handleNav('bookings')"><span class="icon">👤</span>My Bookings</button>
 </div>
 
-<!-- AREA PICKER MODAL - THIS WAS MISSING -->
 <div class="modal" id="areaModal">
 <div class="modal-box" style="padding:0;overflow:hidden">
 <div style="padding:18px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee">
@@ -241,9 +239,11 @@ input:focus,select:focus{border-color:#111}
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 let allSalons=[],allRatings={},selectedSalon=null,selectedService=null,ratingBooking=null,ratingStars=0,selectedCategory='',userLocation=null,sortByDistance=false,favFilterActive=false;
 try{ const savedLoc = localStorage.getItem('bms_user_location'); if(savedLoc){ userLocation = JSON.parse(savedLoc); sortByDistance = true; } }catch(e){}
+
 function getFavorites(){ try{ return JSON.parse(localStorage.getItem('bms_favorites')||'[]'); }catch(e){ return []; } }
 function isFav(id){ return getFavorites().includes(id); }
 function toggleFav(id,e){ if(e){ e.stopPropagation(); e.preventDefault(); } let favs=getFavorites(); if(favs.includes(id)){ favs=favs.filter(x=>x!==id);} else favs.push(id); localStorage.setItem('bms_favorites',JSON.stringify(favs)); renderSalons(); }
+
 function handleNav(type){
   document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
   if(type==='home'){ favFilterActive=false; document.getElementById('navHome').classList.add('active'); showTab('home'); renderSalons(); }
@@ -251,7 +251,7 @@ function handleNav(type){
   else if(type==='favs'){ favFilterActive=true; document.getElementById('navFavs').classList.add('active'); showTab('home'); renderSalons(); }
   else if(type==='bookings'){ document.getElementById('navBookings').classList.add('active'); showTab('my'); }
 }
-// NEW AREA PICKER FUNCTIONS - THIS WAS MISSING
+
 function openAreaPicker(){ document.getElementById('areaModal').classList.add('open'); }
 function closeAreaPicker(){ document.getElementById('areaModal').classList.remove('open'); }
 function setArea(area){
@@ -261,39 +261,46 @@ function setArea(area){
   closeAreaPicker();
   loadSalons();
 }
-function chooseRole(role){ try{ localStorage.setItem('bms_role', role); }catch(e){} if(role==='owner'){ window.location.href='dashboard.html'; return; } document.getElementById('welcomeScreen').style.display='none'; document.getElementById('customerHome').style.display='block'; document.getElementById('bottomNav').style.display='flex'; updateLogoutVisibility(); loadSalons(); updateLocUI(); }
-function switchRole(){ try{ localStorage.removeItem('bms_role'); }catch(e){} document.getElementById('customerHome').style.display='none'; document.getElementById('bottomNav').style.display='none'; document.getElementById('welcomeScreen').style.display='block'; }
+
+function chooseRole(role){ 
+  try{ localStorage.setItem('bms_role', role); }catch(e){}
+  if(role==='owner'){ 
+    window.location.href='dashboard.html'; 
+    return; 
+  } 
+  document.getElementById('welcomeScreen').style.display='none'; 
+  document.getElementById('customerHome').style.display='block'; 
+  document.getElementById('bottomNav').style.display='flex'; 
+  updateLogoutVisibility(); 
+  loadSalons(); 
+  updateLocUI(); 
+}
+
+function switchRole(){ 
+  try{ localStorage.removeItem('bms_role'); }catch(e){}
+  document.getElementById('customerHome').style.display='none'; 
+  document.getElementById('bottomNav').style.display='none'; 
+  document.getElementById('welcomeScreen').style.display='block'; 
+}
+
 function setCategory(cat,el){ selectedCategory=cat; document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active')); if(el) el.classList.add('active'); renderSalons(); }
 function showTab(tab){ document.getElementById('tabHome')?.classList.toggle('active',tab==='home'); document.getElementById('tabMy')?.classList.toggle('active',tab==='my'); document.getElementById('homeTab').style.display=tab==='home'?'block':'none'; document.getElementById('myTab').style.display=tab==='my'?'block':'none'; }
-async function loadSalon() {
-  const input = document.querySelector('input[type="tel"], input[placeholder*="Phone"]').value.trim();
-  const phone = input.replace(/\s+/g,''); // remove spaces
-  
-  if(!phone){ alert('Enter your phone'); return; }
-  
-  console.log('Trying to load:', phone);
-  
-  const { data, error } = await supabase
-    .from('salons')
-    .select('*')
-    .eq('phone', phone)
-    .maybeSingle();
 
-  if(error){ 
-    alert('Error: '+error.message); 
-    console.log(error); 
-    return; 
-  }
-  if(!data){ 
-    alert('No salon found with phone: '+phone+'\nCheck Supabase > salons table'); 
-    return; 
-  }
-  
+async function loadSalon() {
+  const input = document.querySelector('input[type="tel"], input[placeholder*="Phone"]');
+  const val = input ? input.value.trim() : '';
+  const phone = val.replace(/\s+/g,'');
+  if(!phone){ alert('Enter your phone'); return; }
+  const { data, error } = await supabaseClient.from('salons').select('*').eq('phone', phone).maybeSingle();
+  if(error){ alert('Error: '+error.message); console.log(error); return; }
+  if(!data){ alert('No salon found with phone: '+phone); return; }
   localStorage.setItem('my_salon_phone', phone);
   localStorage.setItem('my_salon_id', data.id);
   alert('Loaded: '+data.name);
   location.reload();
-}function getRating(salonId){ const list=allRatings[salonId]||[]; if(list.length===0) return {avg:0,count:0}; const avg=list.reduce((a,b)=>a+b.rating,0)/list.length; return {avg,count:list.length}; }
+}
+
+function getRating(salonId){ const list=allRatings[salonId]||[]; if(list.length===0) return {avg:0,count:0}; const avg=list.reduce((a,b)=>a+b.rating,0)/list.length; return {avg,count:list.length}; }
 function getGallery(s){ if(s.photos&&Array.isArray(s.photos)&&s.photos.length>0) return s.photos.slice(0,10); if(s.photo_url) return [s.photo_url]; return []; }
 function galleryHTML(s){
 const gallery=getGallery(s);
@@ -314,15 +321,20 @@ function useMyLocation(){
   btn.textContent='Getting...';
   navigator.geolocation.getCurrentPosition((pos)=>{ userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude}; sortByDistance=true; try{ localStorage.setItem('bms_user_location',JSON.stringify(userLocation)); }catch(e){} status.style.display='block'; status.textContent='✅ Showing nearest salons first'; btn.textContent='Near Me ✓'; renderSalons(); },()=>{ btn.textContent='Near Me'; alert('Could not get location.'); },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
 }
-function updateLocUI(){ if(userLocation&&sortByDistance){ const status=document.getElementById('locStatus'); if(status){ status.style.display='block'; status.textContent='✅ Showing nearest salons first'; } const btn=document.getElementById('locBtn'); if(btn) btn.textContent='Near Me ✓'; } }
+function updateLocUI(){ 
+  if(userLocation&&sortByDistance){ 
+    const status=document.getElementById('locStatus'); 
+    if(status){ status.style.display='block'; status.textContent='✅ Showing nearest salons first'; } 
+    const btn=document.getElementById('locBtn'); 
+    if(btn) btn.textContent='Near Me ✓'; 
+  } 
 }
-// ADD ONLY - this was missing, needed for salon list + chats
+
 async function loadSalons(){
   try{
     const { data: salons, error } = await supabaseClient.from('salons').select('*').order('created_at',{ascending:false});
     if(error) throw error;
     allSalons = salons || [];
-    // load ratings
     const { data: ratings } = await supabaseClient.from('ratings').select('*');
     allRatings = {};
     (ratings||[]).forEach(r=>{
@@ -336,7 +348,6 @@ async function loadSalons(){
   }
 }
 
-async function loadRatings(){ /* kept for compatibility */ }
 function renderSalons(){
 const q=document.getElementById('searchInput').value.toLowerCase();
 const area=document.getElementById('areaFilter').value;
@@ -420,7 +431,7 @@ if(role === 'customer'){
   document.getElementById('customerHome').style.display = 'block';
   document.getElementById('bottomNav').style.display = 'flex';
 }
-if(phone){ document.getElementById('myPhone').value = phone; document.getElementById('customerPhone').value = phone; if(name) document.getElementById('customerName').value = name; }
+if(phone){ document.getElementById('myPhone').value = phone; const cp=document.getElementById('customerPhone'); if(cp) cp.value = phone; if(name){ const cn=document.getElementById('customerName'); if(cn) cn.value = name; } }
 updateLogoutVisibility(); updateLocUI();
 }catch(e){}
 }
