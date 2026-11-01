@@ -195,15 +195,15 @@ async function load(){
   const cover = photos[0] || '';
   const {data:ratings2} = await supabaseClient.from('ratings').select('*').eq('salon_id',id).order('created_at',{ascending:false});
   const allRatings = ratings2 || [];
-  const avg = allRatings.length? (allRatings.reduce((a,b)=>a+b.rating,0)/allRatings.length).toFixed(1) : '4.8';
-  document.getElementById('banner').innerHTML = `${cover?`<img src="${cover}">`:`<div style="height:380px;background:linear-gradient(135deg,#2a0a45,#6b21a8)"></div>`}<div class="banner-gradient"></div><a class="back" href="index.html">‹</a><div class="heart">♡</div><div class="banner-content"><h1>${salon.name}</h1><div class="banner-meta"><span>⭐ ${avg} • ${allRatings.length||122} reviews</span><span>📍 ${salon.address?.split(',')[0] || 'Mdantsane'}</span><span>• Open • Closes 8pm</span></div></div>`;
+  const avg = allRatings.length ? (allRatings.reduce((a,b)=>a+b.rating,0)/allRatings.length).toFixed(1) : 'New';
+  const countText = allRatings.length ? `${allRatings.length} review${allRatings.length!==1?'s':''}` : 'No reviews yet';
+  document.getElementById('banner').innerHTML = `${cover?`<img src="${cover}">`:`<div style="height:380px;background:linear-gradient(135deg,#2a0a45,#6b21a8)"></div>`}<div class="banner-gradient"></div><a class="back" href="index.html">‹</a><div class="heart">♡</div><div class="banner-content"><h1>${salon.name}</h1><div class="banner-meta"><span>⭐ ${avg} ${allRatings.length?`• ${countText}`:`• ${countText}`}</span><span>📍 ${salon.address?.split(',')[0] || 'Mdantsane'}</span><span>• Open • Closes 8pm</span></div></div>`;
   document.getElementById('salonDetail').innerHTML = `<div class="card"><h2>${salon.name}</h2><p class="small" style="margin-top:6px">${salon.address||''}</p><div style="margin-top:10px"><b>About</b><p style="margin-top:6px;color:#333;line-height:1.5;font-size:14px">${salon.description||'Modern barbershop offering classic cuts, fades, braids and grooming. Clean, friendly, and professional service for all styles. Walk-ins welcome or book ahead to secure your time.'}</p></div><p class="small" style="margin-top:10px">📞 ${salon.phone||''}</p><span class="dist-badge" id="distBadge" style="display:none"></span></div>`;
   
   // OWNER CARD - ADD ONLY
   const ownerName = salon.owner_name || salon.name.split(' ')[0] || 'Lihle';
   document.getElementById('ownerAvatar').textContent = ownerName[0].toUpperCase();
-  document.getElementById('ownerName').textContent = `Owner: ${ownerName} • ${salon.phone||'082...'}`;
-  document.getElementById('ownerCard').style.display='block';
+  document.getElementById('ownerName').text
 
   // SERVICES - MOCKUP STYLE CARDS
   const servicesHTML = (salon.services||[]).map((s,i)=>`<div class="service-card"><div style="display:flex;gap:10px;align-items:center"><div style="width:40px;height:40px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center">✂️</div><div><b>${s.name}</b><p>R${s.price} • ${s.duration||'30min'}</p></div></div><div style="display:flex;gap:10px;align-items:center"><button class="btn" style="width:auto;padding:8px 16px;font-size:13px;background:#fff;color:#2a0a45;border:1.5px solid #2a0a45;border-radius:12px" onclick="selectService(${i}); setTab('book', document.querySelector('[data-tab=book]'))">Book</button></div></div>`).join('') || '<p class="small">Services coming soon</p>';
