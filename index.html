@@ -286,18 +286,42 @@ function switchRole(){
 function setCategory(cat,el){ selectedCategory=cat; document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active')); if(el) el.classList.add('active'); renderSalons(); }
 function showTab(tab){ document.getElementById('tabHome')?.classList.toggle('active',tab==='home'); document.getElementById('tabMy')?.classList.toggle('active',tab==='my'); document.getElementById('homeTab').style.display=tab==='home'?'block':'none'; document.getElementById('myTab').style.display=tab==='my'?'block':'none'; }
 
-async function loadSalon() {
-  const input = document.querySelector('input[type="tel"], input[placeholder*="Phone"]');
-  const val = input ? input.value.trim() : '';
-  const phone = val.replace(/\s+/g,'');
-  if(!phone){ alert('Enter your phone'); return; }
-  const { data, error } = await supabaseClient.from('salons').select('*').eq('phone', phone).maybeSingle();
-  if(error){ alert('Error: '+error.message); console.log(error); return; }
-  if(!data){ alert('No salon found with phone: '+phone); return; }
-  localStorage.setItem('my_salon_phone', phone);
-  localStorage.setItem('my_salon_id', data.id);
-  alert('Loaded: '+data.name);
-  location.reload();
+async function loadSalons(){
+  try{
+    let salons = null;
+    let error = null;
+    
+    // Try 'salons' first, then 'salon' if it fails (your old table might be singular)
+    let res = await supabaseClient.from('salons').select('*').order('created_at',{ascending:false});
+    if(res.error && res.error.message.includes('schema cache')){
+      console.log('salons not found, trying salon...');
+      res = await supabaseClient.from('salon').select('*').order('created_at',{ascending:false});
+    }
+    if(res.error) throw res.error;
+    allSalons = res.data || [];
+    
+    // ratings - try both too
+    let rRes = await supabaseClient.from('ratings').select('*');
+    if(rRes.error && rRes.error.message.includes('schema cache')){
+      rRes = await supabaseClient.from('rating').select('*');
+    }
+    allRatings = {};
+    (rRes.data||[]).forEach(r=>{
+      if(!allRatings[r.salon_id]) allRatings[r.salon_id]=[];
+      allRatings[r.salon_id].push(r);
+    });
+    renderSalons();
+  }catch(e){
+    console.log(e);
+    document.getElementById('salonList').innerHTML=`
+      <div class="card">
+        <b>Error loading: ${e.message}</b><br><br>
+        <span class="small">Fix: Go to Supabase Dashboard > Table Editor > Check if table is called <b>salon</b> or <b>salons</b>.<br><br>
+        Then go to Supabase > API Docs > Reload schema (or run in SQL Editor: <code>NOTIFY pgrst, 'reload schema';</code>)</span>
+        <br><br>
+        <button class="btn" onclick="loadSalons()">Retry ↺</button>
+      </div>`;
+  }
 }
 
 function getRating(salonId){ const list=allRatings[salonId]||[]; if(list.length===0) return {avg:0,count:0}; const avg=list.reduce((a,b)=>a+b.rating,0)/list.length; return {avg,count:list.length}; }
