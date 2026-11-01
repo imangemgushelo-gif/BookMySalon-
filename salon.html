@@ -186,6 +186,18 @@ function setTab(tab, el){
 }
 
 async function load(){
+  // CUSTOMER LOGIN GATE - FIX
+  try{
+    const custPhone = localStorage.getItem('bms_customer_phone');
+    const ownerPhone = localStorage.getItem('bms_owner_phone');
+    const salonIdSaved = localStorage.getItem('bms_salon_id');
+    const isOwner = (salonIdSaved && String(salonIdSaved) === String(id)) || ownerPhone;
+    if(!custPhone && !isOwner){
+      window.location.href = `customer-login.html?redirect=salon.html?id=${id}`;
+      return;
+    }
+  }catch(e){}
+
   if(!id){ document.getElementById('salonDetail').innerHTML='<p>Salon not found. <a href="index.html">Go home</a></p>'; return; }
   const {data} = await supabaseClient.from('salons').select('*').eq('id',id).single();
   salon=data;
@@ -246,9 +258,19 @@ function isPastTime(dateStr, timeStr){
   return d <= now;
 }
 async function confirmBooking(){
+  // CUSTOMER LOGIN GATE - ADDED
+  try{
+    const loggedPhone = localStorage.getItem('bms_customer_phone');
+    if(!loggedPhone){
+      alert('Please login first');
+      window.location.href = `customer-login.html?redirect=salon.html?id=${id}`;
+      return;
+    }
+  }catch(e){}
+
   if(!selectedService){ alert('Please choose a service'); return; }
   const customer_name=document.getElementById('customerName').value.trim();
-  const customer_phone=document.getElementById('customerPhone').value.trim();
+  let customer_phone=document.getElementById('customerPhone').value.trim();
   const booking_date=document.getElementById('bookingDate').value;
   const booking_time=document.getElementById('bookingTime').value;
   if(!customer_name||!customer_phone||!booking_date||!booking_time){ alert('Please fill all fields'); return; }
@@ -257,6 +279,16 @@ async function confirmBooking(){
     document.getElementById('customerPhone').focus();
     return;
   }
+  // ENFORCE LOGGED PHONE IS THE REAL ONE - ADDED
+  try{
+    const loggedPhone = localStorage.getItem('bms_customer_phone');
+    if(loggedPhone && normalizePhone(loggedPhone) !== normalizePhone(customer_phone)){
+      alert(`You are logged in as ${loggedPhone}. Please use your logged phone number to book.`);
+      document.getElementById('customerPhone').value = loggedPhone;
+      customer_phone = loggedPhone;
+      return;
+    }
+  }catch(e){}
   if(isPastTime(booking_date, booking_time)){
     alert('You cannot book a time that has already passed today. Please choose a later time or another date.');
     return;
