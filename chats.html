@@ -19,7 +19,6 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 .input-row{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;padding:10px;display:flex;gap:8px;max-width:600px;margin:0 auto}
 .input-row input{flex:1;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;outline:none}
 .input-row button{background:#2a0a45;color:#fff;border:0;border-radius:12px;padding:13px 18px;font-weight:700;cursor:pointer}
-/* ADD ONLY - White design chat list enhancements */
 .card-chat{display:flex;gap:12px;align-items:center;padding:14px 16px}
 .avatar{width:48px;height:48px;border-radius:14px;background:#2a0a45;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0}
 .info{flex:1;min-width:0}
@@ -44,9 +43,12 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 // === FIX ADDED: INSTANT HELPERS BEFORE SUPABASE - SO IT NEVER STUCKS ===
 function normalizePhone(p){ return (p||'').replace(/[\s\-\(\)\+]/g,''); }
 function getLastRead(id){ try{ return localStorage.getItem('bms_chat_read_'+id)||''; }catch(e){ return ''; } }
+function setLastRead(id){ try{ localStorage.setItem('bms_chat_read_'+id, new Date().toISOString()); }catch(e){} }
+// FIX ADDED: safe encode for salon names with ' like Tyler's
+function safeEncode(str){ return encodeURIComponent(str||'').replace(/'/g,'%27').replace(/"/g,'%22'); }
 function showError(msg){
   const el = document.getElementById('content');
-  if(el) el.innerHTML = `<div class="card" style="cursor:default"><p class="small">${msg}</p><p style="margin-top:12px"><a href="index.html">← Back to Home</a> • <a href="chats.html?v=200">Reload</a></p></div>`;
+  if(el) el.innerHTML = `<div class="card" style="cursor:default"><p class="small">${msg}</p><p style="margin-top:12px"><a href="index.html">← Back to Home</a> • <a href="chats.html?v=201">Reload</a></p></div>`;
 }
 function showLoginNeeded(isOwner){
   if(isOwner){
@@ -56,7 +58,6 @@ function showLoginNeeded(isOwner){
   }
   window._blocked = true;
 }
-// Instant privacy check BEFORE supabase loads
 let role = 'customer';
 try{ role = localStorage.getItem('bms_role') || 'customer'; }catch(e){}
 if(role !== 'owner') role = 'customer';
@@ -71,18 +72,16 @@ if(role !== 'owner') role = 'customer';
   else if(isOwner && !salonId){ showLoginNeeded(true); }
 })();
 
-// Guarantee Loading... disappears after 3s
 setTimeout(()=>{
   const el = document.getElementById('content');
   if(el && el.innerHTML.includes('Loading...') && !window._blocked){
-    showError('Still loading... Supabase slow or blocked.<br><br>1. Check internet<br>2. Add ?v=200 to URL to force refresh<br>3. If not logged in, you should see "Please log in"');
+    showError('Still loading... Supabase slow or blocked.<br><br>1. Check internet<br>2. Add ?v=201 to URL to force refresh<br>3. If not logged in, you should see "Please log in"');
   }
 }, 3000);
 window.addEventListener('error', (e)=>{
   console.error(e);
   showError('JS Error: ' + (e.message||'unknown'));
 });
-// === END INSTANT FIX ===
 
 let supabaseClient = null;
 try{
@@ -92,7 +91,7 @@ try{
     throw new Error('Supabase CDN not loaded - check internet');
   }
 }catch(e){
-  showError('Failed to load chat service: '+e.message+'<br><br>Please refresh: <a href="chats.html?v=200">Reload</a>');
+  showError('Failed to load chat service: '+e.message+'<br><br>Please refresh: <a href="chats.html?v=201">Reload</a>');
 }
 
 const params = new URLSearchParams(location.search);
@@ -108,20 +107,9 @@ async function loadList(){
   const custPhoneRaw = localStorage.getItem('bms_customer_phone') || localStorage.getItem('customer_phone') || '';
   const custPhoneClean = normalizePhone(custPhoneRaw);
 
-  // === PRIVACY FIX ADDED - MUST BE LOGGED IN ===
-  if(!isOwner && !custPhoneClean){
-    showLoginNeeded(false);
-    return;
-  }
-  if(isOwner && !salonId){
-    showLoginNeeded(true);
-    return;
-  }
-
-  if(!supabaseClient){
-    showError('Chat service not ready. <a href="chats.html?v=200">Tap to reload</a>');
-    return;
-  }
+  if(!isOwner && !custPhoneClean){ showLoginNeeded(false); return; }
+  if(isOwner && !salonId){ showLoginNeeded(true); return; }
+  if(!supabaseClient){ showError('Chat service not ready. <a href="chats.html?v=201">Tap to reload</a>'); return; }
 
   let bookings = [];
   try{
@@ -133,43 +121,29 @@ async function loadList(){
       bookings = data||[];
     } else {
       let data = [];
-      try{
-        if(custPhoneClean){
-          const {data: d1, error: e1} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(200);
-          if(e1) throw e1;
-          data = (d1||[]).filter(b=> {
-            const bp = normalizePhone(b.customer_phone||'');
-            return bp===custPhoneClean || b.customer_phone===custPhoneRaw || (custPhoneClean.length>=9 && bp.endsWith(custPhoneClean.slice(-9)));
-          });
-        } else {
-          data = [];
-        }
-      }catch(inner){
-        console.warn('Bookings fetch failed:', inner.message);
-        if(isOwner){
-          const {data: d1} = await supabaseClient.from('bookings').select('*').limit(50);
-          data = d1||[];
-        } else {
-          data = [];
-        }
-        if(!data.length && isOwner) throw inner;
+      if(custPhoneClean){
+        const {data: d1, error: e1} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(200);
+        if(e1) throw e1;
+        data = (d1||[]).filter(b=> {
+          const bp = normalizePhone(b.customer_phone||'');
+          return bp===custPhoneClean || b.customer_phone===custPhoneRaw || (custPhoneClean.length>=9 && bp.endsWith(custPhoneClean.slice(-9)));
+        });
       }
       bookings = data;
     }
   }catch(e){
-    document.getElementById('content').innerHTML = '<div class="card"><p class="small">Error: '+e.message+'<br><br>Fix in Supabase SQL Editor:<br><code>ALTER TABLE bookings DISABLE ROW LEVEL SECURITY;<br>ALTER TABLE messages DISABLE ROW LEVEL SECURITY;</code></p><p style="margin-top:10px"><a href="chats.html?v=200">Reload</a></p></div>';
+    document.getElementById('content').innerHTML = '<div class="card"><p class="small">Error: '+e.message+'</p><p style="margin-top:10px"><a href="chats.html?v=201">Reload</a></p></div>';
     return;
   }
 
   bookings = bookings.filter(b=> (b.status||'')!=='cancelled');
-  if(!bookings.length){ document.getElementById('content').innerHTML = '<div class="card"><p class="small">No active chats. Book a salon to start chatting. Cancelled chats are hidden.</p><p class="small" style="margin-top:8px">Your phone: '+(custPhoneRaw||'not saved')+' | Role: '+role+'</p></div>'; return; }
+  if(!bookings.length){ document.getElementById('content').innerHTML = '<div class="card"><p class="small">No active chats.</p><p class="small" style="margin-top:8px">Your phone: '+(custPhoneRaw||'not saved')+'</p></div>'; return; }
 
   const dedupMap = {};
   bookings.forEach(b=>{
     const key = isOwner ? normalizePhone(b.customer_phone||b.customer_name||b.id) : b.salon_id;
     if(!key) return;
-    const existing = dedupMap[key];
-    if(!existing) dedupMap[key]=b;
+    if(!dedupMap[key]) dedupMap[key]=b;
     else {
       const d1 = new Date((b.booking_date||'')+'T'+(b.booking_time||'00:00'));
       const d2 = new Date((existing.booking_date||'')+'T'+(existing.booking_time||'00:00'));
@@ -203,7 +177,7 @@ async function loadList(){
         }
       });
     }
-  }catch(e){ console.warn('Messages fetch failed:', e.message); }
+  }catch(e){}
 
   document.getElementById('content').innerHTML = unique.map(b=>{
     const isOwnerView = isOwner;
@@ -215,11 +189,13 @@ async function loadList(){
     const preview = last ? `${last.sender_role==='customer' ? (isOwnerView?'Customer: ':'You: ') : (isOwnerView?'You: ':'${salonName}: ')}${(last.message||'').slice(0,40)}` : 'Tap to open chat';
     const unread = unreadById[b.id]||0;
     const avatar = (title[0]||'?').toUpperCase();
+    // FIXED: use safeEncode for Tyler's
+    const safeTitle = safeEncode(title);
     return `
-    <div class="card card-chat" onclick="window.location.href='chats.html?booking_id=${b.id}&salon_name=${encodeURIComponent(title)}&salon_id=${b.salon_id}'">
+    <div class="card card-chat" onclick="window.location.href='chats.html?booking_id=${b.id}&salon_name=${safeTitle}&salon_id=${b.salon_id}'">
       <div class="avatar">${avatar}</div>
       <div class="info">
-        <div class="name">${title} ${unread?`<span class=\"unread-badge\">${unread>9?'9+':unread}</span>`:''} <span class="badge-role">${isOwnerView?'Customer':'Salon'}</span></div>
+        <div class="name">${title} ${unread?`<span class="unread-badge">${unread>9?'9+':unread}</span>`:''} <span class="badge-role">${isOwnerView?'Customer':'Salon'}</span></div>
         <div class="small" style="margin-top:2px">${subTitle}</div>
         <div class="last-preview">${preview}</div>
         <div class="meta-row">💬 Open Chat → ${isOwnerView ? '• '+ (b.customer_phone||'') : ''}</div>
@@ -240,7 +216,8 @@ async function loadSingle(){
     const el = document.getElementById('msgs');
     if(!msgs.length) el.innerHTML = '<p class="small">No messages yet. Say hello 👋</p>';
     else el.innerHTML = msgs.map(m=>`<div class="msg ${m.sender_role===role?'mine':'theirs'}">${(m.message||'').replace(/</g,'&lt;')}</div>`).join('');
-    try{ localStorage.setItem('bms_chat_read_' + bookingId, new Date().toISOString()); }catch(e){}
+    // FIX ADDED: mark as read immediately so badge disappears when you go back
+    setLastRead(bookingId);
   }catch(e){
     document.getElementById('content').innerHTML = '<p class="small">Error loading messages: '+e.message+'</p><p style="margin-top:10px"><a href="chats.html">← All Chats</a></p>';
   }
@@ -253,8 +230,9 @@ async function sendMsg(){
   try{
     const {error} = await supabaseClient.from('messages').insert([{ booking_id: bookingId, sender_role: role, message: text }]);
     if(error) throw error;
+    setLastRead(bookingId);
   }catch(e){
-    alert('Failed to send: '+e.message+' - Check RLS on messages table');
+    alert('Failed to send: '+e.message);
   }
   loadSingle();
 }
