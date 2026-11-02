@@ -41,33 +41,65 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 <button onclick="sendMsg()">Send</button>
 </div>
 <script>
-const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
-const params = new URLSearchParams(location.search);
-const bookingId = params.get('booking_id');
+// === FIX ADDED: INSTANT HELPERS BEFORE SUPABASE - SO IT NEVER STUCKS ===
+function normalizePhone(p){ return (p||'').replace(/[\s\-\(\)\+]/g,''); }
+function getLastRead(id){ try{ return localStorage.getItem('bms_chat_read_'+id)||''; }catch(e){ return ''; } }
+function showError(msg){
+  const el = document.getElementById('content');
+  if(el) el.innerHTML = `<div class="card" style="cursor:default"><p class="small">${msg}</p><p style="margin-top:12px"><a href="index.html">← Back to Home</a> • <a href="chats.html?v=200">Reload</a></p></div>`;
+}
+function showLoginNeeded(isOwner){
+  if(isOwner){
+    showError(`<h3>🔒 Owner login required</h3><p class="small" style="margin-top:8px">Please log in as salon owner. Chats are only for your salon.</p>`);
+  } else {
+    showError(`<h3>🔒 Please log in to see chats</h3><p class="small" style="margin-top:8px">Chats are private. You must book with your phone number first. No phone found in this device.</p>`);
+  }
+  window._blocked = true;
+}
+// Instant privacy check BEFORE supabase loads
 let role = 'customer';
 try{ role = localStorage.getItem('bms_role') || 'customer'; }catch(e){}
 if(role !== 'owner') role = 'customer';
-function normalizePhone(p){ return (p||'').replace(/[\s\-\(\)\+]/g,''); }
-function getLastRead(id){ try{ return localStorage.getItem('bms_chat_read_'+id)||''; }catch(e){ return ''; } }
 
-// --- FIX ADDED: prevent infinite Loading... ---
-function showError(msg){
-  document.getElementById('content').innerHTML = `<div class="card"><p class="small">${msg}</p><p style="margin-top:8px"><a href="index.html">← Back to Home</a></p></div>`;
-}
-// Auto-timeout if still loading after 8s
+(function instantPrivacyCheck(){
+  if(new URLSearchParams(location.search).get('booking_id')) return;
+  const isOwner = role==='owner';
+  const salonId = localStorage.getItem('bms_salon_id');
+  const custPhoneRaw = localStorage.getItem('bms_customer_phone') || localStorage.getItem('customer_phone') || '';
+  const custPhoneClean = normalizePhone(custPhoneRaw);
+  if(!isOwner && !custPhoneClean){ showLoginNeeded(false); }
+  else if(isOwner && !salonId){ showLoginNeeded(true); }
+})();
+
+// Guarantee Loading... disappears after 3s
 setTimeout(()=>{
-  const c = document.getElementById('content').innerHTML;
-  if(c.includes('Loading...')){
-    showError('Still loading...<br><br>1. Check Supabase > Table Editor > bookings has data<br>2. Check RLS is OFF or has policy for anon<br>3. No phone saved? Go to My Bookings and book once.<br><br>Tap to reload: <a href="chats.html">Reload</a>');
+  const el = document.getElementById('content');
+  if(el && el.innerHTML.includes('Loading...') && !window._blocked){
+    showError('Still loading... Supabase slow or blocked.<br><br>1. Check internet<br>2. Add ?v=200 to URL to force refresh<br>3. If not logged in, you should see "Please log in"');
   }
-}, 8000);
+}, 3000);
 window.addEventListener('error', (e)=>{
   console.error(e);
-  showError('JS Error: ' + (e.message||'unknown') + '<br>Open Chrome Console to see details.');
+  showError('JS Error: ' + (e.message||'unknown'));
 });
-// --- END FIX ---
+// === END INSTANT FIX ===
+
+let supabaseClient = null;
+try{
+  if(typeof supabase !== 'undefined' && supabase.createClient){
+    supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
+  } else {
+    throw new Error('Supabase CDN not loaded - check internet');
+  }
+}catch(e){
+  showError('Failed to load chat service: '+e.message+'<br><br>Please refresh: <a href="chats.html?v=200">Reload</a>');
+}
+
+const params = new URLSearchParams(location.search);
+const bookingId = params.get('booking_id');
 
 async function loadList(){
+  if(window._blocked) return;
   document.getElementById('pageTitle').textContent = '💬 Chats';
   document.getElementById('inputRow').style.display = 'none';
   
@@ -78,27 +110,18 @@ async function loadList(){
 
   // === PRIVACY FIX ADDED - MUST BE LOGGED IN ===
   if(!isOwner && !custPhoneClean){
-    document.getElementById('content').innerHTML = `
-      <div class="card" style="cursor:default">
-        <h3 style="margin-bottom:8px">🔒 Please log in to see chats</h3>
-        <p class="small">Chats are private. You must book with your phone number first.</p>
-        <p class="small" style="margin-top:8px">No phone found in this device.</p>
-        <br>
-        <a href="index.html" style="background:#2a0a45;color:#fff;padding:12px 18px;border-radius:12px;display:inline-block">Go Book a Salon</a>
-      </div>`;
+    showLoginNeeded(false);
     return;
   }
   if(isOwner && !salonId){
-    document.getElementById('content').innerHTML = `
-      <div class="card" style="cursor:default">
-        <h3 style="margin-bottom:8px">🔒 Owner login required</h3>
-        <p class="small">Please log in as salon owner. Chats are only for your salon.</p>
-        <br>
-        <a href="index.html" style="background:#2a0a45;color:#fff;padding:12px 18px;border-radius:12px;display:inline-block">Go to Home</a>
-      </div>`;
+    showLoginNeeded(true);
     return;
   }
-  // === END PRIVACY FIX ===
+
+  if(!supabaseClient){
+    showError('Chat service not ready. <a href="chats.html?v=200">Tap to reload</a>');
+    return;
+  }
 
   let bookings = [];
   try{
@@ -109,7 +132,6 @@ async function loadList(){
       if(error) throw error;
       bookings = data||[];
     } else {
-      // CUSTOMER - try by phone - FIXED: handle RLS + empty phone
       let data = [];
       try{
         if(custPhoneClean){
@@ -120,12 +142,10 @@ async function loadList(){
             return bp===custPhoneClean || b.customer_phone===custPhoneRaw || (custPhoneClean.length>=9 && bp.endsWith(custPhoneClean.slice(-9)));
           });
         } else {
-          // PRIVACY FIX: Never load all bookings if no phone - already returned above, but keep safe
           data = [];
         }
       }catch(inner){
         console.warn('Bookings fetch failed:', inner.message);
-        // PRIVACY FIX: Do NOT fallback to loading all bookings for customer
         if(isOwner){
           const {data: d1} = await supabaseClient.from('bookings').select('*').limit(50);
           data = d1||[];
@@ -137,16 +157,13 @@ async function loadList(){
       bookings = data;
     }
   }catch(e){
-    document.getElementById('content').innerHTML = '<p class="small">Error: '+e.message+'<br><br>Fix in Supabase SQL Editor:<br><code>ALTER TABLE bookings DISABLE ROW LEVEL SECURITY;<br>ALTER TABLE messages DISABLE ROW LEVEL SECURITY;</code><br><br>Then reload. Also run: NOTIFY pgrst, \\'reload schema\\';</p>';
+    document.getElementById('content').innerHTML = '<div class="card"><p class="small">Error: '+e.message+'<br><br>Fix in Supabase SQL Editor:<br><code>ALTER TABLE bookings DISABLE ROW LEVEL SECURITY;<br>ALTER TABLE messages DISABLE ROW LEVEL SECURITY;</code></p><p style="margin-top:10px"><a href="chats.html?v=200">Reload</a></p></div>';
     return;
   }
 
-  // 1. HIDE CANCELLED
   bookings = bookings.filter(b=> (b.status||'')!=='cancelled');
-
   if(!bookings.length){ document.getElementById('content').innerHTML = '<div class="card"><p class="small">No active chats. Book a salon to start chatting. Cancelled chats are hidden.</p><p class="small" style="margin-top:8px">Your phone: '+(custPhoneRaw||'not saved')+' | Role: '+role+'</p></div>'; return; }
 
-  // 2. GROUP BY SALON (for customer) + DEDUPLICATE (1 thread per salon/customer)
   const dedupMap = {};
   bookings.forEach(b=>{
     const key = isOwner ? normalizePhone(b.customer_phone||b.customer_name||b.id) : b.salon_id;
@@ -161,7 +178,6 @@ async function loadList(){
   });
   const unique = Object.values(dedupMap);
 
-  // 3. GET SALON NAMES for customer view
   const salonIds = [...new Set(unique.map(b=>b.salon_id))].filter(Boolean);
   let salonsById = {};
   if(salonIds.length){
@@ -172,7 +188,6 @@ async function loadList(){
     }catch(e){}
   }
 
-  // 4. UNREAD + LAST MESSAGE PREVIEW
   const bookingIds = unique.map(b=>b.id);
   let lastMsgById = {};
   let unreadById = {};
@@ -190,7 +205,6 @@ async function loadList(){
     }
   }catch(e){ console.warn('Messages fetch failed:', e.message); }
 
-  // 5. RENDER - Customer sees SALON name, Owner sees CUSTOMER name
   document.getElementById('content').innerHTML = unique.map(b=>{
     const isOwnerView = isOwner;
     const salonName = salonsById[b.salon_id] || 'Salon';
@@ -245,7 +259,9 @@ async function sendMsg(){
   loadSingle();
 }
 document.getElementById('msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg(); });
-if(bookingId) { loadSingle(); setInterval(loadSingle, 3000); } else { loadList(); }
+if(bookingId) { loadSingle(); setInterval(loadSingle, 3000); } else { 
+  if(!window._blocked) loadList(); 
+}
 </script>
 </body>
 </html>
