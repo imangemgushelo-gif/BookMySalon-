@@ -19,6 +19,15 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 .input-row{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;padding:10px;display:flex;gap:8px;max-width:600px;margin:0 auto}
 .input-row input{flex:1;padding:13px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:15px;outline:none}
 .input-row button{background:#2a0a45;color:#fff;border:0;border-radius:12px;padding:13px 18px;font-weight:700;cursor:pointer}
+/* ADD ONLY - White design chat list enhancements */
+.card-chat{display:flex;gap:12px;align-items:center;padding:14px 16px}
+.avatar{width:48px;height:48px;border-radius:14px;background:#2a0a45;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0}
+.info{flex:1;min-width:0}
+.name{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+.last-preview{font-size:13px;color:#666;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unread-badge{background:#ff0000;color:#fff;font-size:11px;font-weight:800;min-width:20px;height:20px;line-height:20px;text-align:center;padding:0 6px;border-radius:20px;display:inline-block}
+.badge-role{font-size:10px;padding:3px 7px;border-radius:10px;background:#f3e8ff;color:#2a0a45;font-weight:700}
+.meta-row{font-size:11px;color:#999;margin-top:4px}
 </style>
 </head>
 <body>
@@ -31,7 +40,6 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 <input id="msgInput" placeholder="Type a message...">
 <button onclick="sendMsg()">Send</button>
 </div>
-
 <script>
 const supabaseClient = supabase.createClient("https://zkkyslypjukewacipyey.supabase.co", "sb_publishable_l1F1qMQCNL3SJ253UKmxag__KEoUYHZ");
 const params = new URLSearchParams(location.search);
@@ -39,29 +47,171 @@ const bookingId = params.get('booking_id');
 let role = 'customer';
 try{ role = localStorage.getItem('bms_role') || 'customer'; }catch(e){}
 if(role !== 'owner') role = 'customer';
+function normalizePhone(p){ return (p||'').replace(/[\s\-\(\)\+]/g,''); }
+function getLastRead(id){ try{ return localStorage.getItem('bms_chat_read_'+id)||''; }catch(e){ return ''; } }
+
+// --- FIX ADDED: prevent infinite Loading... ---
+function showError(msg){
+  document.getElementById('content').innerHTML = `<div class="card"><p class="small">${msg}</p><p style="margin-top:8px"><a href="index.html">← Back to Home</a></p></div>`;
+}
+// Auto-timeout if still loading after 8s
+setTimeout(()=>{
+  const c = document.getElementById('content').innerHTML;
+  if(c.includes('Loading...')){
+    showError('Still loading...<br><br>1. Check Supabase > Table Editor > bookings has data<br>2. Check RLS is OFF or has policy for anon<br>3. No phone saved? Go to My Bookings and book once.<br><br>Tap to reload: <a href="chats.html">Reload</a>');
+  }
+}, 8000);
+window.addEventListener('error', (e)=>{
+  console.error(e);
+  showError('JS Error: ' + (e.message||'unknown') + '<br>Open Chrome Console to see details.');
+});
+// --- END FIX ---
 
 async function loadList(){
   document.getElementById('pageTitle').textContent = '💬 Chats';
   document.getElementById('inputRow').style.display = 'none';
-  const content = document.getElementById('content');
-  try{
-    const {data, error} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(50);
-    if(error) throw error;
-    const list = (data||[]).filter(b=> (b.status||'') !== 'cancelled');
-    if(!list.length){
-      content.innerHTML = '<div class="card"><p>No active chats</p><p class="small">Book a salon first. Found '+ (data||[]).length +' bookings total.</p></div>';
-      return;
-    }
-    content.innerHTML = list.map(b=>`
-      <div class="card" onclick="window.location.href='chats.html?booking_id=${b.id}&salon_name=${encodeURIComponent(b.customer_name||'Chat')}'">
-        <b>${b.customer_name||b.customer_phone||'Customer'}</b><br>
-        <span class="small">${b.service||'Booking'} • ${b.booking_date||''} ${b.booking_time||''} • ${b.status||''}</span><br>
-        <span style="color:#2a0a45;font-weight:800">💬 Open Chat →</span>
-      </div>
-    `).join('');
-  }catch(e){
-    document.getElementById('content').innerHTML = '<div class="card">Error: '+e.message+'<br><br>Run in Supabase SQL: ALTER TABLE bookings DISABLE ROW LEVEL SECURITY;</div>';
+  
+  const isOwner = role==='owner';
+  const salonId = localStorage.getItem('bms_salon_id');
+  const custPhoneRaw = localStorage.getItem('bms_customer_phone') || localStorage.getItem('customer_phone') || '';
+  const custPhoneClean = normalizePhone(custPhoneRaw);
+
+  // === PRIVACY FIX ADDED - MUST BE LOGGED IN ===
+  if(!isOwner && !custPhoneClean){
+    document.getElementById('content').innerHTML = `
+      <div class="card" style="cursor:default">
+        <h3 style="margin-bottom:8px">🔒 Please log in to see chats</h3>
+        <p class="small">Chats are private. You must book with your phone number first.</p>
+        <p class="small" style="margin-top:8px">No phone found in this device.</p>
+        <br>
+        <a href="index.html" style="background:#2a0a45;color:#fff;padding:12px 18px;border-radius:12px;display:inline-block">Go Book a Salon</a>
+      </div>`;
+    return;
   }
+  if(isOwner && !salonId){
+    document.getElementById('content').innerHTML = `
+      <div class="card" style="cursor:default">
+        <h3 style="margin-bottom:8px">🔒 Owner login required</h3>
+        <p class="small">Please log in as salon owner. Chats are only for your salon.</p>
+        <br>
+        <a href="index.html" style="background:#2a0a45;color:#fff;padding:12px 18px;border-radius:12px;display:inline-block">Go to Home</a>
+      </div>`;
+    return;
+  }
+  // === END PRIVACY FIX ===
+
+  let bookings = [];
+  try{
+    if(isOwner){
+      let q = supabaseClient.from('bookings').select('*').order('created_at',{ascending:false});
+      if(salonId) q = q.eq('salon_id', salonId);
+      const {data, error} = await q;
+      if(error) throw error;
+      bookings = data||[];
+    } else {
+      // CUSTOMER - try by phone - FIXED: handle RLS + empty phone
+      let data = [];
+      try{
+        if(custPhoneClean){
+          const {data: d1, error: e1} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(200);
+          if(e1) throw e1;
+          data = (d1||[]).filter(b=> {
+            const bp = normalizePhone(b.customer_phone||'');
+            return bp===custPhoneClean || b.customer_phone===custPhoneRaw || (custPhoneClean.length>=9 && bp.endsWith(custPhoneClean.slice(-9)));
+          });
+        } else {
+          // PRIVACY FIX: Never load all bookings if no phone - already returned above, but keep safe
+          data = [];
+        }
+      }catch(inner){
+        console.warn('Bookings fetch failed:', inner.message);
+        // PRIVACY FIX: Do NOT fallback to loading all bookings for customer
+        if(isOwner){
+          const {data: d1} = await supabaseClient.from('bookings').select('*').limit(50);
+          data = d1||[];
+        } else {
+          data = [];
+        }
+        if(!data.length && isOwner) throw inner;
+      }
+      bookings = data;
+    }
+  }catch(e){
+    document.getElementById('content').innerHTML = '<p class="small">Error: '+e.message+'<br><br>Fix in Supabase SQL Editor:<br><code>ALTER TABLE bookings DISABLE ROW LEVEL SECURITY;<br>ALTER TABLE messages DISABLE ROW LEVEL SECURITY;</code><br><br>Then reload. Also run: NOTIFY pgrst, \\'reload schema\\';</p>';
+    return;
+  }
+
+  // 1. HIDE CANCELLED
+  bookings = bookings.filter(b=> (b.status||'')!=='cancelled');
+
+  if(!bookings.length){ document.getElementById('content').innerHTML = '<div class="card"><p class="small">No active chats. Book a salon to start chatting. Cancelled chats are hidden.</p><p class="small" style="margin-top:8px">Your phone: '+(custPhoneRaw||'not saved')+' | Role: '+role+'</p></div>'; return; }
+
+  // 2. GROUP BY SALON (for customer) + DEDUPLICATE (1 thread per salon/customer)
+  const dedupMap = {};
+  bookings.forEach(b=>{
+    const key = isOwner ? normalizePhone(b.customer_phone||b.customer_name||b.id) : b.salon_id;
+    if(!key) return;
+    const existing = dedupMap[key];
+    if(!existing) dedupMap[key]=b;
+    else {
+      const d1 = new Date((b.booking_date||'')+'T'+(b.booking_time||'00:00'));
+      const d2 = new Date((existing.booking_date||'')+'T'+(existing.booking_time||'00:00'));
+      if(d1>d2) dedupMap[key]=b;
+    }
+  });
+  const unique = Object.values(dedupMap);
+
+  // 3. GET SALON NAMES for customer view
+  const salonIds = [...new Set(unique.map(b=>b.salon_id))].filter(Boolean);
+  let salonsById = {};
+  if(salonIds.length){
+    try{
+      let r = await supabaseClient.from('salons').select('id,name').in('id', salonIds);
+      if(r.error) r = await supabaseClient.from('salon').select('id,name').in('id', salonIds);
+      (r.data||[]).forEach(s=> salonsById[s.id]=s.name);
+    }catch(e){}
+  }
+
+  // 4. UNREAD + LAST MESSAGE PREVIEW
+  const bookingIds = unique.map(b=>b.id);
+  let lastMsgById = {};
+  let unreadById = {};
+  try{
+    if(bookingIds.length){
+      const {data: msgs} = await supabaseClient.from('messages').select('booking_id,message,created_at,sender_role').in('booking_id', bookingIds).order('created_at',{ascending:false});
+      (msgs||[]).forEach(m=>{
+        if(!lastMsgById[m.booking_id]) lastMsgById[m.booking_id]=m;
+        const shouldCount = isOwner ? m.sender_role==='customer' : m.sender_role==='owner';
+        const lastRead = getLastRead(m.booking_id);
+        if(shouldCount && (!lastRead || new Date(m.created_at) > new Date(lastRead))){
+          unreadById[m.booking_id]=(unreadById[m.booking_id]||0)+1;
+        }
+      });
+    }
+  }catch(e){ console.warn('Messages fetch failed:', e.message); }
+
+  // 5. RENDER - Customer sees SALON name, Owner sees CUSTOMER name
+  document.getElementById('content').innerHTML = unique.map(b=>{
+    const isOwnerView = isOwner;
+    const salonName = salonsById[b.salon_id] || 'Salon';
+    const customerName = b.customer_name || b.customer_phone || 'Customer';
+    const title = isOwnerView ? customerName : salonName;
+    const subTitle = isOwnerView ? `${b.service||'Booking'} • ${b.booking_date||''} ${b.booking_time||''} • ${b.status||''}` : `${b.service||'Booking'} • ${b.booking_date||''} • ${b.status||''} • ${salonName}`;
+    const last = lastMsgById[b.id];
+    const preview = last ? `${last.sender_role==='customer' ? (isOwnerView?'Customer: ':'You: ') : (isOwnerView?'You: ':'${salonName}: ')}${(last.message||'').slice(0,40)}` : 'Tap to open chat';
+    const unread = unreadById[b.id]||0;
+    const avatar = (title[0]||'?').toUpperCase();
+    return `
+    <div class="card card-chat" onclick="window.location.href='chats.html?booking_id=${b.id}&salon_name=${encodeURIComponent(title)}&salon_id=${b.salon_id}'">
+      <div class="avatar">${avatar}</div>
+      <div class="info">
+        <div class="name">${title} ${unread?`<span class=\"unread-badge\">${unread>9?'9+':unread}</span>`:''} <span class="badge-role">${isOwnerView?'Customer':'Salon'}</span></div>
+        <div class="small" style="margin-top:2px">${subTitle}</div>
+        <div class="last-preview">${preview}</div>
+        <div class="meta-row">💬 Open Chat → ${isOwnerView ? '• '+ (b.customer_phone||'') : ''}</div>
+      </div>
+    </div>`;
+  }).join('') + `<p class="small" style="margin-top:12px;text-align:center;color:#999">Cancelled hidden • ${unique.length} chat thread${unique.length!==1?'s':''} • Grouped by ${isOwner?'customer':'salon'} • Private to you</p>`;
 }
 
 async function loadSingle(){
@@ -70,25 +220,30 @@ async function loadSingle(){
   document.getElementById('inputRow').style.display = 'flex';
   document.getElementById('content').innerHTML = '<div id="msgs"><p class="small">Loading messages...</p></div><p style="margin-top:10px"><a href="chats.html">← All Chats</a></p>';
   try{
-    const {data} = await supabaseClient.from('messages').select('*').eq('booking_id', bookingId).order('created_at',{ascending:true});
+    const { data, error } = await supabaseClient.from('messages').select('*').eq('booking_id', bookingId).order('created_at',{ascending:true});
+    if(error) throw error;
     const msgs = data || [];
     const el = document.getElementById('msgs');
     if(!msgs.length) el.innerHTML = '<p class="small">No messages yet. Say hello 👋</p>';
     else el.innerHTML = msgs.map(m=>`<div class="msg ${m.sender_role===role?'mine':'theirs'}">${(m.message||'').replace(/</g,'&lt;')}</div>`).join('');
+    try{ localStorage.setItem('bms_chat_read_' + bookingId, new Date().toISOString()); }catch(e){}
   }catch(e){
-    document.getElementById('content').innerHTML = '<p class="small">Error: '+e.message+'</p>';
+    document.getElementById('content').innerHTML = '<p class="small">Error loading messages: '+e.message+'</p><p style="margin-top:10px"><a href="chats.html">← All Chats</a></p>';
   }
 }
-
 async function sendMsg(){
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
   if(!text || !bookingId) return;
   input.value = '';
-  await supabaseClient.from('messages').insert([{ booking_id: bookingId, sender_role: role, message: text }]);
+  try{
+    const {error} = await supabaseClient.from('messages').insert([{ booking_id: bookingId, sender_role: role, message: text }]);
+    if(error) throw error;
+  }catch(e){
+    alert('Failed to send: '+e.message+' - Check RLS on messages table');
+  }
   loadSingle();
 }
-
 document.getElementById('msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg(); });
 if(bookingId) { loadSingle(); setInterval(loadSingle, 3000); } else { loadList(); }
 </script>
