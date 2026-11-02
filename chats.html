@@ -33,6 +33,7 @@ a{color:#2a0a45;text-decoration:none;font-weight:700}
 <div class="box">
 <a href="index.html">← Back</a>
 <h1 style="margin:12px 0" id="pageTitle">💬 Chats</h1>
+<div id="privacyBadge" class="card" style="display:none; cursor:default; background:#f3e8ff; border-color:#e9d5ff;"></div>
 <div id="content"><p class="small">Loading...</p></div>
 </div>
 <div class="input-row" id="inputRow" style="display:none">
@@ -48,13 +49,13 @@ function setLastRead(id){ try{ localStorage.setItem('bms_chat_read_'+id, new Dat
 function safeEncode(str){ return encodeURIComponent(str||'').replace(/'/g,'%27').replace(/"/g,'%22'); }
 function showError(msg){
   const el = document.getElementById('content');
-  if(el) el.innerHTML = `<div class="card" style="cursor:default"><p class="small">${msg}</p><p style="margin-top:12px"><a href="index.html">← Back to Home</a> • <a href="chats.html?v=201">Reload</a></p></div>`;
+  if(el) el.innerHTML = `<div class="card" style="cursor:default"><p class="small">${msg}</p><p style="margin-top:12px"><a href="index.html">← Back to Home</a> • <a href="chats.html?v=202">Reload</a></p></div>`;
 }
 function showLoginNeeded(isOwner){
   if(isOwner){
-    showError(`<h3>🔒 Owner login required</h3><p class="small" style="margin-top:8px">Please log in as salon owner. Chats are only for your salon.</p>`);
+    showError(`<h3>🔒 Owner login required</h3><p class="small" style="margin-top:8px">Please log in as salon owner. Chats are only for your salon. <a href="index.html">Go Home →</a></p>`);
   } else {
-    showError(`<h3>🔒 Please log in to see chats</h3><p class="small" style="margin-top:8px">Chats are private. You must book with your phone number first. No phone found in this device.</p>`);
+    showError(`<h3>🔒 Please log in to see chats</h3><p class="small" style="margin-top:8px">Chats are private. Login on home page with your phone first. No phone found in this device. <a href="index.html">Login →</a></p>`);
   }
   window._blocked = true;
 }
@@ -68,16 +69,26 @@ if(role !== 'owner') role = 'customer';
   const salonId = localStorage.getItem('bms_salon_id');
   const custPhoneRaw = localStorage.getItem('bms_customer_phone') || localStorage.getItem('customer_phone') || '';
   const custPhoneClean = normalizePhone(custPhoneRaw);
+  const badge = document.getElementById('privacyBadge');
+  if(badge){
+    if(!isOwner && custPhoneClean){
+      badge.style.display='block';
+      badge.innerHTML = `<span class="small">🔒 Private to you: <b>${custPhoneRaw}</b> • Only chats for this phone</span>`;
+    } else if(isOwner && salonId){
+      badge.style.display='block';
+      badge.innerHTML = `<span class="small">🔒 Owner view: <b>Salon ${salonId.slice(0,8)}...</b> • Only your salon chats</span>`;
+    }
+  }
   if(!isOwner && !custPhoneClean){ showLoginNeeded(false); }
-  else if(isOwner && !salonId){ showLoginNeeded(true); }
+  else if(isOwner && !salonId && !localStorage.getItem('bms_owner_phone')){ showLoginNeeded(true); }
 })();
 
-setTimeout(()=>{
+let _loadTimeout = setTimeout(()=>{
   const el = document.getElementById('content');
   if(el && el.innerHTML.includes('Loading...') && !window._blocked){
-    showError('Still loading... Supabase slow or blocked.<br><br>1. Check internet<br>2. Add ?v=201 to URL to force refresh<br>3. If not logged in, you should see "Please log in"');
+    showError('Still loading... Supabase slow or blocked.<br><br>1. Check internet<br>2. Add ?v=202 to URL to force refresh<br>3. If not logged in, you should see "Please log in"');
   }
-}, 3000);
+}, 7000);
 window.addEventListener('error', (e)=>{
   console.error(e);
   showError('JS Error: ' + (e.message||'unknown'));
@@ -91,7 +102,7 @@ try{
     throw new Error('Supabase CDN not loaded - check internet');
   }
 }catch(e){
-  showError('Failed to load chat service: '+e.message+'<br><br>Please refresh: <a href="chats.html?v=201">Reload</a>');
+  showError('Failed to load chat service: '+e.message+'<br><br>Please refresh: <a href="chats.html?v=202">Reload</a>');
 }
 
 const params = new URLSearchParams(location.search);
@@ -104,40 +115,53 @@ async function loadList(){
   
   const isOwner = role==='owner';
   const salonId = localStorage.getItem('bms_salon_id');
+  const ownerPhone = localStorage.getItem('bms_owner_phone') || localStorage.getItem('bms_salon_phone') || '';
   const custPhoneRaw = localStorage.getItem('bms_customer_phone') || localStorage.getItem('customer_phone') || '';
   const custPhoneClean = normalizePhone(custPhoneRaw);
 
   if(!isOwner && !custPhoneClean){ showLoginNeeded(false); return; }
-  if(isOwner && !salonId){ showLoginNeeded(true); return; }
-  if(!supabaseClient){ showError('Chat service not ready. <a href="chats.html?v=201">Tap to reload</a>'); return; }
+  if(isOwner && !salonId && !ownerPhone){ showLoginNeeded(true); return; }
+  if(!supabaseClient){ showError('Chat service not ready. <a href="chats.html?v=202">Tap to reload</a>'); return; }
 
   let bookings = [];
   try{
     if(isOwner){
-      let q = supabaseClient.from('bookings').select('*').order('created_at',{ascending:false});
+      // ===== OWNER PRIVACY FIX: ONLY HIS SALON =====
+      let q = supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(100);
       if(salonId) q = q.eq('salon_id', salonId);
+      else if(ownerPhone) q = q.eq('salon_id', salonId); // fallback - will be empty if no id, forces login
       const {data, error} = await q;
       if(error) throw error;
       bookings = data||[];
     } else {
-      let data = [];
-      if(custPhoneClean){
-        const {data: d1, error: e1} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(200);
-        if(e1) throw e1;
-        data = (d1||[]).filter(b=> {
-          const bp = normalizePhone(b.customer_phone||'');
-          return bp===custPhoneClean || b.customer_phone===custPhoneRaw || (custPhoneClean.length>=9 && bp.endsWith(custPhoneClean.slice(-9)));
-        });
+      // ===== CUSTOMER PRIVACY FIX: ONLY PHONE FROM INDEX LOGIN =====
+      // STRICT: query server-side by exact phone, no fetching all
+      const {data, error} = await supabaseClient.from('bookings')
+        .select('*')
+        .eq('customer_phone', custPhoneRaw) // strict match to logged phone
+        .order('created_at',{ascending:false})
+        .limit(100);
+      if(error) throw error;
+      let dataFiltered = data||[];
+      // fallback if they saved normalized vs raw - try second query
+      if(dataFiltered.length===0 && custPhoneClean !== custPhoneRaw){
+        const {data: d2} = await supabaseClient.from('bookings').select('*').eq('customer_phone', custPhoneClean).order('created_at',{ascending:false}).limit(100);
+        dataFiltered = d2||[];
       }
-      bookings = data;
+      bookings = dataFiltered;
     }
   }catch(e){
-    document.getElementById('content').innerHTML = '<div class="card"><p class="small">Error: '+e.message+'</p><p style="margin-top:10px"><a href="chats.html?v=201">Reload</a></p></div>';
+    clearTimeout(_loadTimeout);
+    document.getElementById('content').innerHTML = '<div class="card"><p class="small">Error: '+e.message+'</p><p style="margin-top:10px"><a href="chats.html?v=202">Reload</a> • <a href="index.html">Home</a></p></div>';
     return;
   }
 
+  clearTimeout(_loadTimeout);
   bookings = bookings.filter(b=> (b.status||'')!=='cancelled');
-  if(!bookings.length){ document.getElementById('content').innerHTML = '<div class="card"><p class="small">No active chats.</p><p class="small" style="margin-top:8px">Your phone: '+(custPhoneRaw||'not saved')+'</p></div>'; return; }
+  if(!bookings.length){ 
+    document.getElementById('content').innerHTML = `<div class="card" style="cursor:default"><p class="small">No active chats for <b>${isOwner? (salonId ? 'your salon' : ownerPhone) : custPhoneRaw}</b></p><p class="small" style="margin-top:8px">Your bookings will appear here. Book a salon first.</p><p style="margin-top:10px"><a href="index.html">← Browse Salons</a></p></div>`; 
+    return; 
+  }
 
   const dedupMap = {};
   bookings.forEach(b=>{
@@ -145,6 +169,7 @@ async function loadList(){
     if(!key) return;
     if(!dedupMap[key]) dedupMap[key]=b;
     else {
+      const existing = dedupMap[key];
       const d1 = new Date((b.booking_date||'')+'T'+(b.booking_time||'00:00'));
       const d2 = new Date((existing.booking_date||'')+'T'+(existing.booking_time||'00:00'));
       if(d1>d2) dedupMap[key]=b;
@@ -189,7 +214,6 @@ async function loadList(){
     const preview = last ? `${last.sender_role==='customer' ? (isOwnerView?'Customer: ':'You: ') : (isOwnerView?'You: ':'${salonName}: ')}${(last.message||'').slice(0,40)}` : 'Tap to open chat';
     const unread = unreadById[b.id]||0;
     const avatar = (title[0]||'?').toUpperCase();
-    // FIXED: use safeEncode for Tyler's
     const safeTitle = safeEncode(title);
     return `
     <div class="card card-chat" onclick="window.location.href='chats.html?booking_id=${b.id}&salon_name=${safeTitle}&salon_id=${b.salon_id}'">
@@ -201,7 +225,7 @@ async function loadList(){
         <div class="meta-row">💬 Open Chat → ${isOwnerView ? '• '+ (b.customer_phone||'') : ''}</div>
       </div>
     </div>`;
-  }).join('') + `<p class="small" style="margin-top:12px;text-align:center;color:#999">Cancelled hidden • ${unique.length} chat thread${unique.length!==1?'s':''} • Grouped by ${isOwner?'customer':'salon'} • Private to you</p>`;
+  }).join('') + `<p class="small" style="margin-top:12px;text-align:center;color:#999">Cancelled hidden • ${unique.length} chat thread${unique.length!==1?'s':''} • Grouped by ${isOwner?'customer':'salon'} • Private to ${isOwner ? 'your salon' : custPhoneRaw}</p>`;
 }
 
 async function loadSingle(){
@@ -216,9 +240,10 @@ async function loadSingle(){
     const el = document.getElementById('msgs');
     if(!msgs.length) el.innerHTML = '<p class="small">No messages yet. Say hello 👋</p>';
     else el.innerHTML = msgs.map(m=>`<div class="msg ${m.sender_role===role?'mine':'theirs'}">${(m.message||'').replace(/</g,'&lt;')}</div>`).join('');
-    // FIX ADDED: mark as read immediately so badge disappears when you go back
     setLastRead(bookingId);
+    clearTimeout(_loadTimeout);
   }catch(e){
+    clearTimeout(_loadTimeout);
     document.getElementById('content').innerHTML = '<p class="small">Error loading messages: '+e.message+'</p><p style="margin-top:10px"><a href="chats.html">← All Chats</a></p>';
   }
 }
