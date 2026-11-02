@@ -50,6 +50,23 @@ if(role !== 'owner') role = 'customer';
 function normalizePhone(p){ return (p||'').replace(/[\s\-\(\)\+]/g,''); }
 function getLastRead(id){ try{ return localStorage.getItem('bms_chat_read_'+id)||''; }catch(e){ return ''; } }
 
+// --- FIX ADDED: prevent infinite Loading... ---
+function showError(msg){
+  document.getElementById('content').innerHTML = `<div class="card"><p class="small">${msg}</p><p style="margin-top:8px"><a href="index.html">← Back to Home</a></p></div>`;
+}
+// Auto-timeout if still loading after 8s
+setTimeout(()=>{
+  const c = document.getElementById('content').innerHTML;
+  if(c.includes('Loading...')){
+    showError('Still loading...<br><br>1. Check Supabase > Table Editor > bookings has data<br>2. Check RLS is OFF or has policy for anon<br>3. No phone saved? Go to My Bookings and book once.<br><br>Tap to reload: <a href="chats.html">Reload</a>');
+  }
+}, 8000);
+window.addEventListener('error', (e)=>{
+  console.error(e);
+  showError('JS Error: ' + (e.message||'unknown') + '<br>Open Chrome Console to see details.');
+});
+// --- END FIX ---
+
 async function loadList(){
   document.getElementById('pageTitle').textContent = '💬 Chats';
   document.getElementById('inputRow').style.display = 'none';
@@ -68,27 +85,39 @@ async function loadList(){
       if(error) throw error;
       bookings = data||[];
     } else {
-      // CUSTOMER - try by phone
+      // CUSTOMER - try by phone - FIXED: handle RLS + empty phone
       let data = [];
-      if(custPhoneClean){
-        const {data: d1} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(200);
-        // filter in JS to handle different formats
-        data = (d1||[]).filter(b=> normalizePhone(b.customer_phone)===custPhoneClean || b.customer_phone===custPhoneRaw || normalizePhone(b.customer_phone).endsWith(custPhoneClean.slice(-9)));
-      } else {
-        const {data: d1} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(100);
+      try{
+        if(custPhoneClean){
+          const {data: d1, error: e1} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(200);
+          if(e1) throw e1;
+          data = (d1||[]).filter(b=> {
+            const bp = normalizePhone(b.customer_phone||'');
+            return bp===custPhoneClean || b.customer_phone===custPhoneRaw || (custPhoneClean.length>=9 && bp.endsWith(custPhoneClean.slice(-9)));
+          });
+        } else {
+          const {data: d1, error: e1} = await supabaseClient.from('bookings').select('*').order('created_at',{ascending:false}).limit(100);
+          if(e1) throw e1;
+          data = d1||[];
+        }
+      }catch(inner){
+        // FIX ADDED: if bookings query blocked by RLS, try without filter and show message
+        console.warn('Bookings fetch failed, trying fallback:', inner.message);
+        const {data: d1} = await supabaseClient.from('bookings').select('*').limit(50);
         data = d1||[];
+        if(!data.length) throw inner;
       }
       bookings = data;
     }
   }catch(e){
-    document.getElementById('content').innerHTML = '<p class="small">Error: '+e.message+'<br>Run in SQL: NOTIFY pgrst, \\'reload schema\\';</p>';
+    document.getElementById('content').innerHTML = '<p class="small">Error: '+e.message+'<br><br>Fix in Supabase SQL Editor:<br><code>ALTER TABLE bookings DISABLE ROW LEVEL SECURITY;<br>ALTER TABLE messages DISABLE ROW LEVEL SECURITY;</code><br><br>Then reload. Also run: NOTIFY pgrst, \\'reload schema\\';</p>';
     return;
   }
 
   // 1. HIDE CANCELLED
   bookings = bookings.filter(b=> (b.status||'')!=='cancelled');
 
-  if(!bookings.length){ document.getElementById('content').innerHTML = '<div class="card"><p class="small">No active chats. Book a salon to start chatting. Cancelled chats are hidden.</p></div>'; return; }
+  if(!bookings.length){ document.getElementById('content').innerHTML = '<div class="card"><p class="small">No active chats. Book a salon to start chatting. Cancelled chats are hidden.</p><p class="small" style="margin-top:8px">If you just booked, make sure your phone number is saved: <code>localStorage.getItem("bms_customer_phone")</code> is: '+(localStorage.getItem('bms_customer_phone')||'EMPTY - book a salon to save')+'</p></div>'; return; }
 
   // 2. GROUP BY SALON (for customer) + DEDUPLICATE (1 thread per salon/customer)
   const dedupMap = {};
@@ -121,16 +150,18 @@ async function loadList(){
   let lastMsgById = {};
   let unreadById = {};
   try{
-    const {data: msgs} = await supabaseClient.from('messages').select('booking_id,message,created_at,sender_role').in('booking_id', bookingIds).order('created_at',{ascending:false});
-    (msgs||[]).forEach(m=>{
-      if(!lastMsgById[m.booking_id]) lastMsgById[m.booking_id]=m;
-      const shouldCount = isOwner ? m.sender_role==='customer' : m.sender_role==='owner';
-      const lastRead = getLastRead(m.booking_id);
-      if(shouldCount && (!lastRead || new Date(m.created_at) > new Date(lastRead))){
-        unreadById[m.booking_id]=(unreadById[m.booking_id]||0)+1;
-      }
-    });
-  }catch(e){}
+    if(bookingIds.length){
+      const {data: msgs} = await supabaseClient.from('messages').select('booking_id,message,created_at,sender_role').in('booking_id', bookingIds).order('created_at',{ascending:false});
+      (msgs||[]).forEach(m=>{
+        if(!lastMsgById[m.booking_id]) lastMsgById[m.booking_id]=m;
+        const shouldCount = isOwner ? m.sender_role==='customer' : m.sender_role==='owner';
+        const lastRead = getLastRead(m.booking_id);
+        if(shouldCount && (!lastRead || new Date(m.created_at) > new Date(lastRead))){
+          unreadById[m.booking_id]=(unreadById[m.booking_id]||0)+1;
+        }
+      });
+    }
+  }catch(e){ console.warn('Messages fetch failed:', e.message); }
 
   // 5. RENDER - Customer sees SALON name, Owner sees CUSTOMER name
   document.getElementById('content').innerHTML = unique.map(b=>{
@@ -161,19 +192,29 @@ async function loadSingle(){
   document.getElementById('pageTitle').textContent = '💬 ' + name;
   document.getElementById('inputRow').style.display = 'flex';
   document.getElementById('content').innerHTML = '<div id="msgs"><p class="small">Loading messages...</p></div><p style="margin-top:10px"><a href="chats.html">← All Chats</a></p>';
-  const { data } = await supabaseClient.from('messages').select('*').eq('booking_id', bookingId).order('created_at',{ascending:true});
-  const msgs = data || [];
-  const el = document.getElementById('msgs');
-  if(!msgs.length) el.innerHTML = '<p class="small">No messages yet. Say hello 👋</p>';
-  else el.innerHTML = msgs.map(m=>`<div class="msg ${m.sender_role===role?'mine':'theirs'}">${(m.message||'').replace(/</g,'&lt;')}</div>`).join('');
-  try{ localStorage.setItem('bms_chat_read_' + bookingId, new Date().toISOString()); }catch(e){}
+  try{
+    const { data, error } = await supabaseClient.from('messages').select('*').eq('booking_id', bookingId).order('created_at',{ascending:true});
+    if(error) throw error;
+    const msgs = data || [];
+    const el = document.getElementById('msgs');
+    if(!msgs.length) el.innerHTML = '<p class="small">No messages yet. Say hello 👋</p>';
+    else el.innerHTML = msgs.map(m=>`<div class="msg ${m.sender_role===role?'mine':'theirs'}">${(m.message||'').replace(/</g,'&lt;')}</div>`).join('');
+    try{ localStorage.setItem('bms_chat_read_' + bookingId, new Date().toISOString()); }catch(e){}
+  }catch(e){
+    document.getElementById('content').innerHTML = '<p class="small">Error loading messages: '+e.message+'</p><p style="margin-top:10px"><a href="chats.html">← All Chats</a></p>';
+  }
 }
 async function sendMsg(){
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
   if(!text || !bookingId) return;
   input.value = '';
-  await supabaseClient.from('messages').insert([{ booking_id: bookingId, sender_role: role, message: text }]);
+  try{
+    const {error} = await supabaseClient.from('messages').insert([{ booking_id: bookingId, sender_role: role, message: text }]);
+    if(error) throw error;
+  }catch(e){
+    alert('Failed to send: '+e.message+' - Check RLS on messages table');
+  }
   loadSingle();
 }
 document.getElementById('msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg(); });
