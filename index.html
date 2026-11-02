@@ -93,6 +93,50 @@ input:focus,select:focus{border-color:#111}
 </style>
 </head>
 <body>
+<!-- ================= COMBINED LOGIN GATES ADDED ================= -->
+<div id="customerLoginGate" style="display:none; position:fixed; inset:0; background:#fff; z-index:9999; padding:20px; overflow:auto;">
+  <div style="max-width:480px; margin:0 auto;">
+    <a href="#" onclick="document.getElementById('customerLoginGate').style.display='none'; return false;" style="color:#2a0a45; font-weight:700; text-decoration:none;">← Back to Welcome</a>
+    <div style="margin-top:16px;">
+      <div style="text-align:center; margin-bottom:10px;">
+        <div style="font-size:32px; font-weight:900;"><span style="color:#1a0b2e;">Book</span><span style="color:#b89a5a;">My</span><span style="color:#1a0b2e;">Salon</span></div>
+      </div>
+      <div class="card" style="padding:24px; border-radius:24px;">
+        <h2 style="text-align:center; font-size:22px; margin-bottom:6px;">Welcome back!</h2>
+        <p style="text-align:center; color:#777; margin-bottom:18px;">Login with your phone to book & chat</p>
+        <label style="font-weight:700; display:block; margin-bottom:8px;">Your Full Name</label>
+        <input id="gateName" placeholder="e.g. Lihle Dlamini">
+        <label style="font-weight:700; display:block; margin-bottom:8px;">Your Phone Number</label>
+        <input id="gatePhone" placeholder="e.g. 082 123 4567" inputmode="numeric">
+        <p class="small" style="margin:8px 0 16px;">We use your phone to show your bookings & chats. 10 digits, starts with 0.</p>
+        <button onclick="doCustomerLogin()" class="btn btn-dark" style="background:#2a0a45; font-size:18px; padding:16px;">Login →</button>
+        <p style="text-align:center; margin-top:14px; font-size:14px; color:#777;">Are you a salon owner? <a href="#" onclick="document.getElementById('customerLoginGate').style.display='none'; document.getElementById('ownerLoginGate').style.display='block'; return false;" style="color:#2a0a45; font-weight:700;">Owner Login →</a></p>
+        <p id="gateError" style="color:#c0392b; font-size:13px; margin-top:10px; display:none;"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="ownerLoginGate" style="display:none; position:fixed; inset:0; background:#fff; z-index:9999; padding:20px; overflow:auto;">
+  <div style="max-width:480px; margin:0 auto;">
+    <a href="#" onclick="document.getElementById('ownerLoginGate').style.display='none'; return false;" style="color:#2a0a45; font-weight:700; text-decoration:none;">← Back to Welcome</a>
+    <div style="margin-top:16px;">
+      <div class="card" style="padding:24px; border-radius:24px;">
+        <label style="font-weight:700; display:block; margin-bottom:8px;">Your Salon Phone / Owner Phone</label>
+        <input id="ownerGatePhone" placeholder="e.g. 082 123 4567" inputmode="numeric">
+        <button onclick="doOwnerLogin()" class="btn" style="background:#111; font-size:18px; padding:16px; margin-top:8px;">Load My Salon →</button>
+        <p style="text-align:center; margin-top:14px; font-size:14px; color:#777;">No salon yet? <a href="register.html" style="color:#2a0a45; font-weight:700;">+ Register Salon</a></p>
+        <p id="ownerGateError" style="color:#c0392b; font-size:13px; margin-top:10px; display:none;"></p>
+      </div>
+      <div class="card" style="background:#2a0a45; color:#fff; border-radius:18px; padding:20px; margin-top:14px;">
+        <b style="font-size:20px; color:#fff;">Profile</b>
+        <p style="color:#ccc; margin-top:6px;">Your salon profile — as customers see it.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ================= END GATES ================= -->
+
 <div class="box" id="welcomeScreen">
   <div class="logo logo-small">Book<span>My</span>Salon</div>
   <h1 style="font-size:32px;line-height:1.15;margin:20px 0 8px">Hello! 👋<br>How can we help<br>you today?</h1>
@@ -115,13 +159,11 @@ input:focus,select:focus{border-color:#111}
   <div class="logo logo-small">Book<span>My</span>Salon</div>
   <a href="#" onclick="switchRole();return false;" style="font-size:12px;color:#777;text-decoration:none">Switch: Owner ↺</a>
 </div>
-
-<!-- LOGIN HEADER - VERSION 1 - ADDED -->
 <div id="loginHeader" style="margin:10px 0 12px;padding:0;display:flex;align-items:center;justify-content:space-between;gap:8px">
   <span id="loginStatus" style="font-size:14px;color:#111;font-weight:700">👋 Hi, Guest</span>
   <div style="display:flex;gap:8px;align-items:center">
     <a id="myBookingsLink" href="#" onclick="handleNav('bookings');return false;" style="display:none;font-size:12px;background:#fff;color:#111;border:1.5px solid #e5e5e5;padding:7px 12px;border-radius:20px;text-decoration:none;font-weight:700">📅 My Bookings</a>
-    <a id="loginBtn" href="customer-login.html" style="font-size:12px;background:#2a0a45;color:white;padding:8px 14px;border-radius:20px;text-decoration:none;font-weight:800">Login</a>
+    <a id="loginBtn" href="#" onclick="document.getElementById('customerLoginGate').style.display='block'; return false;" style="font-size:12px;background:#2a0a45;color:white;padding:8px 14px;border-radius:20px;text-decoration:none;font-weight:800">Login</a>
     <a id="logoutBtn" href="#" onclick="logoutUser();return false;" style="display:none;font-size:12px;background:#fff;border:1.5px solid #e5e5e5;padding:7px 12px;border-radius:20px;text-decoration:none;font-weight:700;color:#111">↪ Logout</a>
   </div>
 </div>
@@ -273,12 +315,26 @@ function setArea(area){
   loadSalons();
 }
 
+// ===== FIXED chooseRole - NOW SHOWS GATE FIRST =====
+function cleanPhone(p){ return (p||'').replace(/[\s\-\(\)\+]/g,''); }
+function isCustomerLogged(){ return cleanPhone(localStorage.getItem('bms_customer_phone')||localStorage.getItem('customer_phone')||'').length>=10; }
+function isOwnerLogged(){ return localStorage.getItem('bms_salon_id') || cleanPhone(localStorage.getItem('bms_owner_phone')||localStorage.getItem('bms_salon_phone')||'').length>=10; }
+
 function chooseRole(role){ 
   try{ localStorage.setItem('bms_role', role); }catch(e){}
   if(role==='owner'){ 
+    if(!isOwnerLogged()){
+      document.getElementById('ownerLoginGate').style.display='block';
+      return;
+    }
     window.location.href='dashboard.html'; 
     return; 
   } 
+  // CUSTOMER
+  if(!isCustomerLogged()){
+    document.getElementById('customerLoginGate').style.display='block';
+    return;
+  }
   document.getElementById('welcomeScreen').style.display='none'; 
   document.getElementById('customerHome').style.display='block'; 
   document.getElementById('bottomNav').style.display='flex'; 
@@ -286,6 +342,43 @@ function chooseRole(role){
   updateLoginHeader();
   loadSalons(); 
   updateLocUI(); 
+}
+
+function doCustomerLogin(){
+  const name = document.getElementById('gateName').value.trim();
+  const raw = document.getElementById('gatePhone').value.trim();
+  const phone = cleanPhone(raw);
+  const err = document.getElementById('gateError');
+  if(name.length<2){ err.textContent='Enter your full name'; err.style.display='block'; return; }
+  if(phone.length!==10 || !phone.startsWith('0')){ err.textContent='Phone must be 10 digits, starts with 0'; err.style.display='block'; return; }
+  try{
+    localStorage.setItem('bms_customer_phone', raw);
+    localStorage.setItem('customer_phone', raw);
+    localStorage.setItem('bms_customer_name', name);
+    localStorage.setItem('bms_role','customer');
+  }catch(e){}
+  document.getElementById('customerLoginGate').style.display='none';
+  document.getElementById('welcomeScreen').style.display='none'; 
+  document.getElementById('customerHome').style.display='block'; 
+  document.getElementById('bottomNav').style.display='flex'; 
+  updateLogoutVisibility(); 
+  updateLoginHeader();
+  loadSalons(); 
+  updateLocUI();
+}
+
+function doOwnerLogin(){
+  const raw = document.getElementById('ownerGatePhone').value.trim();
+  const phone = cleanPhone(raw);
+  const err = document.getElementById('ownerGateError');
+  if(phone.length!==10 || !phone.startsWith('0')){ err.textContent='Phone must be 10 digits, starts with 0'; err.style.display='block'; return; }
+  try{
+    localStorage.setItem('bms_owner_phone', raw);
+    localStorage.setItem('bms_salon_phone', raw);
+    localStorage.setItem('bms_role','owner');
+  }catch(e){}
+  document.getElementById('ownerLoginGate').style.display='none';
+  window.location.href='dashboard.html?phone='+encodeURIComponent(raw);
 }
 
 function switchRole(){ 
@@ -371,12 +464,11 @@ function normalizePhone(phone){ return (phone||'').replace(/[\s\-\(\)\+]/g,''); 
 function isValidSAPhone(phone){ const cleaned=normalizePhone(phone); let p=cleaned; if(p.startsWith('27')&&p.length===11) p='0'+p.slice(2); if(!/^\d+$/.test(p)) return false; if(p.length!==10) return false; if(!p.startsWith('0')) return false; return true; }
 function isPastTime(dateStr,timeStr){ const today=new Date().toISOString().split('T')[0]; if(dateStr!==today) return false; const now=new Date(); const [hh,mm]=timeStr.split(':').map(Number); const bookingDateTime=new Date(); bookingDateTime.setHours(hh,mm,0,0); return bookingDateTime<=now; }
 async function confirmBooking(){
-// CUSTOMER LOGIN GATE - ADDED
 try{
   const loggedPhone = localStorage.getItem('bms_customer_phone');
   if(!loggedPhone){
     alert('Please login first');
-    window.location.href = 'customer-login.html?redirect=index.html';
+    document.getElementById('customerLoginGate').style.display='block';
     return;
   }
 }catch(e){}
@@ -387,7 +479,6 @@ const booking_date=document.getElementById('bookingDate').value;
 const booking_time=document.getElementById('bookingTime').value;
 if(!customer_name||!customer_phone||!booking_date||!booking_time){ alert('Please fill all fields'); return; }
 if(!isValidSAPhone(customer_phone)){ alert('Please enter valid SA phone'); return; }
-// ENFORCE LOGGED PHONE - ADDED
 try{
   const loggedPhone = localStorage.getItem('bms_customer_phone');
   if(loggedPhone && normalizePhone(loggedPhone) !== normalizePhone(customer_phone)){
@@ -436,7 +527,6 @@ document.getElementById('ratingSuccess').style.display='block';
 setTimeout(()=>{ closeRatingModal(); loadMyBookings(); loadSalons(); }, 1000);
 }
 
-// VERSION 1 HEADER LOGIC - ADDED
 function updateLoginHeader(){
   try{
     const phone = localStorage.getItem('bms_customer_phone');
@@ -448,7 +538,6 @@ function updateLoginHeader(){
     const bookingsLink = document.getElementById('myBookingsLink');
     if(!statusEl) return;
     if(phone){
-      // VERSION 1 - LOGGED IN - SHOWS REAL NAME - DYNAMIC
       statusEl.textContent = `👋 Hi, ${name || phone}`;
       if(loginBtn) loginBtn.style.display='none';
       if(logoutBtn) logoutBtn.style.display='block';
@@ -459,7 +548,6 @@ function updateLoginHeader(){
       if(logoutBtn) logoutBtn.style.display='block';
       if(bookingsLink) bookingsLink.style.display='none';
     } else {
-      // VERSION 1 - NOT LOGGED IN
       statusEl.textContent = '👋 Hi, Guest';
       if(loginBtn) loginBtn.style.display='block';
       if(logoutBtn) logoutBtn.style.display='none';
@@ -474,7 +562,7 @@ try{
 const phone = localStorage.getItem('bms_customer_phone');
 const name = localStorage.getItem('bms_customer_name');
 const role = localStorage.getItem('bms_role');
-if(role === 'customer'){
+if(role === 'customer' && phone){
   document.getElementById('welcomeScreen').style.display = 'none';
   document.getElementById('customerHome').style.display = 'block';
   document.getElementById('bottomNav').style.display = 'flex';
