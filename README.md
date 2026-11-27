@@ -13,4 +13,4 @@ Features:
 - Deposits via PayFast / Yoco
 
 Built with GitHub + Cloudflare Pages.
-Live: https://bookmysalon.pages.dev
+Official website: https://bookmysalon.pages.dev
